@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.sloperider.SlopeRider;
 import com.sloperider.scene.Scene;
 
 import java.util.ArrayList;
@@ -46,8 +47,8 @@ public class PhysicsWorld {
     public final void render(Camera camera) {
         Matrix4 projection = new Matrix4(camera.combined);
         projection.scale(
-            Scene.PIXEL_PER_UNIT,
-            Scene.PIXEL_PER_UNIT,
+            SlopeRider.PIXEL_PER_UNIT,
+            SlopeRider.PIXEL_PER_UNIT,
             0.f
         );
 

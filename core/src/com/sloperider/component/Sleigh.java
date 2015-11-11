@@ -1,5 +1,8 @@
 package com.sloperider.component;
 
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Fixture;
@@ -12,8 +15,34 @@ import com.sloperider.physics.PhysicsActor;
 /**
  * Created by jpx on 08/11/15.
  */
-public class Sleigh extends Actor implements PhysicsActor {
+public class Sleigh extends Component {
+    private Texture _texture;
+
     public Sleigh() {
+    }
+
+    @Override
+    protected void doReady() {
+
+    }
+
+    @Override
+    protected void doAct(float delta) {
+
+    }
+
+    @Override
+    protected void doDraw(Batch batch) {
+
+    }
+
+    @Override
+    public void requireAssets(AssetManager assetManager) {
+    }
+
+    @Override
+    public void manageAssets(AssetManager assetManager) {
+//        _texture = assetManager.get("", Texture.class);
     }
 
     @Override
