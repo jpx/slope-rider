@@ -23,7 +23,6 @@ import com.sloperider.component.Component;
 import com.sloperider.component.Sleigh;
 import com.sloperider.component.Track;
 import com.sloperider.physics.PhysicsWorld;
-import com.sloperider.scene.Scene;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,8 +57,13 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
     private void addComponent(Component component, Group parent) {
         _components.add(component);
 
-        _physicsWorld.addActor(component);
         parent.addActor(component);
+        _physicsWorld.addActor(component);
+
+        if (_assetsLoaded) {
+            component.manageAssets(_assetManager);
+            component.ready();
+        }
     }
 
     @Override
@@ -96,7 +100,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
         _stage.getCamera().position.add(new Vector3(2.f, 4.f, 0.f).scl(SlopeRider.PIXEL_PER_UNIT));
 
-        ((OrthographicCamera) _stage.getCamera()).zoom += 0.5f;
+        ((OrthographicCamera) _stage.getCamera()).zoom += 2.5f;
 
         _cameraController = new CameraInputController(_stage.getCamera());
 
@@ -145,10 +149,12 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        _physicsWorld.update(Gdx.graphics.getDeltaTime());
+
         _stage.act(Gdx.graphics.getDeltaTime());
+
         _stage.draw();
 
-        _physicsWorld.update(Gdx.graphics.getDeltaTime());
         _physicsWorld.render(_stage.getCamera());
 	}
 
@@ -171,8 +177,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 
         Sleigh sleigh = new Sleigh();
-        _stage.addActor(sleigh);
-        _physicsWorld.addActor(sleigh);
+        addComponent(sleigh, _stage.getRoot());
 
         _touchDown = true;
         Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));

@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.g3d.model.data.ModelMesh;
@@ -45,8 +46,8 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ShortArray;
+import com.sloperider.SlopeRider;
 import com.sloperider.physics.PhysicsActor;
-import com.sloperider.scene.Scene;
 
 import java.nio.BufferOverflowException;
 import java.util.logging.Logger;
@@ -69,6 +70,13 @@ public class Track extends Component {
     }
 
     @Override
+    protected void setParent(Group parent) {
+        super.setParent(parent);
+
+        setSize(60.f, 5.f);
+    }
+
+    @Override
     public void requireAssets(AssetManager assetManager) {
         assetManager.load("texture/track_ground.png", Texture.class);
     }
@@ -81,24 +89,19 @@ public class Track extends Component {
 
     @Override
     protected void doReady() {
-
         _mesh = createMesh(new float[]{
-                6.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 1.2f, 0.f, 0.f
+            16.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 0.f, 4.2f, 0.f, 0.f
         });
 
         ModelBuilder builder = new ModelBuilder();
 
-        final float size = 20.f;
-
         builder.begin();
 
-        builder.part("track", _mesh, Gdx.gl.GL_TRIANGLES, 0, _mesh.getNumIndices(),
-                new Material(ColorAttribute.createDiffuse(Color.GREEN)));
+        Material material = new Material(TextureAttribute.createDiffuse(_trackGroundTexture));
+
+        builder.part("track", _mesh, Gdx.gl.GL_TRIANGLES, 0, _mesh.getNumIndices(), material);
 
         Model model = builder.end();
-
-//        Model model = builder.createRect(0.f, 0.f, 0.f, size, 0.f, 0.f, size, size, 0.f, 0.f, size, 0.f, 0.f, 0.f, -1.f,
-//                new Material(ColorAttribute.createDiffuse(Color.GREEN)), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 
         _modelInstance = new ModelInstance(model);
 
@@ -194,8 +197,8 @@ public class Track extends Component {
         ShortArray indices = new ShortArray();
 
         createPolygon(new FloatArray(new float[]{
-                6.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 1.2f, 0.f, 0.f
-        }), 20.f, 5.f, 41, true, vertices, indices);
+                16.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 0.f, 4.2f, 0.f, 0.f
+        }), getWidth(), getHeight(), 101, true, vertices, indices);
 
         final boolean useTriangles = false;
 
@@ -212,8 +215,8 @@ public class Track extends Component {
         }
         else {
             for (int i = 0; i < vertices.size / 2; ++i) {
-                short index0 = i == 0 ? (short) ((vertices.size - 1) / 2) : (short) i;
-                short index1 = i == (vertices.size - 1) / 2 ? (short) 0 : (short) (i + 1);
+                short index0 = i == 0 ? (short) (vertices.size / 2 - 1) : (short) i;
+                short index1 = i == vertices.size / 2 - 1 ? (short) 0 : (short) (i + 1);
 
                 addEdgeBody(world, vertices, index0, index1, localToStageCoordinates(new Vector2(getX(), getY())));
             }
@@ -229,15 +232,15 @@ public class Track extends Component {
         Texture texture = new Texture("texture/track_ground.png");
         texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 
-        final int width = 20;
-        final int height = 5;
+        final float width = getWidth();
+        final float height = getHeight();
 
         final int sampleCount = 101;
 
         final FloatArray vertices = new FloatArray();
         final ShortArray indices = new ShortArray();
 
-        createPolygon(new FloatArray(points), width, height, sampleCount, true, vertices, indices);
+        createPolygon(new FloatArray(points), width, height, sampleCount, false, vertices, indices);
 
         final int vertexCount = vertices.size / 2;
         final int indexCount = indices.size;
@@ -263,15 +266,14 @@ public class Track extends Component {
             meshVertices.add(position.z);
 
             final Vector2 uv = new Vector2(
-                position.x,
-                position.y
+                position.x / Math.max(width, height),
+                position.y / Math.max(width, height)
             );
 
             meshVertices.add(uv.x);
             meshVertices.add(uv.y);
         }
 
-        indices.reverse();
         mesh.setIndices(indices.toArray());
         mesh.setVertices(meshVertices.toArray());
 
@@ -335,6 +337,10 @@ public class Track extends Component {
             EarClippingTriangulator triangulator = new EarClippingTriangulator();
 
             indices.addAll(triangulator.computeTriangles(vertices));
+        }
+
+        if (!clockwise) {
+            indices.reverse();
         }
     }
 }
