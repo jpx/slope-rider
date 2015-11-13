@@ -46,6 +46,7 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ShortArray;
+import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.PhysicsActor;
 
@@ -73,7 +74,7 @@ public class Track extends Component {
     protected void setParent(Group parent) {
         super.setParent(parent);
 
-        setSize(60.f, 5.f);
+        setSize(160.f, 5.f);
     }
 
     @Override
@@ -88,9 +89,9 @@ public class Track extends Component {
     }
 
     @Override
-    protected void doReady() {
+    protected void doReady(ComponentFactory componentFactory) {
         _mesh = createMesh(new float[]{
-            16.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 0.f, 4.2f, 0.f, 0.f
+            20.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 0.f, 1.2f, 0.f, 0.f
         });
 
         ModelBuilder builder = new ModelBuilder();
@@ -104,12 +105,19 @@ public class Track extends Component {
         Model model = builder.end();
 
         _modelInstance = new ModelInstance(model);
+        _modelInstance.transform
+            .scale(SlopeRider.PIXEL_PER_UNIT, SlopeRider.PIXEL_PER_UNIT, SlopeRider.PIXEL_PER_UNIT)
+            .translate(getX(), getY(), 0.f);
 
         _modelBatch = new ModelBatch();
 
         _environment = new Environment();
         _environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         _environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+
+        TrackPoint trackPoint = componentFactory.createComponent(this, new Vector2(), 1, TrackPoint.class);
+
+
     }
 
     @Override
@@ -122,7 +130,7 @@ public class Track extends Component {
         batch.end();
 
         _modelBatch.begin(getStage().getCamera());
-        _modelInstance.transform.set(batch.getTransformMatrix());
+        _modelInstance.transform.mul(batch.getTransformMatrix());
         _modelBatch.render(_modelInstance);
         _modelBatch.end();
 
@@ -197,7 +205,7 @@ public class Track extends Component {
         ShortArray indices = new ShortArray();
 
         createPolygon(new FloatArray(new float[]{
-                16.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 0.f, 4.2f, 0.f, 0.f
+                20.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 0.f, 1.2f, 0.f, 0.f
         }), getWidth(), getHeight(), 101, true, vertices, indices);
 
         final boolean useTriangles = false;
@@ -210,7 +218,7 @@ public class Track extends Component {
                 triangleIndices.add(indices.get(i * 3 + 1));
                 triangleIndices.add(indices.get(i * 3 + 2));
 
-                addTriangleBody(world, vertices, triangleIndices, localToStageCoordinates(new Vector2(getX(), getY())));
+                addTriangleBody(world, vertices, triangleIndices, new Vector2(getX(), getY()));
             }
         }
         else {
@@ -218,7 +226,7 @@ public class Track extends Component {
                 short index0 = i == 0 ? (short) (vertices.size / 2 - 1) : (short) i;
                 short index1 = i == vertices.size / 2 - 1 ? (short) 0 : (short) (i + 1);
 
-                addEdgeBody(world, vertices, index0, index1, localToStageCoordinates(new Vector2(getX(), getY())));
+                addEdgeBody(world, vertices, index0, index1, new Vector2(getX(), getY()));
             }
         }
     }

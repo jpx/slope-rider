@@ -37,9 +37,6 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
     Stage _stage;
 
-	SpriteBatch batch;
-	Texture img;
-
     SpriteBatch _spriteBatch;
 
     PhysicsWorld _physicsWorld;
@@ -50,21 +47,10 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
     boolean _touchDown;
     Vector2 _lastTouchPoint;
 
-    private List<Component> _components;
     private AssetManager _assetManager;
     private boolean _assetsLoaded;
 
-    private void addComponent(Component component, Group parent) {
-        _components.add(component);
-
-        parent.addActor(component);
-        _physicsWorld.addActor(component);
-
-        if (_assetsLoaded) {
-            component.manageAssets(_assetManager);
-            component.ready();
-        }
-    }
+    private ComponentFactory _componentFactory;
 
     @Override
     public void resize(int width, int height) {
@@ -86,17 +72,19 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
         _touchDown = false;
 
+        _assetsLoaded = false;
+        _assetManager = new AssetManager();
+
         _physicsWorld = new PhysicsWorld();
 
         _sleigh = new Sleigh();
         _track = new Track();
 
-        _stage.getRoot().scaleBy(SlopeRider.PIXEL_PER_UNIT, SlopeRider.PIXEL_PER_UNIT);
+        //_stage.getRoot().scaleBy(SlopeRider.PIXEL_PER_UNIT, SlopeRider.PIXEL_PER_UNIT);
 
-        _components = new ArrayList<Component>();
-
-        addComponent(_sleigh, _stage.getRoot());
-        addComponent(_track, _stage.getRoot());
+        _componentFactory = new ComponentFactory(_assetManager, _physicsWorld);
+        _sleigh = _componentFactory.createComponent(_stage.getRoot(), new Vector2(), 5, Sleigh.class);
+        _track = _componentFactory.createComponent(_stage.getRoot(), new Vector2(10.f, 0.f), 10, Track.class);
 
         _stage.getCamera().position.add(new Vector3(2.f, 4.f, 0.f).scl(SlopeRider.PIXEL_PER_UNIT));
 
@@ -106,27 +94,8 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
         Gdx.input.setInputProcessor(new InputMultiplexer(this, _cameraController));
 
-        _assetsLoaded = false;
-        _assetManager = new AssetManager();
-
-        requireAssets(_assetManager);
+        _componentFactory.requireAssets();
 	}
-
-    private void requireAssets(AssetManager assetManager) {
-        for (Component component : _components) {
-            component.requireAssets(assetManager);
-        }
-    }
-
-    private void assetsLoaded() {
-        for (Component component : _components) {
-            component.manageAssets(_assetManager);
-        }
-
-        for (Component component : _components) {
-            component.ready();
-        }
-    }
 
 	@Override
 	public void render () {
@@ -134,7 +103,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
             if (_assetManager.update()) {
                 _assetsLoaded = true;
 
-                assetsLoaded();
+                _componentFactory.ready();
             } else {
                 final float progress = _assetManager.getProgress();
 
@@ -176,8 +145,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 
-        Sleigh sleigh = new Sleigh();
-        addComponent(sleigh, _stage.getRoot());
+        Sleigh sleigh = _componentFactory.createComponent(_stage.getRoot(), new Vector2(12.f, 28.f), 5, Sleigh.class);
 
         _touchDown = true;
         Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));

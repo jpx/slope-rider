@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
+import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.PhysicsActor;
 
@@ -37,13 +39,14 @@ public class Sleigh extends Component {
     protected void setParent(Group parent) {
         super.setParent(parent);
 
-        final float baseSize = 2.f;
+        final float baseSize = 1.f;
 
         setSize(baseSize, baseSize / _spriteRatio);
+        setOrigin(getWidth() / 2.f, getHeight() / 2.f);
     }
 
     @Override
-    protected void doReady() {
+    protected void doReady(ComponentFactory componentFactory) {
         _textureRegion = new TextureRegion(_texture);
     }
 
@@ -56,14 +59,14 @@ public class Sleigh extends Component {
     protected void doDraw(Batch batch) {
         batch.draw(
             _textureRegion,
-            getX(),
-            getY(),
+            getX() * SlopeRider.PIXEL_PER_UNIT,
+            getY() * SlopeRider.PIXEL_PER_UNIT,
             getOriginX(),
             getOriginY(),
             getWidth(),
             getHeight(),
-            getScaleX(),
-            getScaleY(),
+            getScaleX() * SlopeRider.PIXEL_PER_UNIT,
+            getScaleY() * SlopeRider.PIXEL_PER_UNIT,
             getRotation()
         );
     }
@@ -84,7 +87,7 @@ public class Sleigh extends Component {
         BodyDef bodyDef = new BodyDef();
 
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set(1.5f, 21.f);
+        bodyDef.position.set(getX(), getY());
 
         _body = world.createBody(bodyDef);
 
@@ -93,8 +96,11 @@ public class Sleigh extends Component {
         final float width = getWidth();
         final float height = getHeight();
 
-        shape.set(new float[]{
-            width * 0.1f, height * 0.1f, width * 1.1f, height * 0.1f, width, height * 0.7f, 0.f, height * 0.7f
+        shape.set(new float[] {
+            -width * 0.45f, -height * 0.35f,
+            width * 0.38f, -height * 0.35f,
+            width * 0.38f, height * 0.15f,
+            -width * 0.45f, height * 0.15f
         });
 
         FixtureDef fixtureDef = new FixtureDef();
@@ -109,7 +115,7 @@ public class Sleigh extends Component {
 
     @Override
     public void updateBody(World world) {
-        final Vector2 position = _body.getPosition();
+        final Vector2 position = _body.getPosition().cpy();;
         final float rotation = MathUtils.radiansToDegrees * _body.getAngle();
 
         setPosition(position.x, position.y);
