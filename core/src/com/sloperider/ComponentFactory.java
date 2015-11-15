@@ -8,6 +8,7 @@ import com.sloperider.component.Component;
 import com.sloperider.physics.PhysicsWorld;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -15,6 +16,7 @@ import java.util.List;
  */
 public class ComponentFactory {
     private boolean _ready;
+    private boolean _runningPostPhase;
 
     private Stage _stage;
 
@@ -22,15 +24,18 @@ public class ComponentFactory {
     private PhysicsWorld _physicsWorld;
 
     private List<Component> _components;
+    private List<Component> _componentsToAdd;
 
     ComponentFactory(Stage stage, AssetManager assetManager, PhysicsWorld physicsWorld) {
         _ready = false;
+        _runningPostPhase = false;
 
         _stage = stage;
         _assetManager = assetManager;
         _physicsWorld = physicsWorld;
 
         _components = new ArrayList<Component>();
+        _componentsToAdd = new LinkedList<Component>();
     }
 
     void requireAssets() {
@@ -44,6 +49,7 @@ public class ComponentFactory {
             return;
 
         _ready = true;
+        _runningPostPhase = true;
 
         for (Component component : _components) {
             component.manageAssets(_assetManager);
@@ -55,6 +61,15 @@ public class ComponentFactory {
 
         for (Component component : _components) {
             _physicsWorld.addActor(component);
+        }
+
+        _runningPostPhase = false;
+
+        while (!_componentsToAdd.isEmpty()) {
+            Component component = _componentsToAdd.get(0);
+            _componentsToAdd.remove(0);
+
+            _components.add(component);
         }
     }
 
@@ -68,10 +83,12 @@ public class ComponentFactory {
             e.printStackTrace();
         }
 
-//        component.setScale(SlopeRider.PIXEL_PER_UNIT);
         component.setPosition(position.x, position.y);
 
-        _components.add(component);
+        if (!_runningPostPhase)
+            _components.add(component);
+        else
+            _componentsToAdd.add(component);
 
         _stage.addActor(component);
 

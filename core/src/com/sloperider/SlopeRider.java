@@ -5,28 +5,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.sloperider.component.Component;
 import com.sloperider.component.Sleigh;
 import com.sloperider.component.Track;
+import com.sloperider.component.TrackCameraController;
 import com.sloperider.physics.PhysicsWorld;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
 
 public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
@@ -40,9 +30,6 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
     PhysicsWorld _physicsWorld;
 
     Track _track;
-
-    boolean _touchDown;
-    Vector2 _lastTouchPoint;
 
     private AssetManager _assetManager;
     private boolean _assetsLoaded;
@@ -67,8 +54,6 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
         _stage = new Stage(new ScreenViewport(), _spriteBatch);
 
-        _touchDown = false;
-
         _assetsLoaded = false;
         _assetManager = new AssetManager();
 
@@ -77,11 +62,14 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         _componentFactory = new ComponentFactory(_stage, _assetManager, _physicsWorld);
         _track = _componentFactory.createComponent(new Vector2(10.f, 0.f), Track.class);
 
+        TrackCameraController cameraController = _componentFactory.createComponent(new Vector2(), TrackCameraController.class)
+            .setTrack(_track);
+
         _stage.getCamera().position.add(new Vector3(2.f, 4.f, 0.f).scl(SlopeRider.PIXEL_PER_UNIT));
 
-        ((OrthographicCamera) _stage.getCamera()).zoom += 1.5f;
+        ((OrthographicCamera) _stage.getCamera()).zoom += 2.5f;
 
-        Gdx.input.setInputProcessor(new InputMultiplexer(_stage, this));
+        Gdx.input.setInputProcessor(new InputMultiplexer(_stage, new GestureDetector(cameraController), cameraController, this));
 
         _componentFactory.requireAssets();
 	}
@@ -131,43 +119,19 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-
         Sleigh sleigh = _componentFactory.createComponent(new Vector2(12.f, 28.f), Sleigh.class);
-
-        if (!_touchDown) {
-            _touchDown = true;
-            Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));
-            _lastTouchPoint = new Vector2(position.x, position.y);
-        }
 
         return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-
-        if (_touchDown) {
-            _touchDown = false;
-            Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));
-            _lastTouchPoint = new Vector2(position.x, position.y);
-        }
-        return true;
+        return false;
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (!_touchDown)
-            return false;
-
-        Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));
-
-        Vector2 move = new Vector2(position.x, position.y).sub(_lastTouchPoint).scl(-1.f);
-
-        Camera camera = _stage.getCamera();
-        camera.position.add(new Vector3(move.x, move.y, 0.f));
-
-        _lastTouchPoint = new Vector2(position.x, position.y);
-        return true;
+        return false;
     }
 
     @Override

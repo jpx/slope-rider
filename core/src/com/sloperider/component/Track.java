@@ -221,7 +221,7 @@ public class Track extends Component {
         FloatArray vertices = new FloatArray();
         ShortArray indices = new ShortArray();
 
-        createPolygon(_trackPointValues, getWidth(), getHeight(), PHYSICS_SPLINE_SAMPLE_COUNT, true, vertices, indices);
+        createPolygon(_trackPointValues, getWidth(), getHeight(), true, PHYSICS_SPLINE_SAMPLE_COUNT, true, vertices, indices);
 
         for (int i = 0; i < vertices.size / 2; ++i) {
             short index0 = i == 0 ? (short) (vertices.size / 2 - 1) : (short) i;
@@ -247,7 +247,7 @@ public class Track extends Component {
         final FloatArray vertices = new FloatArray();
         final ShortArray indices = new ShortArray();
 
-        createPolygon(_trackPointValues, getWidth(), getHeight(), GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
+        createPolygon(_trackPointValues, getWidth(), getHeight(), true, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
 
         final Mesh mesh = new Mesh(true, vertices.size / 2, indices.size,
             new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
@@ -263,7 +263,7 @@ public class Track extends Component {
         final FloatArray vertices = new FloatArray();
         final ShortArray indices = new ShortArray();
 
-        createPolygon(_trackPointValues, getWidth(), getHeight(), GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
+        createPolygon(_trackPointValues, getWidth(), getHeight(), true, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
 
         final int vertexCount = vertices.size / 2;
         final int indexCount = indices.size;
@@ -296,14 +296,20 @@ public class Track extends Component {
         mesh.setVertices(meshVertices.toArray());
     }
 
-    private void createPolygon(FloatArray points, float width, float height, int sampleCount, boolean clockwise, FloatArray vertices, ShortArray indices) {
+    private void createPolygon(FloatArray points,
+                               float width, float height,
+                               boolean rectangularBase,
+                               int sampleCount, boolean clockwise,
+                               FloatArray vertices, ShortArray indices) {
         final int pointCount = points.size;
-        final int vertexCount = sampleCount + 2;
+        final int vertexCount = rectangularBase ? sampleCount + 2 : sampleCount * 2;
         final int splinePointCount = pointCount + 2;
 
         Vector2[] splinePoints = new Vector2[splinePointCount];
 
         vertices.ensureCapacity(vertexCount * 2);
+//        for (int i = 0; i < vertexCount * 2; ++i)
+//            vertices.add(0.f);
 
         for (int i = 0; i < pointCount; ++i)
         {
@@ -315,20 +321,32 @@ public class Track extends Component {
 
         CatmullRomSpline<Vector2> spline = new CatmullRomSpline<Vector2>(splinePoints, false);
 
-        for (int i = 0; i < sampleCount; ++i)
-        {
-            Vector2 value = new Vector2();
+        if (rectangularBase) {
+            for (int i = 0; i < sampleCount; ++i) {
+                Vector2 value = new Vector2();
 
-            spline.valueAt(value, i / (float) (sampleCount - 1));
+                spline.valueAt(value, i / (float) (sampleCount - 1));
 
-            vertices.insert(i * 2 + 0, i / (float) (sampleCount - 1) * width);
-            vertices.insert(i * 2 + 1, value.y);
+                vertices.insert(i * 2 + 0, i / (float) (sampleCount - 1) * width);
+                vertices.insert(i * 2 + 1, value.y);
+            }
+
+            vertices.insert(sampleCount * 2 + 0, width);
+            vertices.insert(sampleCount * 2 + 1, 0.f);
+            vertices.insert(sampleCount * 2 + 2, 0.f);
+            vertices.insert(sampleCount * 2 + 3, 0.f);
+        } else {
+            for (int i = 0; i < sampleCount; ++i) {
+                Vector2 value = new Vector2();
+
+                spline.valueAt(value, i / (float) (sampleCount - 1));
+
+                vertices.insert(i * 2 + 0, i / (float) (sampleCount - 1) * width);
+                vertices.insert(i * 2 + 1, value.y);
+                vertices.insert((sampleCount - 1 + i) * 2 + 0, i / (float) (sampleCount - 1) * width);
+                vertices.insert((sampleCount - 1 + i) * 2 + 1, value.y - 3);
+            }
         }
-
-        vertices.insert(sampleCount * 2 + 0, width);
-        vertices.insert(sampleCount * 2 + 1, 0.f);
-        vertices.insert(sampleCount * 2 + 2, 0.f);
-        vertices.insert(sampleCount * 2 + 3, 0.f);
 
         if (!clockwise) {
             for (int i = 0; i < vertices.size / 4; ++i) {
@@ -359,5 +377,42 @@ public class Track extends Component {
         if (!clockwise) {
             indices.reverse();
         }
+    }
+
+    private void resetTopMesh(Mesh mesh) {
+        final FloatArray vertices = new FloatArray();
+        final ShortArray indices = new ShortArray();
+
+        createPolygon(_trackPointValues, getWidth(), getHeight(), false, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
+
+        final int vertexCount = vertices.size / 2;
+        final int indexCount = indices.size;
+
+        final int vertexSize = 5;
+
+        FloatArray meshVertices = new FloatArray(vertexCount * vertexSize);
+
+        for (int i = 0; i < vertexCount; ++i) {
+            final Vector3 position = new Vector3(
+                    vertices.get(i * 2 + 0),
+                    vertices.get(i * 2 + 1),
+                    0.f
+            );
+
+            meshVertices.add(position.x);
+            meshVertices.add(position.y);
+            meshVertices.add(position.z);
+
+            final Vector2 uv = new Vector2(
+                    position.x / Math.max(getWidth(), getHeight()),
+                    position.y / Math.max(getWidth(), getHeight())
+            );
+
+            meshVertices.add(uv.x);
+            meshVertices.add(uv.y);
+        }
+
+        mesh.setIndices(indices.toArray());
+        mesh.setVertices(meshVertices.toArray());
     }
 }
