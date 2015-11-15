@@ -33,15 +33,12 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
     public static final float PIXEL_PER_UNIT = 100.0f;
     public static final String TAG = "slope-rider_DEBUG";
 
-    CameraInputController _cameraController;
-
     Stage _stage;
 
     SpriteBatch _spriteBatch;
 
     PhysicsWorld _physicsWorld;
 
-    Sleigh _sleigh;
     Track _track;
 
     boolean _touchDown;
@@ -77,22 +74,14 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
         _physicsWorld = new PhysicsWorld();
 
-        _sleigh = new Sleigh();
-        _track = new Track();
-
-        //_stage.getRoot().scaleBy(SlopeRider.PIXEL_PER_UNIT, SlopeRider.PIXEL_PER_UNIT);
-
-        _componentFactory = new ComponentFactory(_assetManager, _physicsWorld);
-        _sleigh = _componentFactory.createComponent(_stage.getRoot(), new Vector2(), 5, Sleigh.class);
-        _track = _componentFactory.createComponent(_stage.getRoot(), new Vector2(10.f, 0.f), 10, Track.class);
+        _componentFactory = new ComponentFactory(_stage, _assetManager, _physicsWorld);
+        _track = _componentFactory.createComponent(new Vector2(10.f, 0.f), Track.class);
 
         _stage.getCamera().position.add(new Vector3(2.f, 4.f, 0.f).scl(SlopeRider.PIXEL_PER_UNIT));
 
-        ((OrthographicCamera) _stage.getCamera()).zoom += 2.5f;
+        ((OrthographicCamera) _stage.getCamera()).zoom += 1.5f;
 
-        _cameraController = new CameraInputController(_stage.getCamera());
-
-        Gdx.input.setInputProcessor(new InputMultiplexer(this, _cameraController));
+        Gdx.input.setInputProcessor(new InputMultiplexer(_stage, this));
 
         _componentFactory.requireAssets();
 	}
@@ -112,8 +101,6 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
             return;
         }
-
-        _cameraController.update();
 
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -145,19 +132,25 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 
-        Sleigh sleigh = _componentFactory.createComponent(_stage.getRoot(), new Vector2(12.f, 28.f), 5, Sleigh.class);
+        Sleigh sleigh = _componentFactory.createComponent(new Vector2(12.f, 28.f), Sleigh.class);
 
-        _touchDown = true;
-        Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));
-        _lastTouchPoint = new Vector2(position.x, position.y);
+        if (!_touchDown) {
+            _touchDown = true;
+            Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));
+            _lastTouchPoint = new Vector2(position.x, position.y);
+        }
+
         return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        _touchDown = false;
-        Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));
-        _lastTouchPoint = new Vector2(position.x, position.y);
+
+        if (_touchDown) {
+            _touchDown = false;
+            Vector3 position = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));
+            _lastTouchPoint = new Vector2(position.x, position.y);
+        }
         return true;
     }
 

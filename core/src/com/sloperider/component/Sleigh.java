@@ -17,6 +17,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.PhysicsActor;
@@ -47,6 +48,7 @@ public class Sleigh extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
+        setTouchable(Touchable.disabled);
         _textureRegion = new TextureRegion(_texture);
     }
 

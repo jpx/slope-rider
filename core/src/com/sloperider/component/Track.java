@@ -2,35 +2,23 @@ package com.sloperider.component;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.PolygonRegion;
-import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
-import com.badlogic.gdx.graphics.g3d.model.data.ModelMesh;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.CatmullRomSpline;
 import com.badlogic.gdx.math.DelaunayTriangulator;
 import com.badlogic.gdx.math.EarClippingTriangulator;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -39,26 +27,23 @@ import com.badlogic.gdx.physics.box2d.EdgeShape;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.Shape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.FloatArray;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ShortArray;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
-import com.sloperider.physics.PhysicsActor;
 
-import java.nio.BufferOverflowException;
-import java.util.logging.Logger;
-
-import javax.lang.model.type.PrimitiveType;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by jpx on 08/11/15.
  */
 public class Track extends Component {
+    private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 101;
+    private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 101;
+
     private Texture _trackGroundTexture;
 
     private Mesh _mesh;
@@ -67,14 +52,61 @@ public class Track extends Component {
     private ModelInstance _modelInstance;
     private Environment _environment;
 
+    private ComponentFactory _componentFactory;
+
+    private List<TrackPoint> _trackPoints;
+    private FloatArray _trackPointValues;
+
+    private Body _body;
+    private List<Fixture> _fixtures;
+
+    private boolean _physicsTrackUpdateNeeded;
+    private boolean _graphicsTrackUpdateNeeded;
+
     public Track() {
+    }
+
+    private void initializeTrackPoints(int pointCount) {
+        _trackPoints = new ArrayList<TrackPoint>(pointCount);
+        _trackPointValues = new FloatArray(pointCount);
+
+        for (int i = 0; i < pointCount; ++i)
+            _trackPointValues.add(0.f);
+
+        final Vector2 parentPosition = new Vector2(getX(), getY());
+        final Vector2 size = new Vector2(getWidth(), getHeight());
+
+        for (int i = 0; i < pointCount; ++i) {
+            final Vector2 position = parentPosition.cpy().add(i * size.x / (pointCount - 1), getHeight());
+
+            TrackPoint trackPoint = _componentFactory.createComponent(
+                position,
+                TrackPoint.class
+            ).setChangedHandler(new TrackPoint.ChangedHandler() {
+                @Override
+                public void changed(TrackPoint self, float value) {
+                    Gdx.app.log(SlopeRider.TAG, "track value changed ! " + value);
+
+                    updateTrackPoint(_trackPoints.indexOf(self), value);
+                }
+            }).setInitialTrackValue(position.y);
+
+            _trackPoints.add(trackPoint);
+        }
+    }
+
+    private void updateTrackPoint(int index, float value) {
+        _trackPointValues.set(index, value - getHeight());
+
+        _physicsTrackUpdateNeeded = true;
+        _graphicsTrackUpdateNeeded = true;
     }
 
     @Override
     protected void setParent(Group parent) {
         super.setParent(parent);
 
-        setSize(160.f, 5.f);
+        setSize(40.f, 5.f);
     }
 
     @Override
@@ -90,9 +122,14 @@ public class Track extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
-        _mesh = createMesh(new float[]{
-            20.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 0.f, 1.2f, 0.f, 0.f
-        });
+        _physicsTrackUpdateNeeded = false;
+        _graphicsTrackUpdateNeeded = false;
+
+        _componentFactory = componentFactory;
+
+        initializeTrackPoints(11);
+
+        _mesh = createMesh();
 
         ModelBuilder builder = new ModelBuilder();
 
@@ -106,7 +143,7 @@ public class Track extends Component {
 
         _modelInstance = new ModelInstance(model);
         _modelInstance.transform
-            .scale(SlopeRider.PIXEL_PER_UNIT, SlopeRider.PIXEL_PER_UNIT, SlopeRider.PIXEL_PER_UNIT)
+            .scale(getScaleX() * SlopeRider.PIXEL_PER_UNIT, getScaleY() * SlopeRider.PIXEL_PER_UNIT, 1.f)
             .translate(getX(), getY(), 0.f);
 
         _modelBatch = new ModelBatch();
@@ -115,14 +152,15 @@ public class Track extends Component {
         _environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         _environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
-        TrackPoint trackPoint = componentFactory.createComponent(this, new Vector2(), 1, TrackPoint.class);
-
-
     }
 
     @Override
     protected void doAct(float delta) {
+        if (_graphicsTrackUpdateNeeded) {
+            _graphicsTrackUpdateNeeded = false;
 
+            resetMesh(_mesh);
+        }
     }
 
     @Override
@@ -130,52 +168,14 @@ public class Track extends Component {
         batch.end();
 
         _modelBatch.begin(getStage().getCamera());
-        _modelInstance.transform.mul(batch.getTransformMatrix());
+        _modelInstance.transform.cpy().mul(batch.getTransformMatrix());
         _modelBatch.render(_modelInstance);
         _modelBatch.end();
 
         batch.begin();
     }
 
-    private void addTriangleBody(World world, FloatArray vertices, ShortArray indices, Vector2 position) {
-        BodyDef bodyDef = new BodyDef();
-
-        bodyDef.type = BodyDef.BodyType.StaticBody;
-        bodyDef.position.set(position);
-
-        Body body = world.createBody(bodyDef);
-
-        PolygonShape shape = new PolygonShape();
-
-        Vector2[] triangleVertices = new Vector2[indices.size];
-
-        for (int i = 0; i < indices.size; ++i) {
-            triangleVertices[i] = new Vector2(
-                vertices.get(indices.get(i) * 2 + 0),
-                vertices.get(indices.get(i) * 2 + 1)
-            );
-        }
-
-        shape.set(triangleVertices);
-
-        FixtureDef fixtureDef = new FixtureDef();
-
-        fixtureDef.shape = shape;
-        fixtureDef.density = 1.f;
-        fixtureDef.friction = 0.0f;
-        fixtureDef.restitution = 0.f;
-
-        Fixture fixture = body.createFixture(fixtureDef);
-    }
-
-    private void addEdgeBody(World world, FloatArray vertices, short index0, short index1, Vector2 position) {
-        BodyDef bodyDef = new BodyDef();
-
-        bodyDef.type = BodyDef.BodyType.StaticBody;
-        bodyDef.position.set(position);
-
-        Body body = world.createBody(bodyDef);
-
+    private void addEdgeFixture(World world, FloatArray vertices, short index0, short index1, Vector2 position) {
         EdgeShape shape = new EdgeShape();
 
         Vector2 vertex0 = new Vector2(
@@ -196,67 +196,77 @@ public class Track extends Component {
         fixtureDef.friction = 0.0f;
         fixtureDef.restitution = 0.f;
 
-        Fixture fixture = body.createFixture(fixtureDef);
+        Fixture fixture = _body.createFixture(fixtureDef);
+        _fixtures.add(fixture);
     }
 
     @Override
     public void initializeBody(World world) {
+        BodyDef bodyDef = new BodyDef();
+
+        bodyDef.type = BodyDef.BodyType.StaticBody;
+        bodyDef.position.set(getX(), getY());
+
+        _body = world.createBody(bodyDef);
+        _fixtures = new ArrayList<Fixture>();
+
+        resetFixtures(world);
+    }
+
+    private void resetFixtures(World world) {
+        for (Fixture fixture : _fixtures)
+            _body.destroyFixture(fixture);
+        _fixtures.clear();
+
         FloatArray vertices = new FloatArray();
         ShortArray indices = new ShortArray();
 
-        createPolygon(new FloatArray(new float[]{
-                20.f, 5.f, 1.5f, 0.f, -0.2f, 0.f, 0.f, 0.f, 1.2f, 0.f, 0.f
-        }), getWidth(), getHeight(), 101, true, vertices, indices);
+        createPolygon(_trackPointValues, getWidth(), getHeight(), PHYSICS_SPLINE_SAMPLE_COUNT, true, vertices, indices);
 
-        final boolean useTriangles = false;
+        for (int i = 0; i < vertices.size / 2; ++i) {
+            short index0 = i == 0 ? (short) (vertices.size / 2 - 1) : (short) i;
+            short index1 = i == vertices.size / 2 - 1 ? (short) 0 : (short) (i + 1);
 
-        if (useTriangles) {
-            for (int i = 0; i < indices.size / 3; ++i) {
-                ShortArray triangleIndices = new ShortArray();
-
-                triangleIndices.add(indices.get(i * 3 + 0));
-                triangleIndices.add(indices.get(i * 3 + 1));
-                triangleIndices.add(indices.get(i * 3 + 2));
-
-                addTriangleBody(world, vertices, triangleIndices, new Vector2(getX(), getY()));
-            }
-        }
-        else {
-            for (int i = 0; i < vertices.size / 2; ++i) {
-                short index0 = i == 0 ? (short) (vertices.size / 2 - 1) : (short) i;
-                short index1 = i == vertices.size / 2 - 1 ? (short) 0 : (short) (i + 1);
-
-                addEdgeBody(world, vertices, index0, index1, new Vector2(getX(), getY()));
-            }
+            addEdgeFixture(world, vertices, index0, index1, new Vector2(getX(), getY()));
         }
     }
 
     @Override
     public void updateBody(World world) {
+        if (_physicsTrackUpdateNeeded) {
+            _physicsTrackUpdateNeeded = false;
 
+            resetFixtures(world);
+        }
     }
 
-    private Mesh createMesh(float[] points) {
+    private Mesh createMesh() {
         Texture texture = new Texture("texture/track_ground.png");
         texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-
-        final float width = getWidth();
-        final float height = getHeight();
-
-        final int sampleCount = 101;
 
         final FloatArray vertices = new FloatArray();
         final ShortArray indices = new ShortArray();
 
-        createPolygon(new FloatArray(points), width, height, sampleCount, false, vertices, indices);
+        createPolygon(_trackPointValues, getWidth(), getHeight(), GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
 
-        final int vertexCount = vertices.size / 2;
-        final int indexCount = indices.size;
-
-        final Mesh mesh = new Mesh(true, vertexCount, indexCount,
+        final Mesh mesh = new Mesh(true, vertices.size / 2, indices.size,
             new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
             new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0")
         );
+
+        resetMesh(mesh);
+
+        return mesh;
+    }
+
+    private void resetMesh(Mesh mesh) {
+        final FloatArray vertices = new FloatArray();
+        final ShortArray indices = new ShortArray();
+
+        createPolygon(_trackPointValues, getWidth(), getHeight(), GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
+
+        final int vertexCount = vertices.size / 2;
+        final int indexCount = indices.size;
 
         final int vertexSize = 5;
 
@@ -274,8 +284,8 @@ public class Track extends Component {
             meshVertices.add(position.z);
 
             final Vector2 uv = new Vector2(
-                position.x / Math.max(width, height),
-                position.y / Math.max(width, height)
+                position.x / Math.max(getWidth(), getHeight()),
+                position.y / Math.max(getWidth(), getHeight())
             );
 
             meshVertices.add(uv.x);
@@ -284,15 +294,14 @@ public class Track extends Component {
 
         mesh.setIndices(indices.toArray());
         mesh.setVertices(meshVertices.toArray());
-
-        return mesh;
     }
 
-    private static void createPolygon(FloatArray points, float width, float height, int sampleCount, boolean clockwise, FloatArray vertices, ShortArray indices) {
+    private void createPolygon(FloatArray points, float width, float height, int sampleCount, boolean clockwise, FloatArray vertices, ShortArray indices) {
         final int pointCount = points.size;
         final int vertexCount = sampleCount + 2;
+        final int splinePointCount = pointCount + 2;
 
-        Vector2[] splinePoints = new Vector2[pointCount + 2];
+        Vector2[] splinePoints = new Vector2[splinePointCount];
 
         vertices.ensureCapacity(vertexCount * 2);
 
