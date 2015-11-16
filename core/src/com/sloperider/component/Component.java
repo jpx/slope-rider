@@ -63,9 +63,6 @@ public abstract class Component extends Group implements PhysicsActor {
 
     @Override
     public Actor hit(float x, float y, boolean touchable) {
-
-//        parentCoords.x = (parentCoords.x - childX - originX) / scaleX + originX;
-
         Vector2 position = new Vector2(x, y)
             .sub(getOriginX(), getOriginY())
             .scl(1.f / SlopeRider.PIXEL_PER_UNIT)
@@ -78,20 +75,4 @@ public abstract class Component extends Group implements PhysicsActor {
     protected Actor doHit(float x, float y, boolean touchable) {
         return super.hit(x, y, touchable);
     }
-
-    //
-//    @Override
-//    public Vector2 parentToLocalCoordinates(Vector2 parentCoords) {
-//        final Vector2 tmp0 = parentCoords.cpy();
-//
-//        final float originX = getOriginX();
-//        final float originY = getOriginY();
-//
-//        parentCoords.x = (parentCoords.x - (getX() - originX) * getScaleX()) / getScaleX();
-//        parentCoords.y = (parentCoords.y - (getY() - originY) * getScaleY()) / getScaleY();
-//
-////        Gdx.app.log(SlopeRider.TAG, this.getClass() + " parent to local: " + tmp0 + " -> " + parentCoords);
-//
-//        return parentCoords;
-//    }
 }

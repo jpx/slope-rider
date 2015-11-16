@@ -20,6 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
+import com.sloperider.physics.CollisionGroup;
 import com.sloperider.physics.PhysicsActor;
 
 /**
@@ -111,6 +112,9 @@ public class Sleigh extends Component {
         fixtureDef.density = 2.f;
         fixtureDef.friction = 0.1f;
         fixtureDef.restitution = 0.0f;
+
+        fixtureDef.filter.categoryBits = CollisionGroup.SLEIGH.value();
+        fixtureDef.filter.maskBits = CollisionGroup.TRACK.value();
 
         Fixture fixture = _body.createFixture(fixtureDef);
     }

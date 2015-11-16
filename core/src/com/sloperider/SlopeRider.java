@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.sloperider.component.Flag;
 import com.sloperider.component.Sleigh;
 import com.sloperider.component.Track;
 import com.sloperider.component.TrackCameraController;
@@ -64,6 +65,8 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
         TrackCameraController cameraController = _componentFactory.createComponent(new Vector2(), TrackCameraController.class)
             .setTrack(_track);
+
+        _componentFactory.createComponent(new Vector2(11.f, 14.8f), Flag.class);
 
         _stage.getCamera().position.add(new Vector3(2.f, 4.f, 0.f).scl(SlopeRider.PIXEL_PER_UNIT));
 
@@ -119,7 +122,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        Sleigh sleigh = _componentFactory.createComponent(new Vector2(12.f, 28.f), Sleigh.class);
+        Sleigh sleigh = _componentFactory.createComponent(new Vector2(11.f, 16.f), Sleigh.class);
 
         return true;
     }

@@ -148,7 +148,7 @@ public class TrackPoint extends Component {
 
     @Override
     public Actor doHit(float x, float y, boolean touchable) {
-        final float additionalHitScale = 5.f;
+        final float additionalHitScale = 1.5f;
 
         Vector2 minBound = new Vector2(
             -getOriginX() - getWidth() * additionalHitScale / 2.f,
@@ -193,8 +193,6 @@ public class TrackPoint extends Component {
     private void setTrackValue(float value) {
         if (_trackValue == value)
             return;
-
-        Gdx.app.log(SlopeRider.TAG, "trackvalue: " + (value));
 
         setPositionFromTrackValue(value);
 
