@@ -41,11 +41,11 @@ import java.util.List;
  * Created by jpx on 08/11/15.
  */
 public class Track extends Component {
-    private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 101;
-    private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 101;
+    private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 5;
+    private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 5;
 
     private static final float[] _startChunk = {
-        0.f, -1.0f, -1.5f, -2.5f
+//        0.f, -1.0f, -1.5f, -2.5f
     };
 
     private Texture _trackGroundTexture;
@@ -134,7 +134,7 @@ public class Track extends Component {
 
         _componentFactory = componentFactory;
 
-        initializeTrackPoints(11);
+        initializeTrackPoints(5);
 
         _mesh = createMesh();
 
@@ -256,7 +256,7 @@ public class Track extends Component {
         final FloatArray vertices = new FloatArray();
         final ShortArray indices = new ShortArray();
 
-        createPolygon(_trackPointValues, _baseWidth, _baseHeight, true, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
+        createPolygon(_trackPointValues, _baseWidth, _baseHeight, false, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
 
         final Mesh mesh = new Mesh(true, vertices.size / 2, indices.size,
             new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
@@ -272,7 +272,7 @@ public class Track extends Component {
         final FloatArray vertices = new FloatArray();
         final ShortArray indices = new ShortArray();
 
-        createPolygon(_trackPointValues, _baseWidth, _baseHeight, true, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
+        createPolygon(_trackPointValues, _baseWidth, _baseHeight, false, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
 
         final int vertexCount = vertices.size / 2;
         final int indexCount = indices.size;
@@ -322,8 +322,8 @@ public class Track extends Component {
         Vector2[] splinePoints = new Vector2[splinePointCount];
 
         vertices.ensureCapacity(vertexCount * 2);
-//        for (int i = 0; i < vertexCount * 2; ++i)
-//            vertices.add(0.f);
+        for (int i = 0; i < vertexCount * 2; ++i)
+            vertices.add(0.f);
 
         for (int i = 0; i < pointCount; ++i)
         {
@@ -334,31 +334,53 @@ public class Track extends Component {
         splinePoints[splinePoints.length - 1] = new Vector2(width, points.get(pointCount - 1) + height);
 
         CatmullRomSpline<Vector2> spline = new CatmullRomSpline<Vector2>(splinePoints, false);
+        Vector2[] splinePointCache = new Vector2[splinePointCount];
+        Vector2[] splineDerivateCache = new Vector2[splinePointCount];
+
+        for (int i = 0; i < splinePointCount; ++i) {
+            splinePointCache[i] = new Vector2();
+            splineDerivateCache[i] = new Vector2();
+
+            spline.valueAt(splinePointCache[i], i / (float) (sampleCount - 1));
+            spline.derivativeAt(splineDerivateCache[i], i / (float) (sampleCount - 1));
+
+            splineDerivateCache[i].nor();
+        }
 
         if (rectangularBase) {
             for (int i = 0; i < sampleCount; ++i) {
-                Vector2 value = new Vector2();
+                Vector2 value = splinePointCache[i];
 
-                spline.valueAt(value, i / (float) (sampleCount - 1));
-
-                vertices.insert(i * 2 + 0, i / (float) (sampleCount - 1) * width);
-                vertices.insert(i * 2 + 1, value.y);
+                vertices.set(i * 2 + 0, i * width / (float) (sampleCount - 1));
+                vertices.set(i * 2 + 1, value.y);
             }
 
-            vertices.insert(sampleCount * 2 + 0, width);
-            vertices.insert(sampleCount * 2 + 1, 0.f);
-            vertices.insert(sampleCount * 2 + 2, 0.f);
-            vertices.insert(sampleCount * 2 + 3, 0.f);
+            vertices.set(sampleCount * 2 + 0, width);
+            vertices.set(sampleCount * 2 + 1, 0.f);
+            vertices.set(sampleCount * 2 + 2, 0.f);
+            vertices.set(sampleCount * 2 + 3, 0.f);
         } else {
             for (int i = 0; i < sampleCount; ++i) {
-                Vector2 value = new Vector2();
+                final Vector2 value = splinePointCache[i];
+                final Vector2 derivative = splineDerivateCache[i];
+                final Vector2 nextDerivative = splineDerivateCache[Math.min(i, sampleCount - 1)];
+                final Vector2 normal = new Vector2(-derivative.y, derivative.x);
+                final Vector2 nextNormal = new Vector2(-nextDerivative.y, nextDerivative.x);
+                final Vector2 combinedNormal = normal.cpy().add(nextNormal).nor();
 
-                spline.valueAt(value, i / (float) (sampleCount - 1));
+                final float x0 = i * width / (float) (sampleCount - 1);
+                final float y0 = value.y;
 
-                vertices.insert(i * 2 + 0, i / (float) (sampleCount - 1) * width);
-                vertices.insert(i * 2 + 1, value.y);
-                vertices.insert((sampleCount - 1 + i) * 2 + 0, i / (float) (sampleCount - 1) * width);
-                vertices.insert((sampleCount - 1 + i) * 2 + 1, value.y - 3);
+                vertices.set(i * 2 + 0, x0);
+                vertices.set(i * 2 + 1, y0);
+
+                final float scale = 1.f / combinedNormal.dot(normal);
+
+                final float x1 = x0 - combinedNormal.x * 3.f * scale;
+                final float y1 = y0 - combinedNormal.y * 3.f * scale;
+
+                vertices.set((sampleCount * 2 - 1 - i) * 2 + 0, x1);
+                vertices.set((sampleCount * 2 - 1 - i) * 2 + 1, y1);
             }
         }
 
