@@ -41,8 +41,9 @@ import java.util.List;
  * Created by jpx on 08/11/15.
  */
 public class Track extends Component {
-    private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 5;
-    private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 5;
+    private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 41;
+    private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 41;
+    private static final int CONTROL_POINT_COUNT = 11;
 
     private static final float[] _startChunk = {
 //        0.f, -1.0f, -1.5f, -2.5f
@@ -134,7 +135,7 @@ public class Track extends Component {
 
         _componentFactory = componentFactory;
 
-        initializeTrackPoints(5);
+        initializeTrackPoints(CONTROL_POINT_COUNT);
 
         _mesh = createMesh();
 
@@ -230,7 +231,7 @@ public class Track extends Component {
         FloatArray vertices = new FloatArray();
         ShortArray indices = new ShortArray();
 
-        createPolygon(_trackPointValues, _baseWidth, _baseHeight, true, PHYSICS_SPLINE_SAMPLE_COUNT, true, vertices, indices);
+        createPolygon(_trackPointValues, _baseWidth, _baseHeight, false, PHYSICS_SPLINE_SAMPLE_COUNT, true, vertices, indices);
 
         for (int i = 0; i < vertices.size / 2; ++i) {
             short index0 = i == 0 ? (short) (vertices.size / 2 - 1) : (short) i;
@@ -334,10 +335,10 @@ public class Track extends Component {
         splinePoints[splinePoints.length - 1] = new Vector2(width, points.get(pointCount - 1) + height);
 
         CatmullRomSpline<Vector2> spline = new CatmullRomSpline<Vector2>(splinePoints, false);
-        Vector2[] splinePointCache = new Vector2[splinePointCount];
-        Vector2[] splineDerivateCache = new Vector2[splinePointCount];
+        Vector2[] splinePointCache = new Vector2[sampleCount];
+        Vector2[] splineDerivateCache = new Vector2[sampleCount];
 
-        for (int i = 0; i < splinePointCount; ++i) {
+        for (int i = 0; i < sampleCount; ++i) {
             splinePointCache[i] = new Vector2();
             splineDerivateCache[i] = new Vector2();
 
@@ -363,24 +364,49 @@ public class Track extends Component {
             for (int i = 0; i < sampleCount; ++i) {
                 final Vector2 value = splinePointCache[i];
                 final Vector2 derivative = splineDerivateCache[i];
-                final Vector2 nextDerivative = splineDerivateCache[Math.min(i, sampleCount - 1)];
                 final Vector2 normal = new Vector2(-derivative.y, derivative.x);
-                final Vector2 nextNormal = new Vector2(-nextDerivative.y, nextDerivative.x);
-                final Vector2 combinedNormal = normal.cpy().add(nextNormal).nor();
 
                 final float x0 = i * width / (float) (sampleCount - 1);
                 final float y0 = value.y;
 
                 vertices.set(i * 2 + 0, x0);
                 vertices.set(i * 2 + 1, y0);
+            }
 
-                final float scale = 1.f / combinedNormal.dot(normal);
+            for (int i = 0; i < sampleCount; ++i) {
+                final Vector2 derivative = splineDerivateCache[sampleCount - 1 - i];
+                final Vector2 normal = new Vector2(-derivative.y, derivative.x);
 
-                final float x1 = x0 - combinedNormal.x * 3.f * scale;
-                final float y1 = y0 - combinedNormal.y * 3.f * scale;
+                final int topVertexIndex = sampleCount - 1 - i;
+                final int vertexIndex = sampleCount - 1 + i;
 
-                vertices.set((sampleCount * 2 - 1 - i) * 2 + 0, x1);
-                vertices.set((sampleCount * 2 - 1 - i) * 2 + 1, y1);
+                final float x0 = vertices.get(topVertexIndex * 2 + 0);
+                final float y0 = vertices.get(topVertexIndex * 2 + 1);
+
+                float x1 = x0 - normal.x * 3.f;
+                float y1 = y0 - normal.y * 3.f;
+
+                final Vector2 previousPosition = new Vector2();
+
+                for (int offset = 1; offset <= i; ++offset) {
+                    final int previousVertexIndex = vertexIndex - offset;
+
+                    previousPosition.set(new Vector2(vertices.get(previousVertexIndex * 2), vertices.get(previousVertexIndex * 2 + 1)));
+
+                    if (previousPosition.x >= x1)
+                        break;
+
+                    final float actualPositionX = (previousPosition.x + x1) / 2.f;
+                    final float actualPositionY = derivative.y > 0.f ? Math.min(y1, previousPosition.y) : Math.max(y1, previousPosition.y);
+
+                    vertices.set(previousVertexIndex, actualPositionX);
+                    vertices.set(previousVertexIndex + 1, actualPositionY);
+                    x1 = actualPositionX;
+                    y1 = actualPositionY;
+                }
+
+                vertices.set(vertexIndex * 2 + 0, x1);
+                vertices.set(vertexIndex * 2 + 1, y1);
             }
         }
 
