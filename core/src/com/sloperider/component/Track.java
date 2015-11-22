@@ -2,23 +2,31 @@ package com.sloperider.component;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.CatmullRomSpline;
 import com.badlogic.gdx.math.DelaunayTriangulator;
 import com.badlogic.gdx.math.EarClippingTriangulator;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -29,9 +37,12 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.FloatArray;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.ShortArray;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
+import com.sloperider.math.SplineCache;
 import com.sloperider.physics.CollisionGroup;
 
 import java.util.ArrayList;
@@ -41,9 +52,11 @@ import java.util.List;
  * Created by jpx on 08/11/15.
  */
 public class Track extends Component {
-    private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 41;
-    private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 41;
-    private static final int CONTROL_POINT_COUNT = 11;
+    private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 101;
+    private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 101;
+    private static final int CONTROL_POINT_COUNT = 6;
+
+    private static final float TOP_LAYER_HEIGHT = 2.f;
 
     private static final float[] _startChunk = {
 //        0.f, -1.0f, -1.5f, -2.5f
@@ -53,9 +66,13 @@ public class Track extends Component {
 
     private Mesh _mesh;
 
-    private ModelBatch _modelBatch;
-    private ModelInstance _modelInstance;
+    private RenderContext _context;
     private Environment _environment;
+    private Renderable _renderable;
+    private Shader _shader;
+
+    private String _vertexShaderSource;
+    private String _fragmentShaderSource;
 
     private float _baseWidth;
     private float _baseHeight;
@@ -117,6 +134,9 @@ public class Track extends Component {
     @Override
     public void requireAssets(AssetManager assetManager) {
         assetManager.load("texture/track_ground.png", Texture.class);
+
+        _vertexShaderSource = Gdx.files.internal("shader/track.vertex.glsl").readString();
+        _fragmentShaderSource = Gdx.files.internal("shader/track.fragment.glsl").readString();
     }
 
     @Override
@@ -137,7 +157,7 @@ public class Track extends Component {
 
         initializeTrackPoints(CONTROL_POINT_COUNT);
 
-        _mesh = createMesh();
+        resetMesh();
 
         ModelBuilder builder = new ModelBuilder();
 
@@ -149,12 +169,76 @@ public class Track extends Component {
 
         Model model = builder.end();
 
-        _modelInstance = new ModelInstance(model);
-        _modelInstance.transform
+        _renderable = new Renderable();
+        _renderable.worldTransform
             .scale(getScaleX() * SlopeRider.PIXEL_PER_UNIT, getScaleY() * SlopeRider.PIXEL_PER_UNIT, 1.f)
             .translate(getX(), getY(), 0.f);
+        _renderable.environment = _environment;
+        _renderable.meshPart.set(model.meshParts.first());
+        _renderable.material = model.materials.first();
 
-        _modelBatch = new ModelBatch();
+        _renderable.material
+            .set(ColorAttribute.createDiffuse(Color.CYAN));
+
+        _context = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
+
+        _shader = new Shader() {
+            ShaderProgram program;
+
+            Camera camera;
+            RenderContext context;
+
+            @Override
+            public void init() {
+                program = new ShaderProgram(_vertexShaderSource, _fragmentShaderSource);
+                if (!program.isCompiled())
+                    throw new GdxRuntimeException(program.getLog());
+            }
+
+            @Override
+            public int compareTo(Shader other) {
+                return 0;
+            }
+
+            @Override
+            public boolean canRender(Renderable instance) {
+                return true;
+            }
+
+            @Override
+            public void begin(Camera camera, RenderContext context) {
+                this.camera = camera;
+                this.context = context;
+
+                program.begin();
+
+                program.setUniformMatrix("u_worldToScreenMatrix", camera.combined);
+            }
+
+            @Override
+            public void render(Renderable renderable) {
+
+                final Material material = renderable.material;
+
+                final Color diffuseColor = ((ColorAttribute)material.get(ColorAttribute.Diffuse)).color;
+
+//                program.setUniformf("u_diffuseColor", diffuseColor.r, diffuseColor.g, diffuseColor.b, diffuseColor.a);
+                program.setUniformMatrix("u_modelToWorldMatrix", renderable.worldTransform);
+                renderable.meshPart.render(program);
+            }
+
+            @Override
+            public void end() {
+                program.end();
+            }
+
+            @Override
+            public void dispose() {
+                program.dispose();
+            }
+        };
+
+        _shader.init();
 
         _environment = new Environment();
         _environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
@@ -167,7 +251,7 @@ public class Track extends Component {
         if (_graphicsTrackUpdateNeeded) {
             _graphicsTrackUpdateNeeded = false;
 
-            resetMesh(_mesh);
+            resetMesh();
         }
     }
 
@@ -175,10 +259,13 @@ public class Track extends Component {
     protected void doDraw(Batch batch) {
         batch.end();
 
-        _modelBatch.begin(getStage().getCamera());
-        _modelInstance.transform.cpy().mul(batch.getTransformMatrix());
-        _modelBatch.render(_modelInstance);
-        _modelBatch.end();
+        _context.begin();
+
+        _shader.begin(getStage().getCamera(), _context);
+
+        _shader.render(_renderable);
+
+        _context.end();
 
         batch.begin();
     }
@@ -229,13 +316,14 @@ public class Track extends Component {
         _fixtures.clear();
 
         FloatArray vertices = new FloatArray();
-        ShortArray indices = new ShortArray();
 
-        createPolygon(_trackPointValues, _baseWidth, _baseHeight, false, PHYSICS_SPLINE_SAMPLE_COUNT, true, vertices, indices);
+        createPhysicsPolygon(
+            _trackPointValues, _baseWidth, _baseHeight, PHYSICS_SPLINE_SAMPLE_COUNT, vertices
+        );
 
         for (int i = 0; i < vertices.size / 2; ++i) {
-            short index0 = i == 0 ? (short) (vertices.size / 2 - 1) : (short) i;
-            short index1 = i == vertices.size / 2 - 1 ? (short) 0 : (short) (i + 1);
+            final short index0 = (short) i;
+            final short index1 = i == vertices.size / 2 - 1 ? (short) 0 : (short) (i + 1);
 
             addEdgeFixture(world, vertices, index0, index1, new Vector2(getX(), getY()));
         }
@@ -250,194 +338,163 @@ public class Track extends Component {
         }
     }
 
-    private Mesh createMesh() {
-        Texture texture = new Texture("texture/track_ground.png");
-        texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-
+    private void resetMesh() {
         final FloatArray vertices = new FloatArray();
         final ShortArray indices = new ShortArray();
+        final IntArray metadata = new IntArray();
 
-        createPolygon(_trackPointValues, _baseWidth, _baseHeight, false, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
-
-        final Mesh mesh = new Mesh(true, vertices.size / 2, indices.size,
-            new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
-            new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0")
+        createGraphicsPolygon(
+                _trackPointValues,
+                _baseWidth, _baseHeight, TOP_LAYER_HEIGHT,
+                GRAPHICS_SPLINE_SAMPLE_COUNT,
+                vertices, indices, metadata
         );
 
-        resetMesh(mesh);
+        if (_mesh == null) {
+            final int vertexCount = metadata.get(0);
+            final int indexCount = metadata.get(2);
 
-        return mesh;
-    }
-
-    private void resetMesh(Mesh mesh) {
-        final FloatArray vertices = new FloatArray();
-        final ShortArray indices = new ShortArray();
-
-        createPolygon(_trackPointValues, _baseWidth, _baseHeight, false, GRAPHICS_SPLINE_SAMPLE_COUNT, false, vertices, indices);
-
-        final int vertexCount = vertices.size / 2;
-        final int indexCount = indices.size;
-
-        final int vertexSize = 5;
-
-        FloatArray meshVertices = new FloatArray(vertexCount * vertexSize);
-
-        for (int i = 0; i < vertexCount; ++i) {
-            final Vector3 position = new Vector3(
-                vertices.get(i * 2 + 0),
-                vertices.get(i * 2 + 1),
-                0.f
+            _mesh = new Mesh(
+                true,
+                vertexCount,
+                indexCount,
+                new VertexAttribute(VertexAttributes.Usage.Position, 2, "a_position"),
+                new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_uv"),
+                new VertexAttribute(VertexAttributes.Usage.Generic, 2, "a_mask")
             );
-
-            meshVertices.add(position.x);
-            meshVertices.add(position.y);
-            meshVertices.add(position.z);
-
-            final Vector2 uv = new Vector2(
-                position.x / Math.max(_baseWidth, _baseHeight),
-                position.y / Math.max(_baseWidth, _baseHeight)
-            );
-
-            meshVertices.add(uv.x);
-            meshVertices.add(uv.y);
         }
 
-        mesh.setIndices(indices.toArray());
-        mesh.setVertices(meshVertices.toArray());
+        _mesh.setIndices(indices.toArray());
+        _mesh.setVertices(vertices.toArray());
 
         BoundingBox boundingBox = new BoundingBox();
-        mesh.calculateBoundingBox(boundingBox);
+        _mesh.calculateBoundingBox(boundingBox);
 
         setSize(boundingBox.getWidth(), boundingBox.getHeight());
     }
 
-    private void createPolygon(FloatArray points,
-                               float width, float height,
-                               boolean rectangularBase,
-                               int sampleCount, boolean clockwise,
-                               FloatArray vertices, ShortArray indices) {
-        final int pointCount = points.size;
-        final int vertexCount = rectangularBase ? sampleCount + 2 : sampleCount * 2;
-        final int splinePointCount = pointCount + 2;
+    private void createGraphicsPolygon(FloatArray controlPoints,
+                                       float width, float height, float topLayerHeight,
+                                       int sampleCount,
+                                       FloatArray vertices, ShortArray indices,
+                                       IntArray metadata) {
+        final List<Vector2> splinePositions = new ArrayList<Vector2>();
+        final List<Vector2> splineNormals = new ArrayList<Vector2>();
 
-        Vector2[] splinePoints = new Vector2[splinePointCount];
+        SplineCache.reset(controlPoints.toArray(), sampleCount, width, height, splinePositions, splineNormals);
+
+        final int vertexCount = sampleCount * 3;
+        final int vertexSize = 2 + 2 + 2;
+        final int indexCount = (sampleCount - 1) * 12;
+
+        metadata.add(vertexCount);
+        metadata.add(vertexSize);
+        metadata.add(indexCount);
+
+        vertices.ensureCapacity(vertexCount * vertexSize);
+        for (int i = 0; i < vertexCount * vertexSize; ++i)
+            vertices.add(0.f);
+
+        indices.ensureCapacity(indexCount);
+        for (int i = 0; i < indexCount; ++i)
+            indices.add(0);
+
+        for (int i = 0; i < sampleCount; ++i) {
+            final Vector2 splinePosition = splinePositions.get(i);
+            final Vector2 splineNormal = new Vector2();
+
+            splineNormal.set(splineNormals.get(i).cpy().add(splineNormals.get(Math.max(i - 1, 0))).nor());
+
+            final Vector2[] positions = new Vector2[3];
+
+            positions[0] = new Vector2(
+                i * width / (float) (sampleCount - 1),
+                splinePosition.y
+            );
+
+            positions[1] = new Vector2(
+                MathUtils.clamp(positions[0].x + topLayerHeight * -splineNormal.x, 0.f, _baseWidth),
+                positions[0].y + topLayerHeight * -splineNormal.y
+            );
+
+            positions[2] = new Vector2(
+                positions[0].x,
+                0.f
+            );
+
+            final Vector2[] uv = new Vector2[3];
+            final float uvScale = 1.f / Math.max(_baseWidth, _baseHeight);
+
+            for (int j = 0; j < 3; ++j) {
+                uv[j] = new Vector2(positions[j].x, positions[j].y).scl(uvScale);
+            }
+
+            final Vector2[] mask = new Vector2[3];
+
+            mask[0] = new Vector2(1.f, 0.f);
+            mask[1] = new Vector2(0.f, 1.f);
+            mask[2] = new Vector2(0.f, 1.f);
+
+            for (int j = 0; j < 3; ++j) {
+                final int vertexIndex = (i * 3 + j) * vertexSize;
+
+                vertices.set(vertexIndex + 0, positions[j].x);
+                vertices.set(vertexIndex + 1, positions[j].y);
+
+                vertices.set(vertexIndex + 2, uv[j].x);
+                vertices.set(vertexIndex + 3, uv[j].y);
+
+                vertices.set(vertexIndex + 4, mask[j].x);
+                vertices.set(vertexIndex + 5, mask[j].y);
+            }
+        }
+
+        for (int i = 0; i < sampleCount - 1; ++i) {
+            final int baseOffset = i * 12;
+            final int baseIndex = i * 3;
+
+            indices.set(baseOffset + 0, (short) (baseIndex + 0));
+            indices.set(baseOffset + 1, (short) (baseIndex + 1));
+            indices.set(baseOffset + 2, (short) (baseIndex + 4));
+
+            indices.set(baseOffset + 3, (short) (baseIndex + 0));
+            indices.set(baseOffset + 4, (short) (baseIndex + 4));
+            indices.set(baseOffset + 5, (short) (baseIndex + 3));
+
+            indices.set(baseOffset + 6, (short) (baseIndex + 1));
+            indices.set(baseOffset + 7, (short) (baseIndex + 2));
+            indices.set(baseOffset + 8, (short) (baseIndex + 5));
+
+            indices.set(baseOffset + 9, (short) (baseIndex + 1));
+            indices.set(baseOffset + 10, (short) (baseIndex + 5));
+            indices.set(baseOffset + 11, (short) (baseIndex + 4));
+        }
+    }
+
+    private void createPhysicsPolygon(FloatArray points,
+                                      float width, float height,
+                                      int sampleCount,
+                                      FloatArray vertices) {
+        final List<Vector2> splinePositions = new ArrayList<Vector2>();
+
+        SplineCache.reset(points.toArray(), sampleCount, width, height, splinePositions, null);
+
+        final int vertexCount = sampleCount + 2;
 
         vertices.ensureCapacity(vertexCount * 2);
         for (int i = 0; i < vertexCount * 2; ++i)
             vertices.add(0.f);
 
-        for (int i = 0; i < pointCount; ++i)
-        {
-            splinePoints[i + 1] = new Vector2(i * (width / (float) (pointCount - 1)), points.get(i) + height);
-        }
-
-        splinePoints[0] = new Vector2(0.f, points.get(0) + height);
-        splinePoints[splinePoints.length - 1] = new Vector2(width, points.get(pointCount - 1) + height);
-
-        CatmullRomSpline<Vector2> spline = new CatmullRomSpline<Vector2>(splinePoints, false);
-        Vector2[] splinePointCache = new Vector2[sampleCount];
-        Vector2[] splineDerivateCache = new Vector2[sampleCount];
-
         for (int i = 0; i < sampleCount; ++i) {
-            splinePointCache[i] = new Vector2();
-            splineDerivateCache[i] = new Vector2();
+            Vector2 value = splinePositions.get(i);
 
-            spline.valueAt(splinePointCache[i], i / (float) (sampleCount - 1));
-            spline.derivativeAt(splineDerivateCache[i], i / (float) (sampleCount - 1));
-
-            splineDerivateCache[i].nor();
+            vertices.set(i * 2 + 0, i * width / (float) (sampleCount - 1));
+            vertices.set(i * 2 + 1, value.y);
         }
 
-        if (rectangularBase) {
-            for (int i = 0; i < sampleCount; ++i) {
-                Vector2 value = splinePointCache[i];
-
-                vertices.set(i * 2 + 0, i * width / (float) (sampleCount - 1));
-                vertices.set(i * 2 + 1, value.y);
-            }
-
-            vertices.set(sampleCount * 2 + 0, width);
-            vertices.set(sampleCount * 2 + 1, 0.f);
-            vertices.set(sampleCount * 2 + 2, 0.f);
-            vertices.set(sampleCount * 2 + 3, 0.f);
-        } else {
-            for (int i = 0; i < sampleCount; ++i) {
-                final Vector2 value = splinePointCache[i];
-                final Vector2 derivative = splineDerivateCache[i];
-                final Vector2 normal = new Vector2(-derivative.y, derivative.x);
-
-                final float x0 = i * width / (float) (sampleCount - 1);
-                final float y0 = value.y;
-
-                vertices.set(i * 2 + 0, x0);
-                vertices.set(i * 2 + 1, y0);
-            }
-
-            for (int i = 0; i < sampleCount; ++i) {
-                final Vector2 derivative = splineDerivateCache[sampleCount - 1 - i];
-                final Vector2 normal = new Vector2(-derivative.y, derivative.x);
-
-                final int topVertexIndex = sampleCount - 1 - i;
-                final int vertexIndex = sampleCount - 1 + i;
-
-                final float x0 = vertices.get(topVertexIndex * 2 + 0);
-                final float y0 = vertices.get(topVertexIndex * 2 + 1);
-
-                float x1 = x0 - normal.x * 3.f;
-                float y1 = y0 - normal.y * 3.f;
-
-                final Vector2 previousPosition = new Vector2();
-
-                for (int offset = 1; offset <= i; ++offset) {
-                    final int previousVertexIndex = vertexIndex - offset;
-
-                    previousPosition.set(new Vector2(vertices.get(previousVertexIndex * 2), vertices.get(previousVertexIndex * 2 + 1)));
-
-                    if (previousPosition.x >= x1)
-                        break;
-
-                    final float actualPositionX = (previousPosition.x + x1) / 2.f;
-                    final float actualPositionY = derivative.y > 0.f ? Math.min(y1, previousPosition.y) : Math.max(y1, previousPosition.y);
-
-                    vertices.set(previousVertexIndex, actualPositionX);
-                    vertices.set(previousVertexIndex + 1, actualPositionY);
-                    x1 = actualPositionX;
-                    y1 = actualPositionY;
-                }
-
-                vertices.set(vertexIndex * 2 + 0, x1);
-                vertices.set(vertexIndex * 2 + 1, y1);
-            }
-        }
-
-        if (!clockwise) {
-            for (int i = 0; i < vertices.size / 4; ++i) {
-                float x = vertices.get(vertices.size - 1 - i * 2 - 1);
-                float y = vertices.get(vertices.size - 1 - i * 2 - 0);
-
-                vertices.set(vertices.size - 1 - i * 2 - 1, vertices.get(i * 2 + 0));
-                vertices.set(vertices.size - 1 - i * 2 - 0, vertices.get(i * 2 + 1));
-
-                vertices.set(i * 2 + 0, x);
-                vertices.set(i * 2 + 1, y);
-            }
-        }
-
-        final boolean useDelaunay = false;
-
-        if (useDelaunay) {
-            // FIXME
-            DelaunayTriangulator triangulator = new DelaunayTriangulator();
-
-            indices.addAll(triangulator.computeTriangles(vertices, false));
-        } else {
-            EarClippingTriangulator triangulator = new EarClippingTriangulator();
-
-            indices.addAll(triangulator.computeTriangles(vertices));
-        }
-
-        if (!clockwise) {
-            indices.reverse();
-        }
+        vertices.set(sampleCount * 2 + 0, width);
+        vertices.set(sampleCount * 2 + 1, 0.f);
+        vertices.set(sampleCount * 2 + 2, 0.f);
+        vertices.set(sampleCount * 2 + 3, 0.f);
     }
 }
