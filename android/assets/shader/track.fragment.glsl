@@ -2,19 +2,23 @@
 precision mediump float;
 #endif
 
-uniform vec4 u_diffuseColor;
-//uniform sampler2D u_tex0;
+uniform sampler2D u_splattingMap0;
+uniform sampler2D u_splattingMap1;
+uniform sampler2D u_splattingMap2;
 
 varying vec2 v_uv;
-varying vec2 v_mask;
+varying vec3 v_mask;
 
 void main()
 {
-    vec3 diffuse = u_diffuseColor.rgb;
+    vec3 diffuse = vec3(0.0);
 
-    diffuse = vec3(0.0, 0.0, 1.0) * v_mask.x + vec3(0.0, 1.0, 0.0) * v_mask.y;
+    diffuse =
+        texture2D(u_splattingMap0, v_uv).rgb * v_mask.x +
+        texture2D(u_splattingMap1, v_uv).rgb * v_mask.y +
+        texture2D(u_splattingMap2, v_uv).rgb * v_mask.z;
 
-    //vec4 color = texture2D(u_tex0, v_texCoord0);
+    diffuse /= v_mask.x + v_mask.y + v_mask.z;
 
-    gl_FragColor = vec4(diffuse.rgb, 1.0);
+    gl_FragColor = vec4(diffuse, 1.0);
 }

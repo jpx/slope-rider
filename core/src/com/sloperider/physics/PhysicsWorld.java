@@ -34,6 +34,10 @@ public class PhysicsWorld {
         _actors.add(actor);
     }
 
+    public final void removeActor(PhysicsActor actor) {
+        _actors.remove(actor);
+    }
+
     public final void update(float deltaTime) {
 
         for (PhysicsActor actor : _actors) {

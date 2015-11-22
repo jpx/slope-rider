@@ -14,6 +14,18 @@ public class SplineCache {
                                    int sampleCount,
                                    float width, float height,
                                    List<Vector2> positions, List<Vector2> normals) {
+        final Vector2[] vec2ControlPoints = new Vector2[controlPoints.length];
+
+        for (int i = 0; i < controlPoints.length; ++i)
+            vec2ControlPoints[i] = new Vector2(i * (width / (float) (controlPoints.length - 1)), controlPoints[i]);
+
+        reset(vec2ControlPoints, sampleCount, width, height, positions, normals);
+    }
+
+    public static final void reset(Vector2[] controlPoints,
+                                   int sampleCount,
+                                   float width, float height,
+                                   List<Vector2> positions, List<Vector2> normals) {
         final int controlPointCount = controlPoints.length;
         final int splinePointCount = controlPointCount + 2;
 
@@ -21,11 +33,11 @@ public class SplineCache {
 
         for (int i = 0; i < controlPointCount; ++i)
         {
-            splinePoints[i + 1] = new Vector2(i * (width / (float) (controlPointCount - 1)), controlPoints[i] + height);
+            splinePoints[i + 1] = new Vector2(controlPoints[i].x, controlPoints[i].y + height);
         }
 
-        splinePoints[0] = new Vector2(0.f, controlPoints[0] + height);
-        splinePoints[splinePoints.length - 1] = new Vector2(width, controlPoints[controlPointCount - 1] + height);
+        splinePoints[0] = new Vector2(0.f, controlPoints[0].y + height);
+        splinePoints[splinePoints.length - 1] = new Vector2(width, controlPoints[controlPointCount - 1].y + height);
 
         CatmullRomSpline<Vector2> spline = new CatmullRomSpline<Vector2>(splinePoints, false);
 

@@ -36,6 +36,7 @@ import com.badlogic.gdx.physics.box2d.EdgeShape;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntArray;
@@ -45,8 +46,11 @@ import com.sloperider.SlopeRider;
 import com.sloperider.math.SplineCache;
 import com.sloperider.physics.CollisionGroup;
 
+import java.awt.Point;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by jpx on 08/11/15.
@@ -54,15 +58,32 @@ import java.util.List;
 public class Track extends Component {
     private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 101;
     private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 101;
-    private static final int CONTROL_POINT_COUNT = 6;
 
-    private static final float TOP_LAYER_HEIGHT = 2.f;
+    private static final float TOP_LAYER0_HEIGHT = 2.f;
+    private static final float TOP_LAYER1_HEIGHT = 1.f;
 
-    private static final float[] _startChunk = {
-//        0.f, -1.0f, -1.5f, -2.5f
-    };
+    public static enum GroundMaterial {
+        SNOW,
+        STONE
+    }
 
-    private Texture _trackGroundTexture;
+    public static final class PointData {
+        float x;
+        float y;
+        boolean editable;
+        GroundMaterial groundMaterial;
+
+        public PointData(float x, float y, boolean editable, GroundMaterial groundMaterial) {
+            this.x = x;
+            this.y = y;
+            this.editable = editable;
+            this.groundMaterial = groundMaterial;
+        }
+    }
+
+    private Texture _groundDirtTexture;
+    private Texture _groundSnowTexture;
+    private Texture _groundStoneTexture;
 
     private Mesh _mesh;
 
@@ -79,7 +100,8 @@ public class Track extends Component {
 
     private ComponentFactory _componentFactory;
 
-    private List<TrackPoint> _trackPoints;
+    private final List<PointData> _trackPointData = new ArrayList<PointData>();
+    private Map<TrackPoint, Integer> _trackPoints;
     private FloatArray _trackPointValues;
 
     private Body _body;
@@ -91,24 +113,39 @@ public class Track extends Component {
     public Track() {
     }
 
+    public final Track setPoints(final List<PointData> points) {
+        _trackPointData.addAll(points);
+        return this;
+    }
+
+    private Vector2[] buildControlPoints() {
+        final Vector2[] controlPoints = new Vector2[_trackPointData.size()];
+
+        for (int i = 0; i < _trackPointData.size(); ++i)
+            controlPoints[i] = new Vector2(_baseWidth * _trackPointData.get(i).x, _trackPointValues.get(i));
+
+        return controlPoints;
+    }
+
     private void initializeTrackPoints(int pointCount) {
-        _trackPoints = new ArrayList<TrackPoint>(pointCount);
+        _trackPoints = new HashMap<TrackPoint, Integer>(pointCount);
         _trackPointValues = new FloatArray(pointCount);
-
-        for (int i = 0; i < pointCount; ++i) {
-            float value = 0.f;
-
-            if (i < _startChunk.length)
-                value = _startChunk[i];
-
-            _trackPointValues.add(value);
-        }
 
         final Vector2 parentPosition = new Vector2(getX(), getY());
         final Vector2 size = new Vector2(_baseWidth, _baseHeight);
 
-        for (int i = _startChunk.length; i < pointCount; ++i) {
-            final Vector2 position = parentPosition.cpy().add(i * size.x / (pointCount - 1), _baseHeight);
+        for (int i = 0; i < pointCount; ++i) {
+            final PointData pointData = _trackPointData.get(i);
+
+            final float x = pointData.x;
+            final float y = pointData.y;
+
+            _trackPointValues.add(y * size.y);
+
+            if (!pointData.editable)
+                continue;
+
+            final Vector2 position = parentPosition.cpy().add(x * size.x, y * size.y + size.y);
 
             TrackPoint trackPoint = _componentFactory.createComponent(
                 position,
@@ -116,16 +153,16 @@ public class Track extends Component {
             ).setChangedHandler(new TrackPoint.ChangedHandler() {
                 @Override
                 public void changed(TrackPoint self, float value) {
-                    updateTrackPoint(_trackPoints.indexOf(self), value);
+                    updateTrackPoint(_trackPoints.get(self), value);
                 }
             }).setInitialTrackValue(position.y);
 
-            _trackPoints.add(trackPoint);
+            _trackPoints.put(trackPoint, i);
         }
     }
 
     private void updateTrackPoint(int index, float value) {
-        _trackPointValues.set(_startChunk.length + index, value - _baseHeight);
+        _trackPointValues.set(index, value - _baseHeight - getY());
 
         _physicsTrackUpdateNeeded = true;
         _graphicsTrackUpdateNeeded = true;
@@ -133,7 +170,9 @@ public class Track extends Component {
 
     @Override
     public void requireAssets(AssetManager assetManager) {
-        assetManager.load("texture/track_ground.png", Texture.class);
+        assetManager.load("texture/track_ground_dirt.png", Texture.class);
+        assetManager.load("texture/track_ground_snow.png", Texture.class);
+        assetManager.load("texture/track_ground_stone.png", Texture.class);
 
         _vertexShaderSource = Gdx.files.internal("shader/track.vertex.glsl").readString();
         _fragmentShaderSource = Gdx.files.internal("shader/track.fragment.glsl").readString();
@@ -141,21 +180,30 @@ public class Track extends Component {
 
     @Override
     public void manageAssets(AssetManager assetManager) {
-        _trackGroundTexture = assetManager.get("texture/track_ground.png", Texture.class);
-        _trackGroundTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        _groundDirtTexture = assetManager.get("texture/track_ground_dirt.png", Texture.class);
+        _groundDirtTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        _groundDirtTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+        _groundSnowTexture = assetManager.get("texture/track_ground_snow.png", Texture.class);
+        _groundSnowTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        _groundSnowTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+        _groundStoneTexture = assetManager.get("texture/track_ground_stone.png", Texture.class);
+        _groundStoneTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        _groundStoneTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
     }
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
         _baseWidth = 40.f;
-        _baseHeight = 15.f;
+        _baseHeight = 25.f;
 
         _physicsTrackUpdateNeeded = false;
         _graphicsTrackUpdateNeeded = false;
 
         _componentFactory = componentFactory;
 
-        initializeTrackPoints(CONTROL_POINT_COUNT);
+        initializeTrackPoints(_trackPointData.size());
 
         resetMesh();
 
@@ -163,7 +211,7 @@ public class Track extends Component {
 
         builder.begin();
 
-        Material material = new Material(TextureAttribute.createDiffuse(_trackGroundTexture));
+        Material material = new Material();
 
         builder.part("track", _mesh, Gdx.gl.GL_TRIANGLES, 0, _mesh.getNumIndices(), material);
 
@@ -176,9 +224,6 @@ public class Track extends Component {
         _renderable.environment = _environment;
         _renderable.meshPart.set(model.meshParts.first());
         _renderable.material = model.materials.first();
-
-        _renderable.material
-            .set(ColorAttribute.createDiffuse(Color.CYAN));
 
         _context = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
 
@@ -220,9 +265,19 @@ public class Track extends Component {
 
                 final Material material = renderable.material;
 
-                final Color diffuseColor = ((ColorAttribute)material.get(ColorAttribute.Diffuse)).color;
+                final Array<Attribute> textureAttributes = new Array<Attribute>();
+                material.get(textureAttributes, TextureAttribute.Diffuse);
 
-//                program.setUniformf("u_diffuseColor", diffuseColor.r, diffuseColor.g, diffuseColor.b, diffuseColor.a);
+                final Array<Texture> splattingMaps = new Array<Texture>();
+                splattingMaps.add(_groundSnowTexture);
+                splattingMaps.add(_groundDirtTexture);
+                splattingMaps.add(_groundStoneTexture);
+
+                for (int i = 0; i < splattingMaps.size; ++i) {
+                    splattingMaps.get(i).bind(i);
+                    program.setUniformi("u_splattingMap" + i, i);
+                }
+
                 program.setUniformMatrix("u_modelToWorldMatrix", renderable.worldTransform);
                 renderable.meshPart.render(program);
             }
@@ -282,14 +337,23 @@ public class Track extends Component {
                 vertices.get(index1 * 2 + 1)
         );
 
+        // FIXME
+        final GroundMaterial groundMaterial = vertex0.x >= 0.6f * _baseWidth && vertex1.x < 0.8f * _baseWidth
+            ? GroundMaterial.STONE
+            : GroundMaterial.SNOW;
+
         shape.set(vertex0, vertex1);
 
         FixtureDef fixtureDef = new FixtureDef();
-
         fixtureDef.shape = shape;
         fixtureDef.density = 1.f;
-        fixtureDef.friction = 0.0f;
         fixtureDef.restitution = 0.f;
+
+        if (groundMaterial == GroundMaterial.SNOW) {
+            fixtureDef.friction = 0.0f;
+        } else if (groundMaterial == GroundMaterial.STONE) {
+            fixtureDef.friction = 10.f;
+        }
 
         fixtureDef.filter.categoryBits = CollisionGroup.TRACK.value();
 
@@ -318,7 +382,7 @@ public class Track extends Component {
         FloatArray vertices = new FloatArray();
 
         createPhysicsPolygon(
-            _trackPointValues, _baseWidth, _baseHeight, PHYSICS_SPLINE_SAMPLE_COUNT, vertices
+            buildControlPoints(), _baseWidth, _baseHeight, PHYSICS_SPLINE_SAMPLE_COUNT, vertices
         );
 
         for (int i = 0; i < vertices.size / 2; ++i) {
@@ -344,10 +408,10 @@ public class Track extends Component {
         final IntArray metadata = new IntArray();
 
         createGraphicsPolygon(
-                _trackPointValues,
-                _baseWidth, _baseHeight, TOP_LAYER_HEIGHT,
-                GRAPHICS_SPLINE_SAMPLE_COUNT,
-                vertices, indices, metadata
+            buildControlPoints(),
+            _baseWidth, _baseHeight, TOP_LAYER0_HEIGHT, TOP_LAYER1_HEIGHT,
+            GRAPHICS_SPLINE_SAMPLE_COUNT,
+            vertices, indices, metadata
         );
 
         if (_mesh == null) {
@@ -360,7 +424,7 @@ public class Track extends Component {
                 indexCount,
                 new VertexAttribute(VertexAttributes.Usage.Position, 2, "a_position"),
                 new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_uv"),
-                new VertexAttribute(VertexAttributes.Usage.Generic, 2, "a_mask")
+                new VertexAttribute(VertexAttributes.Usage.Generic, 3, "a_mask")
             );
         }
 
@@ -373,19 +437,20 @@ public class Track extends Component {
         setSize(boundingBox.getWidth(), boundingBox.getHeight());
     }
 
-    private void createGraphicsPolygon(FloatArray controlPoints,
-                                       float width, float height, float topLayerHeight,
+    private void createGraphicsPolygon(final Vector2[] controlPoints,
+                                       float width, float height, float topLayer0Height, float topLayer1Height,
                                        int sampleCount,
                                        FloatArray vertices, ShortArray indices,
                                        IntArray metadata) {
         final List<Vector2> splinePositions = new ArrayList<Vector2>();
         final List<Vector2> splineNormals = new ArrayList<Vector2>();
 
-        SplineCache.reset(controlPoints.toArray(), sampleCount, width, height, splinePositions, splineNormals);
+        SplineCache.reset(controlPoints, sampleCount, width, height, splinePositions, splineNormals);
 
-        final int vertexCount = sampleCount * 3;
-        final int vertexSize = 2 + 2 + 2;
-        final int indexCount = (sampleCount - 1) * 12;
+        final int layerCount = 4;
+        final int vertexCount = sampleCount * layerCount;
+        final int vertexSize = 2 + 2 + 3;
+        final int indexCount = (sampleCount - 1) * 6 * (layerCount - 1);
 
         metadata.add(vertexCount);
         metadata.add(vertexSize);
@@ -403,9 +468,12 @@ public class Track extends Component {
             final Vector2 splinePosition = splinePositions.get(i);
             final Vector2 splineNormal = new Vector2();
 
-            splineNormal.set(splineNormals.get(i).cpy().add(splineNormals.get(Math.max(i - 1, 0))).nor());
+            if (i == 0 || i == sampleCount - 1)
+                splineNormal.set(0.f, 1.f);
+            else
+                splineNormal.set(splineNormals.get(i).cpy().add(splineNormals.get(Math.max(i - 1, 0))).nor());
 
-            final Vector2[] positions = new Vector2[3];
+            final Vector2[] positions = new Vector2[layerCount];
 
             positions[0] = new Vector2(
                 i * width / (float) (sampleCount - 1),
@@ -413,30 +481,43 @@ public class Track extends Component {
             );
 
             positions[1] = new Vector2(
-                MathUtils.clamp(positions[0].x + topLayerHeight * -splineNormal.x, 0.f, _baseWidth),
-                positions[0].y + topLayerHeight * -splineNormal.y
+                MathUtils.clamp(positions[0].x + topLayer0Height * -splineNormal.x, 0.f, _baseWidth),
+                positions[0].y + topLayer0Height * -splineNormal.y
             );
 
             positions[2] = new Vector2(
+                MathUtils.clamp(positions[1].x + topLayer1Height * -splineNormal.x, 0.f, _baseWidth),
+                positions[1].y + topLayer1Height * -splineNormal.y
+            );
+
+            positions[3] = new Vector2(
                 positions[0].x,
                 0.f
             );
 
-            final Vector2[] uv = new Vector2[3];
-            final float uvScale = 1.f / Math.max(_baseWidth, _baseHeight);
+            final Vector2[] uv = new Vector2[layerCount];
+            final float uvScale = SlopeRider.PIXEL_PER_UNIT / Math.max(_baseWidth, _baseHeight);
 
-            for (int j = 0; j < 3; ++j) {
+            for (int j = 0; j < layerCount; ++j) {
                 uv[j] = new Vector2(positions[j].x, positions[j].y).scl(uvScale);
             }
 
-            final Vector2[] mask = new Vector2[3];
+            GroundMaterial groundMaterial = GroundMaterial.SNOW;
 
-            mask[0] = new Vector2(1.f, 0.f);
-            mask[1] = new Vector2(0.f, 1.f);
-            mask[2] = new Vector2(0.f, 1.f);
+            // FIXME provide current track point
+            if (positions[0].x >= 0.6f * _baseWidth && positions[0].x < 0.8f * _baseWidth)
+                groundMaterial = GroundMaterial.STONE;
 
-            for (int j = 0; j < 3; ++j) {
-                final int vertexIndex = (i * 3 + j) * vertexSize;
+            // FIXME perform horizontal splatting
+            final Vector3[] mask = new Vector3[layerCount];
+
+            mask[0] = groundMaterial == GroundMaterial.SNOW ? new Vector3(1.f, 0.f, 0.f) : new Vector3(0.f, 0.f, 1.f);
+            mask[1] = groundMaterial == GroundMaterial.SNOW ? new Vector3(0.8f, 0.2f, 0.f) : new Vector3(0.f, 0.2f, 0.8f);
+            mask[2] = new Vector3(0.f, 1.f, 0.f);
+            mask[3] = new Vector3(0.f, 1.f, 0.f);
+
+            for (int j = 0; j < layerCount; ++j) {
+                final int vertexIndex = (i * layerCount + j) * vertexSize;
 
                 vertices.set(vertexIndex + 0, positions[j].x);
                 vertices.set(vertexIndex + 1, positions[j].y);
@@ -446,38 +527,47 @@ public class Track extends Component {
 
                 vertices.set(vertexIndex + 4, mask[j].x);
                 vertices.set(vertexIndex + 5, mask[j].y);
+                vertices.set(vertexIndex + 6, mask[j].z);
             }
         }
 
         for (int i = 0; i < sampleCount - 1; ++i) {
-            final int baseOffset = i * 12;
-            final int baseIndex = i * 3;
+            final int baseOffset = i * 6 * (layerCount - 1);
+            final int baseIndex = i * layerCount;
 
             indices.set(baseOffset + 0, (short) (baseIndex + 0));
             indices.set(baseOffset + 1, (short) (baseIndex + 1));
-            indices.set(baseOffset + 2, (short) (baseIndex + 4));
+            indices.set(baseOffset + 2, (short) (baseIndex + 5));
 
             indices.set(baseOffset + 3, (short) (baseIndex + 0));
-            indices.set(baseOffset + 4, (short) (baseIndex + 4));
-            indices.set(baseOffset + 5, (short) (baseIndex + 3));
+            indices.set(baseOffset + 4, (short) (baseIndex + 5));
+            indices.set(baseOffset + 5, (short) (baseIndex + 4));
 
             indices.set(baseOffset + 6, (short) (baseIndex + 1));
             indices.set(baseOffset + 7, (short) (baseIndex + 2));
-            indices.set(baseOffset + 8, (short) (baseIndex + 5));
+            indices.set(baseOffset + 8, (short) (baseIndex + 6));
 
             indices.set(baseOffset + 9, (short) (baseIndex + 1));
-            indices.set(baseOffset + 10, (short) (baseIndex + 5));
-            indices.set(baseOffset + 11, (short) (baseIndex + 4));
+            indices.set(baseOffset + 10, (short) (baseIndex + 6));
+            indices.set(baseOffset + 11, (short) (baseIndex + 5));
+
+            indices.set(baseOffset + 12, (short) (baseIndex + 2));
+            indices.set(baseOffset + 13, (short) (baseIndex + 3));
+            indices.set(baseOffset + 14, (short) (baseIndex + 7));
+
+            indices.set(baseOffset + 15, (short) (baseIndex + 2));
+            indices.set(baseOffset + 16, (short) (baseIndex + 7));
+            indices.set(baseOffset + 17, (short) (baseIndex + 6));
         }
     }
 
-    private void createPhysicsPolygon(FloatArray points,
+    private void createPhysicsPolygon(final Vector2[] controlPoints,
                                       float width, float height,
                                       int sampleCount,
                                       FloatArray vertices) {
         final List<Vector2> splinePositions = new ArrayList<Vector2>();
 
-        SplineCache.reset(points.toArray(), sampleCount, width, height, splinePositions, null);
+        SplineCache.reset(controlPoints, sampleCount, width, height, splinePositions, null);
 
         final int vertexCount = sampleCount + 2;
 
