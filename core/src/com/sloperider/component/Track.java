@@ -18,6 +18,7 @@ import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
@@ -62,24 +63,39 @@ public class Track extends Component {
     private static final float TOP_LAYER0_HEIGHT = 2.f;
     private static final float TOP_LAYER1_HEIGHT = 1.f;
 
-    public static enum GroundMaterial {
+    private static final float HORIZONTAL_SPLATTING_SIZE = 0.1f;
+
+    public static enum GroundMaterialType {
         SNOW,
-        STONE
+        STONE,
+        DIRT
+    }
+
+    private static class GroundMaterial {
+        GroundMaterialType type;
+        int index;
+
+        public GroundMaterial(GroundMaterialType type, int index) {
+            this.type = type;
+            this.index = index;
+        }
     }
 
     public static final class PointData {
         float x;
         float y;
         boolean editable;
-        GroundMaterial groundMaterial;
+        GroundMaterialType groundMaterial;
 
-        public PointData(float x, float y, boolean editable, GroundMaterial groundMaterial) {
+        public PointData(float x, float y, boolean editable, GroundMaterialType groundMaterial) {
             this.x = x;
             this.y = y;
             this.editable = editable;
             this.groundMaterial = groundMaterial;
         }
     }
+
+    private Map<GroundMaterialType, GroundMaterial> _materials;
 
     private Texture _groundDirtTexture;
     private Texture _groundSnowTexture;
@@ -111,6 +127,12 @@ public class Track extends Component {
     private boolean _graphicsTrackUpdateNeeded;
 
     public Track() {
+        // FIXME initialize from factory
+
+        _materials = new HashMap<GroundMaterialType, GroundMaterial>();
+        _materials.put(GroundMaterialType.SNOW, new GroundMaterial(GroundMaterialType.SNOW, 0));
+        _materials.put(GroundMaterialType.DIRT, new GroundMaterial(GroundMaterialType.DIRT, 1));
+        _materials.put(GroundMaterialType.STONE, new GroundMaterial(GroundMaterialType.STONE, 2));
     }
 
     public final Track setPoints(final List<PointData> points) {
@@ -338,9 +360,9 @@ public class Track extends Component {
         );
 
         // FIXME
-        final GroundMaterial groundMaterial = vertex0.x >= 0.6f * _baseWidth && vertex1.x < 0.8f * _baseWidth
-            ? GroundMaterial.STONE
-            : GroundMaterial.SNOW;
+        final GroundMaterialType groundMaterial = vertex0.x >= 0.6f * _baseWidth && vertex1.x < 0.8f * _baseWidth
+            ? GroundMaterialType.STONE
+            : GroundMaterialType.SNOW;
 
         shape.set(vertex0, vertex1);
 
@@ -349,9 +371,9 @@ public class Track extends Component {
         fixtureDef.density = 1.f;
         fixtureDef.restitution = 0.f;
 
-        if (groundMaterial == GroundMaterial.SNOW) {
+        if (groundMaterial == GroundMaterialType.SNOW) {
             fixtureDef.friction = 0.0f;
-        } else if (groundMaterial == GroundMaterial.STONE) {
+        } else if (groundMaterial == GroundMaterialType.STONE) {
             fixtureDef.friction = 10.f;
         }
 
@@ -408,10 +430,10 @@ public class Track extends Component {
         final IntArray metadata = new IntArray();
 
         createGraphicsPolygon(
-            buildControlPoints(),
-            _baseWidth, _baseHeight, TOP_LAYER0_HEIGHT, TOP_LAYER1_HEIGHT,
-            GRAPHICS_SPLINE_SAMPLE_COUNT,
-            vertices, indices, metadata
+                buildControlPoints(),
+                _baseWidth, _baseHeight, TOP_LAYER0_HEIGHT, TOP_LAYER1_HEIGHT,
+                GRAPHICS_SPLINE_SAMPLE_COUNT,
+                vertices, indices, metadata
         );
 
         if (_mesh == null) {
@@ -464,7 +486,38 @@ public class Track extends Component {
         for (int i = 0; i < indexCount; ++i)
             indices.add(0);
 
+        int nextTrackPointIndex = 1;
+        PointData previousTrackPoint = null;
+        PointData trackPoint = _trackPointData.get(0);
+        PointData nextTrackPoint = _trackPointData.get(1);
+        float trackPointXRate = 0.f;
+
+        GroundMaterial groundMaterial = null;
+        GroundMaterial previousGroundMaterial = null;
+        GroundMaterial nextGroundMaterial = null;
+
         for (int i = 0; i < sampleCount; ++i) {
+            final float x = i * width / (float) (sampleCount - 1);
+
+            if (nextTrackPoint != null)
+                trackPointXRate = (x - trackPoint.x) / (nextTrackPoint.x - trackPoint.x);
+            else
+                trackPointXRate = 1.f;
+
+            if (nextTrackPoint != null || x >= nextTrackPoint.x * width) {
+                previousTrackPoint = trackPoint;
+                trackPoint = nextTrackPoint;
+
+                ++nextTrackPointIndex;
+                nextTrackPoint = nextTrackPointIndex < _trackPointData.size()
+                    ? _trackPointData.get(nextTrackPointIndex)
+                    : null;
+
+                groundMaterial = _materials.get(trackPoint.groundMaterial);
+                previousGroundMaterial = _materials.get(previousTrackPoint != null ? previousTrackPoint.groundMaterial : groundMaterial);
+                nextGroundMaterial = _materials.get(nextTrackPoint != null ? nextTrackPoint.groundMaterial : groundMaterial);
+            }
+
             final Vector2 splinePosition = splinePositions.get(i);
             final Vector2 splineNormal = new Vector2();
 
@@ -476,7 +529,7 @@ public class Track extends Component {
             final Vector2[] positions = new Vector2[layerCount];
 
             positions[0] = new Vector2(
-                i * width / (float) (sampleCount - 1),
+                x,
                 splinePosition.y
             );
 
@@ -502,17 +555,40 @@ public class Track extends Component {
                 uv[j] = new Vector2(positions[j].x, positions[j].y).scl(uvScale);
             }
 
-            GroundMaterial groundMaterial = GroundMaterial.SNOW;
-
-            // FIXME provide current track point
-            if (positions[0].x >= 0.6f * _baseWidth && positions[0].x < 0.8f * _baseWidth)
-                groundMaterial = GroundMaterial.STONE;
-
-            // FIXME perform horizontal splatting
             final Vector3[] mask = new Vector3[layerCount];
 
-            mask[0] = groundMaterial == GroundMaterial.SNOW ? new Vector3(1.f, 0.f, 0.f) : new Vector3(0.f, 0.f, 1.f);
-            mask[1] = groundMaterial == GroundMaterial.SNOW ? new Vector3(0.8f, 0.2f, 0.f) : new Vector3(0.f, 0.2f, 0.8f);
+            float currentGroundMaterialMask = 1.f;
+            GroundMaterial secondaryGroundMaterial = groundMaterial;
+
+            if (trackPointXRate < HORIZONTAL_SPLATTING_SIZE) {
+                if (previousGroundMaterial != null) {
+                    secondaryGroundMaterial = previousGroundMaterial;
+                    currentGroundMaterialMask = trackPointXRate / HORIZONTAL_SPLATTING_SIZE;
+                }
+            }
+            else if (trackPointXRate > 1.f - HORIZONTAL_SPLATTING_SIZE) {
+                if (nextGroundMaterial != null) {
+                    secondaryGroundMaterial = nextGroundMaterial;
+                    currentGroundMaterialMask = 1.f - trackPointXRate / HORIZONTAL_SPLATTING_SIZE;
+                }
+            }
+
+            final float secondaryGroundMaterialMask = 1.f - currentGroundMaterialMask;
+
+            final float[] maskXScale = new float[] { 0.f, 0.f, 0.f };
+
+            maskXScale[groundMaterial.index] = currentGroundMaterialMask;
+            maskXScale[secondaryGroundMaterial.index] = secondaryGroundMaterialMask;
+
+            final float[] maskY0Scale = new float[] { 0.f, 0.f, 0.f };
+            maskY0Scale[groundMaterial.index] = 1.f;
+
+            final float[] maskY1Scale = new float[] { 0.f, 0.f, 0.f };
+            maskY1Scale[groundMaterial.index] = 0.8f;
+            maskY1Scale[_materials.get(GroundMaterialType.DIRT).index] = 0.2f;
+
+            mask[0] = new Vector3(maskXScale[0] * maskY0Scale[0], maskXScale[1] * maskY0Scale[1], maskXScale[2] * maskY0Scale[2]);
+            mask[1] = new Vector3(maskXScale[0] * maskY1Scale[0], maskXScale[1] * maskY1Scale[1], maskXScale[2] * maskY1Scale[2]);
             mask[2] = new Vector3(0.f, 1.f, 0.f);
             mask[3] = new Vector3(0.f, 1.f, 0.f);
 

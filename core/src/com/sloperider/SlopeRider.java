@@ -67,23 +67,23 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         _track = _componentFactory.createComponent(new Vector2(10.f, 0.f), Track.class);
 
         final List<Track.PointData> points0 = new ArrayList<Track.PointData>();
-        points0.add(new Track.PointData(0.0f, 0.f, false, Track.GroundMaterial.SNOW));
-        points0.add(new Track.PointData(0.2f, 0.f, true, Track.GroundMaterial.SNOW));
-        points0.add(new Track.PointData(0.4f, 0.f, true, Track.GroundMaterial.SNOW));
-        points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterial.SNOW));
-        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterial.SNOW));
-        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterial.SNOW));
+        points0.add(new Track.PointData(0.0f, 0.f, false, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.2f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.4f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterialType.STONE));
+        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
         _track.setPoints(points0);
 
         TrackCameraController cameraController = _componentFactory.createComponent(new Vector2(), TrackCameraController.class)
             .setTrack(_track);
 
         final List<Track.PointData> points1 = new ArrayList<Track.PointData>();
-        points1.add(new Track.PointData(0.0f, 0.f, true, Track.GroundMaterial.SNOW));
-        points1.add(new Track.PointData(0.25f, 0.f, true, Track.GroundMaterial.SNOW));
-        points1.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterial.SNOW));
-        points1.add(new Track.PointData(0.75f, 0.f, true, Track.GroundMaterial.SNOW));
-        points1.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterial.SNOW));
+        points1.add(new Track.PointData(0.0f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points1.add(new Track.PointData(0.25f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points1.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points1.add(new Track.PointData(0.75f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points1.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
         _componentFactory.createComponent(new Vector2(52.f, -25.f), Track.class).setPoints(points1);
 
         _componentFactory.createComponent(new Vector2(11.f, 24.8f), Flag.class);
