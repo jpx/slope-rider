@@ -68,11 +68,16 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
         final List<Track.PointData> points0 = new ArrayList<Track.PointData>();
         points0.add(new Track.PointData(0.0f, 0.f, false, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.1f, 0.f, true, Track.GroundMaterialType.SNOW));
         points0.add(new Track.PointData(0.2f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(0.4f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.3f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.4f, -0.6f, false, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterialType.SNOW));
         points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterialType.STONE));
-        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.7f, 0.f, true, Track.GroundMaterialType.STONE));
+        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.9f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
         _track.setPoints(points0);
 
         TrackCameraController cameraController = _componentFactory.createComponent(new Vector2(), TrackCameraController.class)
@@ -84,7 +89,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         points1.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterialType.SNOW));
         points1.add(new Track.PointData(0.75f, 0.f, true, Track.GroundMaterialType.SNOW));
         points1.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
-        _componentFactory.createComponent(new Vector2(52.f, -25.f), Track.class).setPoints(points1);
+        _componentFactory.createComponent(new Vector2(132.f, -25.f), Track.class).setPoints(points1);
 
         _componentFactory.createComponent(new Vector2(11.f, 24.8f), Flag.class);
 

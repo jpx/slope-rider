@@ -230,7 +230,7 @@ public class Track extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
-        _baseWidth = 40.f;
+        _baseWidth = 120.f;
         _baseHeight = 25.f;
 
         _physicsTrackUpdateNeeded = false;
@@ -319,6 +319,9 @@ public class Track extends Component {
                 program.setUniformMatrix("u_modelToWorldMatrix", renderable.worldTransform);
 
                 time += Gdx.graphics.getDeltaTime();
+                if (time > 15.f)
+                    time = 0.f;
+
                 program.setUniformf("u_time", time);
 
                 renderable.meshPart.render(program);
