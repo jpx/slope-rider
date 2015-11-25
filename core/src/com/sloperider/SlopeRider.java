@@ -68,11 +68,11 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
         final List<Track.PointData> points0 = new ArrayList<Track.PointData>();
         points0.add(new Track.PointData(0.0f, 0.f, false, Track.GroundMaterialType.SNOW));
-        points0.add(new Track.PointData(0.2f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.2f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         points0.add(new Track.PointData(0.4f, 0.f, true, Track.GroundMaterialType.SNOW));
         points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterialType.STONE));
-        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.SNOW));
-        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         _track.setPoints(points0);
 
         TrackCameraController cameraController = _componentFactory.createComponent(new Vector2(), TrackCameraController.class)
@@ -113,7 +113,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
             return;
         }
 
-		Gdx.gl.glClearColor(1, 0, 0, 1);
+		Gdx.gl.glClearColor(0.2f, 0.4f, 0.9f, 1.0f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         _physicsWorld.update(Gdx.graphics.getDeltaTime());

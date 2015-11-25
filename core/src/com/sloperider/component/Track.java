@@ -5,6 +5,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -53,6 +54,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sound.sampled.Line;
+
 /**
  * Created by jpx on 08/11/15.
  */
@@ -60,15 +63,16 @@ public class Track extends Component {
     private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 101;
     private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 101;
 
-    private static final float TOP_LAYER0_HEIGHT = 2.f;
-    private static final float TOP_LAYER1_HEIGHT = 1.f;
+    private static final float TOP_LAYER0_HEIGHT = 1.5f;
+    private static final float TOP_LAYER1_HEIGHT = 0.7f;
 
-    private static final float HORIZONTAL_SPLATTING_SIZE = 0.1f;
+    private static final float HORIZONTAL_SPLATTING_SIZE = 0.2f;
 
     public static enum GroundMaterialType {
         SNOW,
         STONE,
-        DIRT
+        DIRT,
+        BOOSTER
     }
 
     private static class GroundMaterial {
@@ -100,6 +104,7 @@ public class Track extends Component {
     private Texture _groundDirtTexture;
     private Texture _groundSnowTexture;
     private Texture _groundStoneTexture;
+    private Texture _groundBoosterTexture;
 
     private Mesh _mesh;
 
@@ -133,6 +138,7 @@ public class Track extends Component {
         _materials.put(GroundMaterialType.SNOW, new GroundMaterial(GroundMaterialType.SNOW, 0));
         _materials.put(GroundMaterialType.DIRT, new GroundMaterial(GroundMaterialType.DIRT, 1));
         _materials.put(GroundMaterialType.STONE, new GroundMaterial(GroundMaterialType.STONE, 2));
+        _materials.put(GroundMaterialType.BOOSTER, new GroundMaterial(GroundMaterialType.BOOSTER, 3));
     }
 
     public final Track setPoints(final List<PointData> points) {
@@ -213,6 +219,13 @@ public class Track extends Component {
         _groundStoneTexture = assetManager.get("texture/track_ground_stone.png", Texture.class);
         _groundStoneTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         _groundStoneTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+        final Pixmap boosterPixmap = new Pixmap(32, 32, Pixmap.Format.RGB888);
+        boosterPixmap.setColor(Color.RED);
+        boosterPixmap.fill();
+        _groundBoosterTexture = new Texture(boosterPixmap);
+        _groundBoosterTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        _groundBoosterTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
     }
 
     @Override
@@ -255,6 +268,8 @@ public class Track extends Component {
             Camera camera;
             RenderContext context;
 
+            float time;
+
             @Override
             public void init() {
                 program = new ShaderProgram(_vertexShaderSource, _fragmentShaderSource);
@@ -294,6 +309,7 @@ public class Track extends Component {
                 splattingMaps.add(_groundSnowTexture);
                 splattingMaps.add(_groundDirtTexture);
                 splattingMaps.add(_groundStoneTexture);
+                splattingMaps.add(_groundBoosterTexture);
 
                 for (int i = 0; i < splattingMaps.size; ++i) {
                     splattingMaps.get(i).bind(i);
@@ -301,6 +317,10 @@ public class Track extends Component {
                 }
 
                 program.setUniformMatrix("u_modelToWorldMatrix", renderable.worldTransform);
+
+                time += Gdx.graphics.getDeltaTime();
+                program.setUniformf("u_time", time);
+
                 renderable.meshPart.render(program);
             }
 
@@ -446,7 +466,7 @@ public class Track extends Component {
                 indexCount,
                 new VertexAttribute(VertexAttributes.Usage.Position, 2, "a_position"),
                 new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_uv"),
-                new VertexAttribute(VertexAttributes.Usage.Generic, 3, "a_mask")
+                new VertexAttribute(VertexAttributes.Usage.Generic, 4, "a_mask")
             );
         }
 
@@ -471,7 +491,7 @@ public class Track extends Component {
 
         final int layerCount = 4;
         final int vertexCount = sampleCount * layerCount;
-        final int vertexSize = 2 + 2 + 3;
+        final int vertexSize = 2 + 2 + 4;
         final int indexCount = (sampleCount - 1) * 6 * (layerCount - 1);
 
         metadata.add(vertexCount);
@@ -486,10 +506,10 @@ public class Track extends Component {
         for (int i = 0; i < indexCount; ++i)
             indices.add(0);
 
-        int nextTrackPointIndex = 1;
+        int nextTrackPointIndex = 0;
         PointData previousTrackPoint = null;
-        PointData trackPoint = _trackPointData.get(0);
-        PointData nextTrackPoint = _trackPointData.get(1);
+        PointData trackPoint = null;
+        PointData nextTrackPoint = _trackPointData.get(nextTrackPointIndex);
         float trackPointXRate = 0.f;
 
         GroundMaterial groundMaterial = null;
@@ -498,13 +518,9 @@ public class Track extends Component {
 
         for (int i = 0; i < sampleCount; ++i) {
             final float x = i * width / (float) (sampleCount - 1);
+            final float globalXRate = x / _baseWidth;
 
-            if (nextTrackPoint != null)
-                trackPointXRate = (x - trackPoint.x) / (nextTrackPoint.x - trackPoint.x);
-            else
-                trackPointXRate = 1.f;
-
-            if (nextTrackPoint != null || x >= nextTrackPoint.x * width) {
+            if (trackPoint == null || (nextTrackPoint != null && x >= nextTrackPoint.x * width)) {
                 previousTrackPoint = trackPoint;
                 trackPoint = nextTrackPoint;
 
@@ -514,9 +530,14 @@ public class Track extends Component {
                     : null;
 
                 groundMaterial = _materials.get(trackPoint.groundMaterial);
-                previousGroundMaterial = _materials.get(previousTrackPoint != null ? previousTrackPoint.groundMaterial : groundMaterial);
-                nextGroundMaterial = _materials.get(nextTrackPoint != null ? nextTrackPoint.groundMaterial : groundMaterial);
+                previousGroundMaterial = previousTrackPoint != null ? _materials.get(previousTrackPoint.groundMaterial) : groundMaterial;
+                nextGroundMaterial = nextTrackPoint != null ? _materials.get(nextTrackPoint.groundMaterial) : groundMaterial;
             }
+
+            if (nextTrackPoint != null)
+                trackPointXRate = (globalXRate - trackPoint.x) / (nextTrackPoint.x - trackPoint.x);
+            else
+                trackPointXRate = 1.f;
 
             final Vector2 splinePosition = splinePositions.get(i);
             final Vector2 splineNormal = new Vector2();
@@ -555,42 +576,48 @@ public class Track extends Component {
                 uv[j] = new Vector2(positions[j].x, positions[j].y).scl(uvScale);
             }
 
-            final Vector3[] mask = new Vector3[layerCount];
+            final float[][] mask = new float[4][layerCount];
 
             float currentGroundMaterialMask = 1.f;
             GroundMaterial secondaryGroundMaterial = groundMaterial;
 
             if (trackPointXRate < HORIZONTAL_SPLATTING_SIZE) {
-                if (previousGroundMaterial != null) {
+                if (previousGroundMaterial != groundMaterial) {
                     secondaryGroundMaterial = previousGroundMaterial;
-                    currentGroundMaterialMask = trackPointXRate / HORIZONTAL_SPLATTING_SIZE;
+                    currentGroundMaterialMask = MathUtils.lerp(0.5f, 1.f, trackPointXRate / HORIZONTAL_SPLATTING_SIZE);
+                } else {
+                    currentGroundMaterialMask = 0.5f;
                 }
             }
             else if (trackPointXRate > 1.f - HORIZONTAL_SPLATTING_SIZE) {
-                if (nextGroundMaterial != null) {
+                if (nextGroundMaterial != groundMaterial) {
                     secondaryGroundMaterial = nextGroundMaterial;
-                    currentGroundMaterialMask = 1.f - trackPointXRate / HORIZONTAL_SPLATTING_SIZE;
+                    currentGroundMaterialMask = MathUtils.lerp(1.f, 0.5f, (trackPointXRate - (1.f - HORIZONTAL_SPLATTING_SIZE)) / (1.f - (1.f - HORIZONTAL_SPLATTING_SIZE)));
+                } else {
+                    currentGroundMaterialMask = 0.5f;
                 }
+            } else {
+                currentGroundMaterialMask = 0.5f;
             }
 
             final float secondaryGroundMaterialMask = 1.f - currentGroundMaterialMask;
 
-            final float[] maskXScale = new float[] { 0.f, 0.f, 0.f };
+            final float[] maskXScale = new float[] { 0.f, 0.f, 0.f, 0.f };
 
-            maskXScale[groundMaterial.index] = currentGroundMaterialMask;
-            maskXScale[secondaryGroundMaterial.index] = secondaryGroundMaterialMask;
+            maskXScale[groundMaterial.index] += currentGroundMaterialMask;
+            maskXScale[secondaryGroundMaterial.index] += secondaryGroundMaterialMask;
 
-            final float[] maskY0Scale = new float[] { 0.f, 0.f, 0.f };
+            final float[] maskY0Scale = new float[] { 0.f, 0.f, 0.f, 0.f };
             maskY0Scale[groundMaterial.index] = 1.f;
 
-            final float[] maskY1Scale = new float[] { 0.f, 0.f, 0.f };
+            final float[] maskY1Scale = new float[] { 0.f, 0.f, 0.f, 0.f };
             maskY1Scale[groundMaterial.index] = 0.8f;
             maskY1Scale[_materials.get(GroundMaterialType.DIRT).index] = 0.2f;
 
-            mask[0] = new Vector3(maskXScale[0] * maskY0Scale[0], maskXScale[1] * maskY0Scale[1], maskXScale[2] * maskY0Scale[2]);
-            mask[1] = new Vector3(maskXScale[0] * maskY1Scale[0], maskXScale[1] * maskY1Scale[1], maskXScale[2] * maskY1Scale[2]);
-            mask[2] = new Vector3(0.f, 1.f, 0.f);
-            mask[3] = new Vector3(0.f, 1.f, 0.f);
+            mask[0] = new float[] { maskXScale[0] * maskY0Scale[0], maskXScale[1] * maskY0Scale[1], maskXScale[2] * maskY0Scale[2], maskXScale[3] * maskY0Scale[3] };
+            mask[1] = new float[] { maskXScale[0] * maskY1Scale[0], maskXScale[1] * maskY1Scale[1], maskXScale[2] * maskY1Scale[2], maskXScale[3] * maskY1Scale[3] };
+            mask[2] = new float[] { 0.f, 1.f, 0.f, 0.f };
+            mask[3] = new float[] { 0.f, 1.f, 0.f, 0.f };
 
             for (int j = 0; j < layerCount; ++j) {
                 final int vertexIndex = (i * layerCount + j) * vertexSize;
@@ -601,9 +628,10 @@ public class Track extends Component {
                 vertices.set(vertexIndex + 2, uv[j].x);
                 vertices.set(vertexIndex + 3, uv[j].y);
 
-                vertices.set(vertexIndex + 4, mask[j].x);
-                vertices.set(vertexIndex + 5, mask[j].y);
-                vertices.set(vertexIndex + 6, mask[j].z);
+                vertices.set(vertexIndex + 4, mask[j][0]);
+                vertices.set(vertexIndex + 5, mask[j][1]);
+                vertices.set(vertexIndex + 6, mask[j][2]);
+                vertices.set(vertexIndex + 7, mask[j][3]);
             }
         }
 

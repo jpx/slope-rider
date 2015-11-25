@@ -1,12 +1,12 @@
 attribute vec2 a_position;
 attribute vec2 a_uv;
-attribute vec3 a_mask;
+attribute vec4 a_mask;
 
 uniform mat4 u_modelToWorldMatrix;
 uniform mat4 u_worldToScreenMatrix;
 
 varying vec2 v_uv;
-varying vec3 v_mask;
+varying vec4 v_mask;
 
 void main()
 {
