@@ -34,9 +34,13 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.EdgeShape;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
@@ -47,6 +51,7 @@ import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 import com.sloperider.math.SplineCache;
 import com.sloperider.physics.CollisionGroup;
+import com.sloperider.physics.PhysicsActor;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -75,7 +80,7 @@ public class Track extends Component {
         BOOSTER
     }
 
-    private static class GroundMaterial {
+    public static class GroundMaterial {
         GroundMaterialType type;
         int index;
 
@@ -230,7 +235,7 @@ public class Track extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
-        _baseWidth = 120.f;
+        _baseWidth = 60.f;
         _baseHeight = 25.f;
 
         _physicsTrackUpdateNeeded = false;
@@ -370,7 +375,31 @@ public class Track extends Component {
         batch.begin();
     }
 
-    private void addEdgeFixture(World world, FloatArray vertices, short index0, short index1, Vector2 position) {
+    static class EdgeContactData implements PhysicsActor.ContactData {
+        GroundMaterial material;
+        Vector2 normal;
+
+        EdgeContactData(GroundMaterial material, Vector2 normal) {
+            this.material = material;
+            this.normal = normal;
+        }
+
+        @Override
+        public boolean contactBegin(ContactData data) {
+            return false;
+        }
+
+        @Override
+        public boolean contactEnd(ContactData data) {
+            return false;
+        }
+    }
+
+    private void addEdgeFixture(final World world,
+                                final FloatArray vertices,
+                                short index0, short index1,
+                                final Vector2 position, final Vector2 normal,
+                                final GroundMaterial material) {
         EdgeShape shape = new EdgeShape();
 
         Vector2 vertex0 = new Vector2(
@@ -382,11 +411,6 @@ public class Track extends Component {
                 vertices.get(index1 * 2 + 1)
         );
 
-        // FIXME
-        final GroundMaterialType groundMaterial = vertex0.x >= 0.6f * _baseWidth && vertex1.x < 0.8f * _baseWidth
-            ? GroundMaterialType.STONE
-            : GroundMaterialType.SNOW;
-
         shape.set(vertex0, vertex1);
 
         FixtureDef fixtureDef = new FixtureDef();
@@ -394,16 +418,21 @@ public class Track extends Component {
         fixtureDef.density = 1.f;
         fixtureDef.restitution = 0.f;
 
-        if (groundMaterial == GroundMaterialType.SNOW) {
-            fixtureDef.friction = 0.0f;
-        } else if (groundMaterial == GroundMaterialType.STONE) {
-            fixtureDef.friction = 10.f;
+        switch (material.type) {
+            case STONE:
+                fixtureDef.friction = 10.f;
+                break;
+            default:
+                fixtureDef.friction = 0.f;
+                break;
         }
 
-        fixtureDef.filter.categoryBits = CollisionGroup.TRACK.value();
+        fixtureDef.filter.categoryBits = group().value();
 
         Fixture fixture = _body.createFixture(fixtureDef);
         _fixtures.add(fixture);
+
+        fixture.setUserData(new EdgeContactData(material, normal));
     }
 
     @Override
@@ -425,16 +454,18 @@ public class Track extends Component {
         _fixtures.clear();
 
         FloatArray vertices = new FloatArray();
+        final List<Vector2> normals = new ArrayList<Vector2>();
+        final List<GroundMaterial> materials = new ArrayList<GroundMaterial>();
 
         createPhysicsPolygon(
-            buildControlPoints(), _baseWidth, _baseHeight, PHYSICS_SPLINE_SAMPLE_COUNT, vertices
+            buildControlPoints(), _baseWidth, _baseHeight, PHYSICS_SPLINE_SAMPLE_COUNT, vertices, normals, materials
         );
 
         for (int i = 0; i < vertices.size / 2; ++i) {
             final short index0 = (short) i;
             final short index1 = i == vertices.size / 2 - 1 ? (short) 0 : (short) (i + 1);
 
-            addEdgeFixture(world, vertices, index0, index1, new Vector2(getX(), getY()));
+            addEdgeFixture(world, vertices, index0, index1, new Vector2(getX(), getY()), normals.get(i), materials.get(i));
         }
     }
 
@@ -671,10 +702,10 @@ public class Track extends Component {
     private void createPhysicsPolygon(final Vector2[] controlPoints,
                                       float width, float height,
                                       int sampleCount,
-                                      FloatArray vertices) {
+                                      FloatArray vertices, final List<Vector2> normals, final List<GroundMaterial> materials) {
         final List<Vector2> splinePositions = new ArrayList<Vector2>();
 
-        SplineCache.reset(controlPoints, sampleCount, width, height, splinePositions, null);
+        SplineCache.reset(controlPoints, sampleCount, width, height, splinePositions, normals);
 
         final int vertexCount = sampleCount + 2;
 
@@ -682,16 +713,49 @@ public class Track extends Component {
         for (int i = 0; i < vertexCount * 2; ++i)
             vertices.add(0.f);
 
+        int nextTrackPointIndex = 0;
+        PointData trackPoint = null;
+        PointData nextTrackPoint = _trackPointData.get(nextTrackPointIndex);
+
+        GroundMaterial groundMaterial = null;
+
         for (int i = 0; i < sampleCount; ++i) {
             Vector2 value = splinePositions.get(i);
 
-            vertices.set(i * 2 + 0, i * width / (float) (sampleCount - 1));
+            final float x = i * width / (float) (sampleCount - 1);
+
+            vertices.set(i * 2 + 0, x);
             vertices.set(i * 2 + 1, value.y);
+
+            if (trackPoint == null || (nextTrackPoint != null && x >= nextTrackPoint.x * width)) {
+                ++nextTrackPointIndex;
+                trackPoint = nextTrackPoint;
+                nextTrackPoint = nextTrackPointIndex < _trackPointData.size() ? _trackPointData.get(nextTrackPointIndex) : null;
+                groundMaterial = _materials.get(trackPoint.groundMaterial);
+            }
+
+            materials.add(groundMaterial);
         }
 
         vertices.set(sampleCount * 2 + 0, width);
         vertices.set(sampleCount * 2 + 1, 0.f);
         vertices.set(sampleCount * 2 + 2, 0.f);
         vertices.set(sampleCount * 2 + 3, 0.f);
+
+        normals.add(new Vector2(0.f, -1.f));
+        normals.add(new Vector2(0.f, -1.f));
+
+        materials.add(_materials.get(GroundMaterialType.DIRT));
+        materials.add(_materials.get(GroundMaterialType.DIRT));
+    }
+
+    @Override
+    public CollisionGroup group() {
+        return CollisionGroup.TRACK;
+    }
+
+    @Override
+    public CollisionGroup collidesWith() {
+        return CollisionGroup.ANYTHING;
     }
 }

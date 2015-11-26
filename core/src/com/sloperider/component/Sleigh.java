@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
@@ -34,7 +35,59 @@ public class Sleigh extends Component {
 
     private Body _body;
 
+    private Vector2 _boostVector;
+
     public Sleigh() {
+    }
+
+    static class ContactData implements PhysicsActor.ContactData {
+        Sleigh sleigh;
+
+        ContactData(Sleigh sleigh) {
+            this.sleigh = sleigh;
+        }
+
+        @Override
+        public boolean contactBegin(PhysicsActor.ContactData data) {
+            if (data instanceof Track.EdgeContactData) {
+                Track.EdgeContactData edgeContactData = (Track.EdgeContactData) data;
+
+                if (edgeContactData.material.type == Track.GroundMaterialType.BOOSTER)
+                    sleigh.boostVector(new Vector2(edgeContactData.normal.y, -edgeContactData.normal.x));
+
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public boolean contactEnd(PhysicsActor.ContactData data) {
+            if (data instanceof Track.EdgeContactData) {
+                Track.EdgeContactData edgeContactData = (Track.EdgeContactData) data;
+
+                if (edgeContactData.material.type == Track.GroundMaterialType.BOOSTER)
+                    sleigh.boostVector(null);
+
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    void boostVector(final Vector2 boostVector) {
+        _boostVector = boostVector;
+    }
+
+    @Override
+    public CollisionGroup group() {
+        return CollisionGroup.SLEIGH;
+    }
+
+    @Override
+    public CollisionGroup collidesWith() {
+        return CollisionGroup.TRACK;
     }
 
     @Override
@@ -113,14 +166,21 @@ public class Sleigh extends Component {
         fixtureDef.friction = 0.1f;
         fixtureDef.restitution = 0.0f;
 
-        fixtureDef.filter.categoryBits = CollisionGroup.SLEIGH.value();
-        fixtureDef.filter.maskBits = CollisionGroup.TRACK.value();
+        fixtureDef.filter.categoryBits = group().value();
+        fixtureDef.filter.maskBits = collidesWith().value();
 
         Fixture fixture = _body.createFixture(fixtureDef);
+
+        fixture.setUserData(new ContactData(this));
     }
 
     @Override
     public void updateBody(World world) {
+        if (_boostVector != null) {
+            Gdx.app.log(SlopeRider.TAG, "impulse: " + _boostVector.toString());
+            _body.applyForceToCenter(_boostVector.cpy().scl(30.f), true);
+        }
+
         final Vector2 position = _body.getPosition().cpy();;
         final float rotation = MathUtils.radiansToDegrees * _body.getAngle();
 

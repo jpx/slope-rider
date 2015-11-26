@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
+import com.sloperider.physics.CollisionGroup;
 import com.sloperider.physics.PhysicsActor;
 
 import sun.rmi.runtime.Log;
@@ -74,5 +75,15 @@ public abstract class Component extends Group implements PhysicsActor {
 
     protected Actor doHit(float x, float y, boolean touchable) {
         return super.hit(x, y, touchable);
+    }
+
+    @Override
+    public CollisionGroup group() {
+        return CollisionGroup.ANYTHING;
+    }
+
+    @Override
+    public CollisionGroup collidesWith() {
+        return CollisionGroup.NOTHING;
     }
 }

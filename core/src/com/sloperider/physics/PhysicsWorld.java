@@ -4,6 +4,10 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 import com.sloperider.SlopeRider;
 
@@ -26,6 +30,46 @@ public class PhysicsWorld {
         _actors = new ArrayList<PhysicsActor>();
 
         _renderer = new Box2DDebugRenderer();
+
+        _world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+                final Object lhsObject = contact.getFixtureA().getUserData();
+                final Object rhsObject = contact.getFixtureB().getUserData();
+
+                if (lhsObject != null && rhsObject != null) {
+                    final PhysicsActor.ContactData lhsData = (PhysicsActor.ContactData) lhsObject;
+                    final PhysicsActor.ContactData rhsData = (PhysicsActor.ContactData) rhsObject;
+
+                    if (!lhsData.contactBegin(rhsData))
+                        rhsData.contactBegin(lhsData);
+                }
+            }
+
+            @Override
+            public void endContact(Contact contact) {
+                final Object lhsObject = contact.getFixtureA().getUserData();
+                final Object rhsObject = contact.getFixtureB().getUserData();
+
+                if (lhsObject != null && rhsObject != null) {
+                    final PhysicsActor.ContactData lhsData = (PhysicsActor.ContactData) lhsObject;
+                    final PhysicsActor.ContactData rhsData = (PhysicsActor.ContactData) rhsObject;
+
+                    if (!lhsData.contactEnd(rhsData))
+                        rhsData.contactEnd(lhsData);
+                }
+            }
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {
+
+            }
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse impulse) {
+
+            }
+        });
     }
 
     public final void addActor(PhysicsActor actor) {

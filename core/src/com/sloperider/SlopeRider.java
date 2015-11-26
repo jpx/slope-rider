@@ -67,17 +67,17 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         _track = _componentFactory.createComponent(new Vector2(10.f, 0.f), Track.class);
 
         final List<Track.PointData> points0 = new ArrayList<Track.PointData>();
-        points0.add(new Track.PointData(0.0f, 0.f, false, Track.GroundMaterialType.SNOW));
-        points0.add(new Track.PointData(0.1f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.0f, 0.f, false, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.1f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         points0.add(new Track.PointData(0.2f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(0.3f, 0.f, true, Track.GroundMaterialType.SNOW));
-        points0.add(new Track.PointData(0.4f, -0.6f, false, Track.GroundMaterialType.SNOW));
-        points0.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterialType.SNOW));
-        points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterialType.STONE));
-        points0.add(new Track.PointData(0.7f, 0.f, true, Track.GroundMaterialType.STONE));
-        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.SNOW));
-        points0.add(new Track.PointData(0.9f, 0.f, true, Track.GroundMaterialType.SNOW));
-        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.3f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.4f, -0.6f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.7f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.9f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         _track.setPoints(points0);
 
         TrackCameraController cameraController = _componentFactory.createComponent(new Vector2(), TrackCameraController.class)
@@ -89,7 +89,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         points1.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterialType.SNOW));
         points1.add(new Track.PointData(0.75f, 0.f, true, Track.GroundMaterialType.SNOW));
         points1.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
-        _componentFactory.createComponent(new Vector2(132.f, -25.f), Track.class).setPoints(points1);
+        _componentFactory.createComponent(new Vector2(72.f, -25.f), Track.class).setPoints(points1);
 
         _componentFactory.createComponent(new Vector2(11.f, 24.8f), Flag.class);
 
@@ -147,7 +147,10 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        Sleigh sleigh = _componentFactory.createComponent(new Vector2(11.f, 26.f), Sleigh.class);
+        final Vector3 viewPosition = _stage.getCamera().unproject(new Vector3(screenX, screenY, 0.f));
+        final Vector2 position = new Vector2(viewPosition.x, viewPosition.y).scl(1.f / SlopeRider.PIXEL_PER_UNIT);
+
+        Sleigh sleigh = _componentFactory.createComponent(position, Sleigh.class);
 
         return true;
     }
