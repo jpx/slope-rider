@@ -29,8 +29,6 @@ public class PhysicsWorld {
 
         _actors = new ArrayList<PhysicsActor>();
 
-        _renderer = new Box2DDebugRenderer();
-
         _world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
@@ -98,7 +96,5 @@ public class PhysicsWorld {
             SlopeRider.PIXEL_PER_UNIT,
             0.f
         );
-
-        _renderer.render(_world, projection);
     }
 }

@@ -177,7 +177,6 @@ public class Sleigh extends Component {
     @Override
     public void updateBody(World world) {
         if (_boostVector != null) {
-            Gdx.app.log(SlopeRider.TAG, "impulse: " + _boostVector.toString());
             _body.applyForceToCenter(_boostVector.cpy().scl(30.f), true);
         }
 

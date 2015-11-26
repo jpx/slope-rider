@@ -239,7 +239,7 @@ public class TrackCameraController
             final float delta = _lastZoomDistance - distance;
 
             final float minZoom = 1.5f;
-            final float maxZoom = 4.5f;
+            final float maxZoom = 6.5f;
             final float zoomSpeed = 0.005f;
 
             OrthographicCamera camera = getCamera();

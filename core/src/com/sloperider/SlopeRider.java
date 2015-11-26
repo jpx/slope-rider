@@ -67,7 +67,7 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         _track = _componentFactory.createComponent(new Vector2(10.f, 0.f), Track.class);
 
         final List<Track.PointData> points0 = new ArrayList<Track.PointData>();
-        points0.add(new Track.PointData(0.0f, 0.f, false, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.0f, 0.f, false, Track.GroundMaterialType.SNOW));
         points0.add(new Track.PointData(0.1f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         points0.add(new Track.PointData(0.2f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         points0.add(new Track.PointData(0.3f, 0.f, true, Track.GroundMaterialType.BOOSTER));
@@ -76,8 +76,8 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         points0.add(new Track.PointData(0.7f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(0.9f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.9f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
         _track.setPoints(points0);
 
         TrackCameraController cameraController = _componentFactory.createComponent(new Vector2(), TrackCameraController.class)
