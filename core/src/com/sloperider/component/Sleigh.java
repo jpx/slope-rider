@@ -35,7 +35,7 @@ public class Sleigh extends Component {
 
     private Body _body;
 
-    private Vector2 _boostVector;
+    private Vector2 _persistentForceVector;
 
     public Sleigh() {
     }
@@ -53,7 +53,7 @@ public class Sleigh extends Component {
                 Track.EdgeContactData edgeContactData = (Track.EdgeContactData) data;
 
                 if (edgeContactData.material.type == Track.GroundMaterialType.BOOSTER)
-                    sleigh.boostVector(new Vector2(edgeContactData.normal.y, -edgeContactData.normal.x));
+                    sleigh.persistentForceVector(new Vector2(edgeContactData.normal.y, -edgeContactData.normal.x));
 
                 return true;
             }
@@ -67,7 +67,7 @@ public class Sleigh extends Component {
                 Track.EdgeContactData edgeContactData = (Track.EdgeContactData) data;
 
                 if (edgeContactData.material.type == Track.GroundMaterialType.BOOSTER)
-                    sleigh.boostVector(null);
+                    sleigh.persistentForceVector(null);
 
                 return true;
             }
@@ -76,18 +76,22 @@ public class Sleigh extends Component {
         }
     }
 
-    void boostVector(final Vector2 boostVector) {
-        _boostVector = boostVector;
+    Body body() {
+        return _body;
+    }
+
+    void persistentForceVector(final Vector2 persistentForceVector) {
+        _persistentForceVector = persistentForceVector;
     }
 
     @Override
-    public CollisionGroup group() {
-        return CollisionGroup.SLEIGH;
+    public short group() {
+        return CollisionGroup.SLEIGH.value();
     }
 
     @Override
-    public CollisionGroup collidesWith() {
-        return CollisionGroup.TRACK;
+    public short collidesWith() {
+        return (short) (CollisionGroup.TRACK.value() | CollisionGroup.END.value());
     }
 
     @Override
@@ -166,8 +170,8 @@ public class Sleigh extends Component {
         fixtureDef.friction = 0.1f;
         fixtureDef.restitution = 0.0f;
 
-        fixtureDef.filter.categoryBits = group().value();
-        fixtureDef.filter.maskBits = collidesWith().value();
+        fixtureDef.filter.categoryBits = group();
+        fixtureDef.filter.maskBits = collidesWith();
 
         Fixture fixture = _body.createFixture(fixtureDef);
 
@@ -176,8 +180,8 @@ public class Sleigh extends Component {
 
     @Override
     public void updateBody(World world) {
-        if (_boostVector != null) {
-            _body.applyForceToCenter(_boostVector.cpy().scl(30.f), true);
+        if (_persistentForceVector != null) {
+            _body.applyForceToCenter(_persistentForceVector.cpy().scl(30.f), true);
         }
 
         final Vector2 position = _body.getPosition().cpy();;

@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.sloperider.component.End;
 import com.sloperider.component.Flag;
 import com.sloperider.component.Sleigh;
 import com.sloperider.component.Track;
@@ -34,6 +35,8 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
     PhysicsWorld _physicsWorld;
 
     Track _track;
+    Flag _flag;
+    End _end;
 
     private AssetManager _assetManager;
     private boolean _assetsLoaded;
@@ -71,17 +74,26 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         points0.add(new Track.PointData(0.1f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         points0.add(new Track.PointData(0.2f, 0.f, true, Track.GroundMaterialType.BOOSTER));
         points0.add(new Track.PointData(0.3f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(0.4f, -0.6f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(0.7f, 0.f, true, Track.GroundMaterialType.BOOSTER));
-        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.BOOSTER));
+        points0.add(new Track.PointData(0.4f, -0.6f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.5f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.6f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.7f, 0.f, true, Track.GroundMaterialType.SNOW));
+        points0.add(new Track.PointData(0.8f, 0.f, true, Track.GroundMaterialType.SNOW));
         points0.add(new Track.PointData(0.9f, 0.f, true, Track.GroundMaterialType.SNOW));
         points0.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
         _track.setPoints(points0);
 
         TrackCameraController cameraController = _componentFactory.createComponent(new Vector2(), TrackCameraController.class)
             .setTrack(_track);
+
+        _track.addListener(new Track.Listener() {
+            @Override
+            public void changed(Track self) {
+                Gdx.app.log(SlopeRider.TAG, "" + self.heightAt(5.f));
+                _flag.setPosition(_flag.getX(), self.heightAt(5.f));
+                _end.setPosition(_end.getX(), self.heightAt(50.f));
+            }
+        });
 
         final List<Track.PointData> points1 = new ArrayList<Track.PointData>();
         points1.add(new Track.PointData(0.0f, 0.f, true, Track.GroundMaterialType.SNOW));
@@ -91,7 +103,8 @@ public class SlopeRider extends ApplicationAdapter implements InputProcessor {
         points1.add(new Track.PointData(1.f, 0.f, true, Track.GroundMaterialType.SNOW));
         _componentFactory.createComponent(new Vector2(72.f, -25.f), Track.class).setPoints(points1);
 
-        _componentFactory.createComponent(new Vector2(11.f, 24.8f), Flag.class);
+        _flag = _componentFactory.createComponent(new Vector2(15.f, 24.8f), Flag.class);
+        _end = _componentFactory.createComponent(new Vector2(60.f, 25.f), End.class);
 
         _stage.getCamera().position.add(new Vector3(2.f, 4.f, 0.f).scl(SlopeRider.PIXEL_PER_UNIT));
 

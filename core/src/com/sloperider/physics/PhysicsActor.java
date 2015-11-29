@@ -11,8 +11,8 @@ public interface PhysicsActor {
         boolean contactEnd(ContactData data);
     }
 
-    CollisionGroup group();
-    CollisionGroup collidesWith();
+    short group();
+    short collidesWith();
 
     void initializeBody(World world);
 

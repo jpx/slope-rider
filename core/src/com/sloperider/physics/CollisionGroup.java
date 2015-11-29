@@ -7,7 +7,8 @@ public enum CollisionGroup {
     NOTHING (0),
     SLEIGH (1 << 0),
     TRACK (1 << 1),
-    ANYTHING (SLEIGH.value | TRACK.value);
+    END (1 << 2),
+    ANYTHING (SLEIGH.value | TRACK.value | END.value);
 
     private int value;
 

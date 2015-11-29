@@ -104,6 +104,12 @@ public class Track extends Component {
         }
     }
 
+    public interface Listener {
+        void changed(Track self);
+    }
+
+    private final List<Listener> _listeners = new ArrayList<Listener>();
+
     private Map<GroundMaterialType, GroundMaterial> _materials;
 
     private Texture _groundDirtTexture;
@@ -144,6 +150,14 @@ public class Track extends Component {
         _materials.put(GroundMaterialType.DIRT, new GroundMaterial(GroundMaterialType.DIRT, 1));
         _materials.put(GroundMaterialType.STONE, new GroundMaterial(GroundMaterialType.STONE, 2));
         _materials.put(GroundMaterialType.BOOSTER, new GroundMaterial(GroundMaterialType.BOOSTER, 3));
+    }
+
+    public final void addListener(Listener listener) {
+        _listeners.add(listener);
+    }
+
+    public final void removeListener(Listener listener) {
+        _listeners.remove(listener);
     }
 
     public final Track setPoints(final List<PointData> points) {
@@ -357,6 +371,10 @@ public class Track extends Component {
             _graphicsTrackUpdateNeeded = false;
 
             resetMesh();
+
+            for (Listener listener : _listeners) {
+                listener.changed(this);
+            }
         }
     }
 
@@ -427,7 +445,7 @@ public class Track extends Component {
                 break;
         }
 
-        fixtureDef.filter.categoryBits = group().value();
+        fixtureDef.filter.categoryBits = group();
 
         Fixture fixture = _body.createFixture(fixtureDef);
         _fixtures.add(fixture);
@@ -518,10 +536,10 @@ public class Track extends Component {
                                        int sampleCount,
                                        FloatArray vertices, ShortArray indices,
                                        IntArray metadata) {
-        final List<Vector2> splinePositions = new ArrayList<Vector2>();
-        final List<Vector2> splineNormals = new ArrayList<Vector2>();
+        SplineCache.reset(controlPoints, sampleCount, width, height);
 
-        SplineCache.reset(controlPoints, sampleCount, width, height, splinePositions, splineNormals);
+        final List<Vector2> splinePositions = SplineCache.positions();
+        final List<Vector2> splineNormals = SplineCache.normals();
 
         final int layerCount = 4;
         final int vertexCount = sampleCount * layerCount;
@@ -703,9 +721,11 @@ public class Track extends Component {
                                       float width, float height,
                                       int sampleCount,
                                       FloatArray vertices, final List<Vector2> normals, final List<GroundMaterial> materials) {
-        final List<Vector2> splinePositions = new ArrayList<Vector2>();
+        SplineCache.reset(controlPoints, sampleCount, width, height);
 
-        SplineCache.reset(controlPoints, sampleCount, width, height, splinePositions, normals);
+        normals.addAll(SplineCache.normals());
+
+        final List<Vector2> splinePositions = SplineCache.positions();
 
         final int vertexCount = sampleCount + 2;
 
@@ -750,12 +770,16 @@ public class Track extends Component {
     }
 
     @Override
-    public CollisionGroup group() {
-        return CollisionGroup.TRACK;
+    public short group() {
+        return CollisionGroup.TRACK.value();
     }
 
     @Override
-    public CollisionGroup collidesWith() {
-        return CollisionGroup.ANYTHING;
+    public short collidesWith() {
+        return CollisionGroup.ANYTHING.value();
+    }
+
+    public final float heightAt(float x) {
+        return SplineCache.heightAt(x) + getY();
     }
 }

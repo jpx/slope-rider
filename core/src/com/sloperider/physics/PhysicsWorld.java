@@ -25,6 +25,8 @@ public class PhysicsWorld {
     private Box2DDebugRenderer _renderer;
 
     public PhysicsWorld() {
+        _renderer = new Box2DDebugRenderer();
+
         _world = new World(new Vector2(0.f, -10.f), true);
 
         _actors = new ArrayList<PhysicsActor>();
@@ -96,5 +98,7 @@ public class PhysicsWorld {
             SlopeRider.PIXEL_PER_UNIT,
             0.f
         );
+
+        _renderer.render(_world, projection);
     }
 }
