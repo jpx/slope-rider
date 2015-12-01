@@ -1,10 +1,15 @@
 package com.sloperider;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
 import com.sloperider.component.Component;
+import com.sloperider.component.Level;
 import com.sloperider.physics.PhysicsWorld;
 
 import java.util.ArrayList;
@@ -71,6 +76,18 @@ public class ComponentFactory {
 
             _components.add(component);
         }
+    }
+
+    public Level createLevel(final String filename) {
+        final Level level = createComponent(Vector2.Zero, Level.class);
+
+        final JsonReader reader = new JsonReader();
+
+        final JsonValue root = reader.parse(Gdx.files.internal(filename));
+
+        level.initialize(this, root);
+
+        return level;
     }
 
     public <T extends Component> T createComponent(Vector2 position, Class<T> type) {

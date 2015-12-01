@@ -42,6 +42,7 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
@@ -165,6 +166,11 @@ public class Track extends Component {
         return this;
     }
 
+    public final void setBaseSize(float width, float height) {
+        _baseWidth = width;
+        _baseHeight = height;
+    }
+
     private Vector2[] buildControlPoints() {
         final Vector2[] controlPoints = new Vector2[_trackPointData.size()];
 
@@ -249,8 +255,7 @@ public class Track extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
-        _baseWidth = 60.f;
-        _baseHeight = 25.f;
+        setTouchable(Touchable.disabled);
 
         _physicsTrackUpdateNeeded = false;
         _graphicsTrackUpdateNeeded = false;

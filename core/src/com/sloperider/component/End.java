@@ -185,6 +185,14 @@ public class End extends Component {
 
     private void resetBody(World world) {
         if (_body != null) {
+            for (final SleighEntry sleighEntry : _activeSleighs) {
+                _sleightsToRemove.add(sleighEntry.sleigh);
+            }
+
+            while (!_sleightsToRemove.isEmpty()) {
+                removeSleigh(_sleightsToRemove.remove(0));
+            }
+
             _body.destroyFixture(_fixture);
             world.destroyBody(_body);
 
