@@ -90,7 +90,7 @@ public class ComponentFactory {
         return level;
     }
 
-    public <T extends Component> T createComponent(Vector2 position, Class<T> type) {
+    public final <T extends Component> T createComponent(Vector2 position, Class<T> type) {
         T component = null;
         try {
             component = type.newInstance();
@@ -121,5 +121,16 @@ public class ComponentFactory {
         }
 
         return component;
+    }
+
+    public final void destroyComponent(Component component) {
+        component.releaseAssets(_assetManager);
+
+        component.destroy(this);
+
+        _physicsWorld.removeActor(component);
+        _stage.getRoot().removeActor(component);
+
+        _components.remove(component);
     }
 }

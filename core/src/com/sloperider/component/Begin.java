@@ -12,7 +12,7 @@ import com.sloperider.SlopeRider;
 /**
  * Created by jpx on 16/11/15.
  */
-public class Flag extends Component {
+public class Begin extends Component {
     private static final float _spriteRatio = 36.f / 53.f;
 
     private Texture _texture;
@@ -29,6 +29,11 @@ public class Flag extends Component {
     }
 
     @Override
+    public void doReleaseAssets(AssetManager assetManager) {
+
+    }
+
+    @Override
     protected void doReady(ComponentFactory componentFactory) {
         _textureRegion = new TextureRegion(_texture);
 
@@ -38,6 +43,11 @@ public class Flag extends Component {
 
         setSize(baseSize, baseSize / _spriteRatio);
         setOrigin(baseSize / 2.f, 0.f);
+    }
+
+    @Override
+    protected void doDestroy(ComponentFactory componentFactory) {
+
     }
 
     @Override
@@ -68,6 +78,11 @@ public class Flag extends Component {
 
     @Override
     public void updateBody(World world) {
+
+    }
+
+    @Override
+    public void destroyBody(World world) {
 
     }
 }

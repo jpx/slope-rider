@@ -79,6 +79,8 @@ public class PhysicsWorld {
     }
 
     public final void removeActor(PhysicsActor actor) {
+        actor.destroyBody(_world);
+
         _actors.remove(actor);
     }
 

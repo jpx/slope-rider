@@ -200,7 +200,7 @@ public class Track extends Component {
 
             final Vector2 position = parentPosition.cpy().add(x * size.x, y * size.y + size.y);
 
-            TrackPoint trackPoint = _componentFactory.createComponent(
+            TrackPoint trackPoint = addComponent(_componentFactory.createComponent(
                 position,
                 TrackPoint.class
             ).setChangedHandler(new TrackPoint.ChangedHandler() {
@@ -208,7 +208,7 @@ public class Track extends Component {
                 public void changed(TrackPoint self, float value) {
                     updateTrackPoint(_trackPoints.get(self), value);
                 }
-            }).setInitialTrackValue(position.y);
+            })).setInitialTrackValue(position.y);
 
             _trackPoints.put(trackPoint, i);
         }
@@ -251,6 +251,11 @@ public class Track extends Component {
         _groundBoosterTexture = new Texture(boosterPixmap);
         _groundBoosterTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         _groundBoosterTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+    }
+
+    @Override
+    public void doReleaseAssets(AssetManager assetManager) {
+
     }
 
     @Override
@@ -367,6 +372,11 @@ public class Track extends Component {
         _environment = new Environment();
         _environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         _environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+
+    }
+
+    @Override
+    protected void doDestroy(ComponentFactory componentFactory) {
 
     }
 
@@ -772,6 +782,11 @@ public class Track extends Component {
 
         materials.add(_materials.get(GroundMaterialType.DIRT));
         materials.add(_materials.get(GroundMaterialType.DIRT));
+    }
+
+    @Override
+    public void destroyBody(World world) {
+        world.destroyBody(_body);
     }
 
     @Override

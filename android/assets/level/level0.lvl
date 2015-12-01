@@ -3,10 +3,12 @@
   "description" : "the level 0",
   "components" : [
     {
-      "type" : "Begin"
+      "type" : "Begin",
+      "position" : [ 0.0, 0.0 ]
     },
     {
-      "type" : "End"
+      "type" : "End",
+      "position" : [ 0.0, 0.0 ]
     },
     {
       "type" : "Track",

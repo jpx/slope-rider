@@ -86,6 +86,11 @@ public class TrackCameraController
     }
 
     @Override
+    public void doReleaseAssets(AssetManager assetManager) {
+
+    }
+
+    @Override
     protected void doReady(ComponentFactory componentFactory) {
         _moveActive = false;
 
@@ -93,6 +98,10 @@ public class TrackCameraController
         _trackSize = new Vector2();
 
         startMove();
+    }
+
+    @Override
+    protected void doDestroy(ComponentFactory componentFactory) {
     }
 
     @Override
@@ -139,6 +148,11 @@ public class TrackCameraController
 
     @Override
     public void updateBody(World world) {
+
+    }
+
+    @Override
+    public void destroyBody(World world) {
 
     }
 

@@ -11,6 +11,9 @@ import com.sloperider.SlopeRider;
 import com.sloperider.physics.CollisionGroup;
 import com.sloperider.physics.PhysicsActor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import sun.rmi.runtime.Log;
 
 /**
@@ -20,18 +23,36 @@ public abstract class Component extends Group implements PhysicsActor {
 
     private boolean _ready;
 
+    private final List<Component> _components = new ArrayList<Component>();
+
+    protected final <T extends Component> T addComponent(final T component) {
+        _components.add(component);
+
+        return component;
+    }
+
     public Component() {
         super();
 
         _ready = false;
     }
 
-    public abstract  void requireAssets(AssetManager assetManager);
+    public abstract void requireAssets(AssetManager assetManager);
     public abstract void manageAssets(AssetManager assetManager);
+    public abstract void doReleaseAssets(AssetManager assetManager);
+
+    public void releaseAssets(AssetManager assetManager) {
+        for (final Component component : _components) {
+            component.releaseAssets(assetManager);
+        }
+
+        doReleaseAssets(assetManager);
+    }
 
     protected abstract void doReady(ComponentFactory componentFactory);
     protected abstract void doAct(float delta);
     protected abstract void doDraw(Batch batch);
+    protected abstract void doDestroy(ComponentFactory componentFactory);
 
     public final void ready(ComponentFactory componentFactory) {
         if (_ready)
@@ -40,6 +61,21 @@ public abstract class Component extends Group implements PhysicsActor {
         _ready = true;
 
         doReady(componentFactory);
+    }
+
+    public final void destroy(ComponentFactory componentFactory) {
+        if (!_ready)
+            return;
+
+        for (final Component component : _components) {
+            componentFactory.destroyComponent(component);
+        }
+
+        _components.clear();
+
+        clear();
+
+        doDestroy(componentFactory);
     }
 
     @Override

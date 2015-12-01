@@ -63,6 +63,11 @@ public class TrackPoint extends Component {
     }
 
     @Override
+    public void doReleaseAssets(AssetManager assetManager) {
+
+    }
+
+    @Override
     protected void doReady(ComponentFactory componentFactory) {
         _draggingActive = false;
 
@@ -99,6 +104,11 @@ public class TrackPoint extends Component {
                 super.touchDragged(event, x, y, pointer);
             }
         });
+    }
+
+    @Override
+    protected void doDestroy(ComponentFactory componentFactory) {
+
     }
 
     @Override
@@ -143,6 +153,11 @@ public class TrackPoint extends Component {
 
     @Override
     public void updateBody(World world) {
+
+    }
+
+    @Override
+    public void destroyBody(World world) {
 
     }
 

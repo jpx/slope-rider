@@ -42,8 +42,12 @@ public class Level extends Component {
                 positionNode.get(1).asFloat()
             );
 
+            if (type.equals("Begin")) {
+
+            }
+
             if (type.equals("Track")) {
-                final Track track = componentFactory.createComponent(position, Track.class);
+                final Track track = addComponent(componentFactory.createComponent(position, Track.class));
 
                 if (_mainTrack == null) {
                     _mainTrack = track;
@@ -80,6 +84,11 @@ public class Level extends Component {
     }
 
     @Override
+    public void doReleaseAssets(AssetManager assetManager) {
+
+    }
+
+    @Override
     protected void doReady(final ComponentFactory componentFactory) {
         Gdx.app.log(SlopeRider.TAG, toString());
 
@@ -91,7 +100,7 @@ public class Level extends Component {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 final Vector2 position = new Vector2(x, y).scl(1.f / SlopeRider.PIXEL_PER_UNIT);
 
-                final Sleigh sleigh = componentFactory.createComponent(position, Sleigh.class);
+                final Sleigh sleigh = addComponent(componentFactory.createComponent(position, Sleigh.class));
 
                 return super.touchDown(event, x, y, pointer, button);
             }
@@ -103,6 +112,10 @@ public class Level extends Component {
         ).setTrack(_mainTrack);
 
         Gdx.input.setInputProcessor(new InputMultiplexer(getStage(), new GestureDetector(cameraController), cameraController));
+    }
+
+    @Override
+    protected void doDestroy(ComponentFactory componentFactory) {
     }
 
     @Override
@@ -126,5 +139,10 @@ public class Level extends Component {
 
     @Override
     public void updateBody(World world) {
+    }
+
+    @Override
+    public void destroyBody(World world) {
+
     }
 }

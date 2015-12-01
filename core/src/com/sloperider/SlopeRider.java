@@ -2,27 +2,18 @@ package com.sloperider;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.sloperider.component.Begin;
 import com.sloperider.component.End;
-import com.sloperider.component.Flag;
 import com.sloperider.component.Level;
-import com.sloperider.component.Sleigh;
-import com.sloperider.component.Track;
-import com.sloperider.component.TrackCameraController;
 import com.sloperider.physics.PhysicsWorld;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SlopeRider extends ApplicationAdapter {
 
@@ -30,12 +21,13 @@ public class SlopeRider extends ApplicationAdapter {
     public static final String TAG = "slope-rider_DEBUG";
 
     Stage _stage;
+    Level _activeLevel;
 
     SpriteBatch _spriteBatch;
 
     PhysicsWorld _physicsWorld;
 
-    Flag _flag;
+    Begin _begin;
     End _end;
 
     private AssetManager _assetManager;
@@ -72,15 +64,15 @@ public class SlopeRider extends ApplicationAdapter {
 //            @Override
 //            public void changed(Track self) {
 //                Gdx.app.log(SlopeRider.TAG, "" + self.heightAt(5.f));
-//                _flag.setPosition(_flag.getX(), self.heightAt(5.f));
+//                _begin.setPosition(_begin.getX(), self.heightAt(5.f));
 //                _end.setPosition(_end.getX(), self.heightAt(50.f));
 //            }
 //        });
 
-        _flag = _componentFactory.createComponent(new Vector2(15.f, 24.8f), Flag.class);
+        _begin = _componentFactory.createComponent(new Vector2(15.f, 24.8f), Begin.class);
         _end = _componentFactory.createComponent(new Vector2(60.f, 25.f), End.class);
 
-        final Level level = _componentFactory.createLevel("level/level0.lvl");
+        _activeLevel = _componentFactory.createLevel("level/level0.lvl");
 
         _stage.getCamera().position.add(new Vector3(2.f, 4.f, 0.f).scl(SlopeRider.PIXEL_PER_UNIT));
 
@@ -91,6 +83,8 @@ public class SlopeRider extends ApplicationAdapter {
         _componentFactory.requireAssets();
 	}
 
+    float tmpTime = 0.f;
+    boolean de = false;
 	@Override
 	public void render () {
         if (!_assetsLoaded) {
@@ -117,5 +111,11 @@ public class SlopeRider extends ApplicationAdapter {
         _stage.draw();
 
         _physicsWorld.render(_stage.getCamera());
+
+        tmpTime += Gdx.graphics.getDeltaTime();
+        if (!de && tmpTime > 5.f) {
+            de = true;
+            _componentFactory.destroyComponent(_activeLevel);
+        }
 	}
 }

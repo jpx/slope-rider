@@ -148,6 +148,11 @@ public class End extends Component {
     }
 
     @Override
+    public void doReleaseAssets(AssetManager assetManager) {
+
+    }
+
+    @Override
     protected void doReady(ComponentFactory componentFactory) {
         _bodyNeedsUpdate = false;
 
@@ -159,6 +164,11 @@ public class End extends Component {
         pixmap.fill();
 
         _textureRegion = new TextureRegion(new Texture(pixmap));
+    }
+
+    @Override
+    protected void doDestroy(ComponentFactory componentFactory) {
+
     }
 
     @Override
@@ -246,6 +256,11 @@ public class End extends Component {
             final Sleigh sleigh = _sleightsToAdd.remove(0);
             addSleigh(sleigh);
         }
+    }
+
+    @Override
+    public void destroyBody(World world) {
+        world.destroyBody(_body);
     }
 
     @Override

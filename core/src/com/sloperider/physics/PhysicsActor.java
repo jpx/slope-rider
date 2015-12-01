@@ -15,6 +15,6 @@ public interface PhysicsActor {
     short collidesWith();
 
     void initializeBody(World world);
-
     void updateBody(World world);
+    void destroyBody(World world);
 }

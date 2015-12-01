@@ -111,6 +111,11 @@ public class Sleigh extends Component {
     }
 
     @Override
+    protected void doDestroy(ComponentFactory componentFactory) {
+
+    }
+
+    @Override
     protected void doAct(float delta) {
 
     }
@@ -139,6 +144,11 @@ public class Sleigh extends Component {
     @Override
     public void manageAssets(AssetManager assetManager) {
         _texture = assetManager.get("texture/sleigh.png", Texture.class);
+    }
+
+    @Override
+    public void doReleaseAssets(AssetManager assetManager) {
+
     }
 
     @Override
@@ -189,5 +199,10 @@ public class Sleigh extends Component {
 
         setPosition(position.x, position.y);
         setRotation(rotation);
+    }
+
+    @Override
+    public void destroyBody(World world) {
+
     }
 }
