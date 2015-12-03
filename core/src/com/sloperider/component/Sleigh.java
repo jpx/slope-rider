@@ -203,6 +203,6 @@ public class Sleigh extends Component {
 
     @Override
     public void destroyBody(World world) {
-
+        world.destroyBody(_body);
     }
 }

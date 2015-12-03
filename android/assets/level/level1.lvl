@@ -1,0 +1,41 @@
+{
+  "name" : "level1",
+  "description" : "the level 1",
+  "components" : [
+    {
+      "type" : "Begin",
+      "position" : [ 0.0, 0.0 ]
+    },
+    {
+      "type" : "End",
+      "position" : [ 0.0, 0.0 ]
+    },
+    {
+      "type" : "Track",
+      "name" : "track0",
+      "position" : [ 10.0, 0.0 ],
+      "width" : 60.0,
+      "height" : 30.0,
+      "points" : [
+        {
+          "x" : 0.0,
+          "y" : 0.0,
+          "editable" : false,
+          "material" : "STONE"
+        },
+        {
+          "x" : 0.5,
+          "y" : 0.0,
+          "editable" : true,
+          "material" : "SNOW"
+        },
+        {
+          "x" : 1.0,
+          "y" : 0.0,
+          "editable" : true,
+          "material" : "SNOW"
+        }
+      ]
+    }
+  ]
+}

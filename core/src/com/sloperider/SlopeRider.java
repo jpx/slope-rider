@@ -4,94 +4,40 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.sloperider.component.Begin;
-import com.sloperider.component.End;
-import com.sloperider.component.Level;
-import com.sloperider.physics.PhysicsWorld;
+import com.sloperider.screen.MainMenuScreen;
+import com.sloperider.screen.MasterScreen;
 
 public class SlopeRider extends ApplicationAdapter {
 
     public static final float PIXEL_PER_UNIT = 100.0f;
     public static final String TAG = "slope-rider_DEBUG";
 
-    Stage _stage;
-    Level _activeLevel;
-
-    SpriteBatch _spriteBatch;
-
-    PhysicsWorld _physicsWorld;
-
-    Begin _begin;
-    End _end;
+    private MasterScreen _masterScreen;
 
     private AssetManager _assetManager;
     private boolean _assetsLoaded;
 
-    private ComponentFactory _componentFactory;
-
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
-
-        _stage.getViewport().update(width, height, false);
-
-        _stage.getCamera().viewportWidth = width;
-        _stage.getCamera().viewportHeight = height;
-
-        _stage.getCamera().update();
     }
 
 	@Override
 	public void create () {
-        _spriteBatch = new SpriteBatch();
-
-        _stage = new Stage(new ScreenViewport(), _spriteBatch);
-
         _assetsLoaded = false;
         _assetManager = new AssetManager();
 
-        _physicsWorld = new PhysicsWorld();
-
-        _componentFactory = new ComponentFactory(_stage, _assetManager, _physicsWorld);
-
-//        _track.addListener(new Track.Listener() {
-//            @Override
-//            public void changed(Track self) {
-//                Gdx.app.log(SlopeRider.TAG, "" + self.heightAt(5.f));
-//                _begin.setPosition(_begin.getX(), self.heightAt(5.f));
-//                _end.setPosition(_end.getX(), self.heightAt(50.f));
-//            }
-//        });
-
-        _begin = _componentFactory.createComponent(new Vector2(15.f, 24.8f), Begin.class);
-        _end = _componentFactory.createComponent(new Vector2(60.f, 25.f), End.class);
-
-        _activeLevel = _componentFactory.createLevel("level/level0.lvl");
-
-        _stage.getCamera().position.add(new Vector3(2.f, 4.f, 0.f).scl(SlopeRider.PIXEL_PER_UNIT));
-
-        ((OrthographicCamera) _stage.getCamera()).zoom += 2.5f;
-
-//        Gdx.input.setInputProcessor(new InputMultiplexer(_stage, new GestureDetector(cameraController), cameraController, this));
-
-        _componentFactory.requireAssets();
+        _masterScreen = new MasterScreen();
+        _masterScreen.assetManager(_assetManager);
+        _masterScreen.start();
+        _masterScreen.push(new MainMenuScreen());
 	}
 
-    float tmpTime = 0.f;
-    boolean de = false;
 	@Override
 	public void render () {
         if (!_assetsLoaded) {
             if (_assetManager.update()) {
                 _assetsLoaded = true;
-
-                _componentFactory.ready();
             } else {
                 final float progress = _assetManager.getProgress();
 
@@ -104,18 +50,14 @@ public class SlopeRider extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0.2f, 0.4f, 0.9f, 1.0f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        _physicsWorld.update(Gdx.graphics.getDeltaTime());
-
-        _stage.act(Gdx.graphics.getDeltaTime());
-
-        _stage.draw();
-
-        _physicsWorld.render(_stage.getCamera());
-
-        tmpTime += Gdx.graphics.getDeltaTime();
-        if (!de && tmpTime > 5.f) {
-            de = true;
-            _componentFactory.destroyComponent(_activeLevel);
-        }
+        _masterScreen.update(Gdx.graphics.getDeltaTime());
+        _masterScreen.render();
 	}
+
+    @Override
+    public void dispose() {
+        super.dispose();
+
+        _masterScreen.dispose();
+    }
 }

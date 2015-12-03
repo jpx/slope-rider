@@ -12,6 +12,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.sloperider.ComponentFactory;
@@ -43,16 +44,21 @@ public class Level extends Component {
             );
 
             if (type.equals("Begin")) {
+                addComponent(componentFactory.createComponent(position, Begin.class));
+            }
 
+            if (type.equals("End")) {
+                addComponent(componentFactory.createComponent(position, End.class));
             }
 
             if (type.equals("Track")) {
-                final Track track = addComponent(componentFactory.createComponent(position, Track.class));
+                final Track track = new Track();
 
                 if (_mainTrack == null) {
                     _mainTrack = track;
                 }
 
+                track.setPosition(position.x, position.y);
                 track.setBaseSize(componentNode.getFloat("width"), componentNode.getFloat("height"));
 
                 final List<Track.PointData> points = new ArrayList<Track.PointData>();
@@ -69,6 +75,8 @@ public class Level extends Component {
                 }
 
                 track.setPoints(points);
+
+                addComponent(componentFactory.initializeComponent(track));
             }
         }
     }
@@ -95,6 +103,8 @@ public class Level extends Component {
         setPosition(0.f, 0.f);
         setSize(1000.f, 1000.f);
 
+        setTouchable(Touchable.childrenOnly);
+
         addListener(new InputListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
@@ -106,16 +116,19 @@ public class Level extends Component {
             }
         });
 
-        final TrackCameraController cameraController = componentFactory.createComponent(
+        final TrackCameraController cameraController = addComponent(componentFactory.createComponent(
             new Vector2(),
             TrackCameraController.class
-        ).setTrack(_mainTrack);
+        )).setTrack(_mainTrack);
 
         Gdx.input.setInputProcessor(new InputMultiplexer(getStage(), new GestureDetector(cameraController), cameraController));
     }
 
     @Override
     protected void doDestroy(ComponentFactory componentFactory) {
+        clear();
+
+        Gdx.input.setInputProcessor(getStage());
     }
 
     @Override

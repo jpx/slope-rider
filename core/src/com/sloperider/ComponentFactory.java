@@ -31,7 +31,7 @@ public class ComponentFactory {
     private List<Component> _components;
     private List<Component> _componentsToAdd;
 
-    ComponentFactory(Stage stage, AssetManager assetManager, PhysicsWorld physicsWorld) {
+    public ComponentFactory(final Stage stage, final AssetManager assetManager, final PhysicsWorld physicsWorld) {
         _ready = false;
         _runningPostPhase = false;
 
@@ -43,13 +43,13 @@ public class ComponentFactory {
         _componentsToAdd = new LinkedList<Component>();
     }
 
-    void requireAssets() {
+    public final void requireAssets() {
         for (Component component : _components) {
             component.requireAssets(_assetManager);
         }
     }
 
-    void ready() {
+    public final void ready() {
         if (_ready)
             return;
 
@@ -79,7 +79,7 @@ public class ComponentFactory {
     }
 
     public Level createLevel(final String filename) {
-        final Level level = createComponent(Vector2.Zero, Level.class);
+        final Level level = new Level();
 
         final JsonReader reader = new JsonReader();
 
@@ -87,10 +87,10 @@ public class ComponentFactory {
 
         level.initialize(this, root);
 
-        return level;
+        return initializeComponent(level);
     }
 
-    public final <T extends Component> T createComponent(Vector2 position, Class<T> type) {
+    public final <T extends Component> T createComponent(final Vector2 position, final Class<T> type) {
         T component = null;
         try {
             component = type.newInstance();
@@ -102,6 +102,12 @@ public class ComponentFactory {
 
         component.setPosition(position.x, position.y);
 
+        initializeComponent(component);
+
+        return component;
+    }
+
+    public final <T extends Component> T initializeComponent(final T component) {
         if (!_runningPostPhase)
             _components.add(component);
         else
@@ -123,7 +129,7 @@ public class ComponentFactory {
         return component;
     }
 
-    public final void destroyComponent(Component component) {
+    public final void destroyComponent(final Component component) {
         component.releaseAssets(_assetManager);
 
         component.destroy(this);
