@@ -143,6 +143,8 @@ public class Track extends Component {
     private boolean _physicsTrackUpdateNeeded;
     private boolean _graphicsTrackUpdateNeeded;
 
+    private boolean _editable;
+
     public Track() {
         // FIXME initialize from factory
 
@@ -151,6 +153,27 @@ public class Track extends Component {
         _materials.put(GroundMaterialType.DIRT, new GroundMaterial(GroundMaterialType.DIRT, 1));
         _materials.put(GroundMaterialType.STONE, new GroundMaterial(GroundMaterialType.STONE, 2));
         _materials.put(GroundMaterialType.BOOSTER, new GroundMaterial(GroundMaterialType.BOOSTER, 3));
+    }
+
+    public final Track editable(boolean editable) {
+        if (editable == _editable)
+            return this;
+
+        _editable = editable;
+
+        for (final Map.Entry<TrackPoint, Integer> entry : _trackPoints.entrySet()) {
+            final TrackPoint trackPoint = entry.getKey();
+
+            if (editable) {
+                trackPoint.setVisible(true);
+                trackPoint.setTouchable(Touchable.enabled);
+            } else {
+                trackPoint.setVisible(false);
+                trackPoint.setTouchable(Touchable.disabled);
+            }
+        }
+
+        return this;
     }
 
     public final void addListener(Listener listener) {
@@ -260,6 +283,8 @@ public class Track extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
+        _editable = true;
+
         setTouchable(Touchable.disabled);
 
         _physicsTrackUpdateNeeded = false;
@@ -387,7 +412,7 @@ public class Track extends Component {
 
             resetMesh();
 
-            for (Listener listener : _listeners) {
+            for (final Listener listener : _listeners) {
                 listener.changed(this);
             }
         }

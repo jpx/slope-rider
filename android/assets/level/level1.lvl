@@ -4,11 +4,11 @@
   "components" : [
     {
       "type" : "Begin",
-      "position" : [ 0.0, 0.0 ]
+      "position" : [ 15.0, 0.0 ]
     },
     {
       "type" : "End",
-      "position" : [ 0.0, 0.0 ]
+      "position" : [ 55.0, 0.0 ]
     },
     {
       "type" : "Track",

@@ -68,7 +68,7 @@ public class MainMenuScreen extends Screen {
         });
 
         // Add an image actor. Have to set the size, else it would be the size of the drawable (which is the 1x1 texture).
-        table.add(new Image(skin.newDrawable("white", Color.RED))).size(64);
+        table.add(new Image(skin.newDrawable("white", Color.RED))).size(128);
     }
 
     @Override

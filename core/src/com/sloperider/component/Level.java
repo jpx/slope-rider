@@ -6,6 +6,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.input.GestureDetector;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.World;
@@ -25,10 +26,34 @@ import java.util.List;
  * Created by jpx on 30/11/15.
  */
 public class Level extends Component {
+    public interface Listener {
+        void stageChanged(final String state);
+    }
+
+    private InputMultiplexer _input;
+
+    private ComponentFactory _componentFactory;
     private String _name;
     private String _description;
 
     private Track _mainTrack;
+    private Begin _begin;
+    private End _end;
+
+    private TrackCameraController _editingCameraController;
+
+    private Sleigh _sleigh;
+    private boolean _sleighIsMoving = false;
+
+    private float _elapsedTimeSinceSleighMoveStoped;
+
+    private Listener _listener;
+
+    public final Level setListener(final Listener listener) {
+        _listener = listener;
+
+        return this;
+    }
 
     public final void initialize(final ComponentFactory componentFactory, final JsonValue root) {
         _name = root.getString("name");
@@ -44,11 +69,11 @@ public class Level extends Component {
             );
 
             if (type.equals("Begin")) {
-                addComponent(componentFactory.createComponent(position, Begin.class));
+                _begin = addComponent(componentFactory.createComponent(position, Begin.class));
             }
 
             if (type.equals("End")) {
-                addComponent(componentFactory.createComponent(position, End.class));
+                _end = addComponent(componentFactory.createComponent(position, End.class));
             }
 
             if (type.equals("Track")) {
@@ -96,11 +121,24 @@ public class Level extends Component {
 
     }
 
+    private void mainTrackChanged(final Track track) {
+        _begin.setPosition(_begin.getX(), track.heightAt(_begin.getX() - track.getX()));
+        _end.setPosition(_end.getX(), track.heightAt(_end.getX() - track.getX()));
+
+        final Rectangle bounds = new Rectangle();
+        computeBounds(bounds);
+
+        setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+    }
+
     @Override
     protected void doReady(final ComponentFactory componentFactory) {
         Gdx.app.log(SlopeRider.TAG, toString());
 
-        setPosition(0.f, 0.f);
+        _input = (InputMultiplexer) Gdx.input.getInputProcessor();
+
+        _componentFactory = componentFactory;
+
         setSize(1000.f, 1000.f);
 
         setTouchable(Touchable.childrenOnly);
@@ -116,19 +154,21 @@ public class Level extends Component {
             }
         });
 
-        final TrackCameraController cameraController = addComponent(componentFactory.createComponent(
-            new Vector2(),
-            TrackCameraController.class
-        )).setTrack(_mainTrack);
+        _mainTrack.addListener(new Track.Listener() {
+            @Override
+            public void changed(Track self) {
+                mainTrackChanged(self);
+            }
+        });
 
-        Gdx.input.setInputProcessor(new InputMultiplexer(getStage(), new GestureDetector(cameraController), cameraController));
+        mainTrackChanged(_mainTrack);
+
+        editingBegin();
     }
 
     @Override
     protected void doDestroy(ComponentFactory componentFactory) {
         clear();
-
-        Gdx.input.setInputProcessor(getStage());
     }
 
     @Override
@@ -138,7 +178,47 @@ public class Level extends Component {
 
     @Override
     protected void doAct(float delta) {
+        if (_sleigh != null) {
+            final boolean sleighIsMoving = _sleigh.isMoving();
 
+            if (_sleighIsMoving != sleighIsMoving) {
+                _sleighIsMoving = sleighIsMoving;
+
+                if (!sleighIsMoving) {
+                    _elapsedTimeSinceSleighMoveStoped = 0.f;
+                }
+            }
+
+            boolean won = false;
+            boolean lost = false;
+
+            if (_end.hasSleigh(_sleigh)) {
+                won = true;
+            } else if (_end.isBrokenBySleigh(_sleigh)) {
+                lost = true;
+            } else {
+                if (sleighOutOfBounds()) {
+                    lost = true;
+                } else if (!sleighIsMoving) {
+                    _elapsedTimeSinceSleighMoveStoped += delta;
+
+                    if (_elapsedTimeSinceSleighMoveStoped > 1.f) {
+                        lost = true;
+                    }
+                }
+            }
+
+            if (won) {
+                Gdx.app.log(SlopeRider.TAG, "won");
+
+                destroySleigh();
+
+            } else if (lost) {
+                Gdx.app.log(SlopeRider.TAG, "lost");
+
+                destroySleigh();
+            }
+        }
     }
 
     @Override
@@ -157,5 +237,69 @@ public class Level extends Component {
     @Override
     public void destroyBody(World world) {
 
+    }
+
+    private Level computeBounds(final Rectangle bounds) {
+        bounds.set(_mainTrack.getX(), _mainTrack.getY(), _mainTrack.getWidth(), 100.f);
+
+        return this;
+    }
+
+    private boolean sleighOutOfBounds() {
+        return _sleigh != null && _sleigh.getX() < getX()
+            || _sleigh.getY() < getY()
+            || _sleigh.getRight() > getRight()
+            || _sleigh.getTop() > getTop();
+    }
+
+    public final Level spawnSleigh() {
+        editingEnd();
+        playingBegin();
+
+        final Vector2 position = new Vector2(_begin.getX(), _begin.getY()).add(0.f, 1.f);
+
+        _sleigh = _componentFactory.createComponent(position, Sleigh.class);
+
+        return this;
+    }
+
+    public final Level destroySleigh() {
+        playingEnd();
+        editingBegin();
+
+        _end.sleighDestroyed(_sleigh);
+        _componentFactory.destroyComponent(_sleigh);
+        _sleigh = null;
+
+        return this;
+    }
+
+    private void playingBegin() {
+        if (_listener != null)
+            _listener.stageChanged("playing");
+    }
+
+    private void playingEnd() {
+
+    }
+
+    private void editingBegin() {
+        if (_listener != null)
+            _listener.stageChanged("editing");
+
+        if (_mainTrack != null)
+            _mainTrack.editable(true);
+
+        _editingCameraController = _componentFactory.createComponent(Vector2.Zero, TrackCameraController.class)
+            .setTrack(_mainTrack)
+            .startMove();
+    }
+
+    private void editingEnd() {
+        if (_editingCameraController != null)
+            _componentFactory.destroyComponent(_editingCameraController);
+
+        if (_mainTrack != null)
+            _mainTrack.editable(false);
     }
 }

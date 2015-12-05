@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
+import com.sloperider.screen.GameScreen;
 import com.sloperider.screen.MainMenuScreen;
 import com.sloperider.screen.MasterScreen;
 
@@ -30,7 +31,8 @@ public class SlopeRider extends ApplicationAdapter {
         _masterScreen = new MasterScreen();
         _masterScreen.assetManager(_assetManager);
         _masterScreen.start();
-        _masterScreen.push(new MainMenuScreen());
+//        _masterScreen.push(new MainMenuScreen());
+        _masterScreen.push(new GameScreen(_masterScreen));
 	}
 
 	@Override

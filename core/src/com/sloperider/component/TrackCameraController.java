@@ -19,6 +19,8 @@ import com.sloperider.SlopeRider;
 public class TrackCameraController
         extends Component
         implements GestureDetector.GestureListener, InputProcessor {
+    private GestureDetector _gestureDetector;
+
     private Track _track;
     private Vector2 _trackPosition;
     private Vector2 _trackSize;
@@ -37,7 +39,7 @@ public class TrackCameraController
     private float _lastZoomDistance;
 
     public TrackCameraController() {
-
+        _gestureDetector = new GestureDetector(this);
     }
 
     public final TrackCameraController setTrack(Track track) {
@@ -58,8 +60,8 @@ public class TrackCameraController
         _targetZoom = 3.5f;
     }
 
-    private void startMove() {
-        OrthographicCamera camera = getCamera();
+    public final TrackCameraController startMove() {
+        final OrthographicCamera camera = getCamera();
 
         _moveDuration = 0.5f;
 
@@ -69,6 +71,8 @@ public class TrackCameraController
 
         _moveStartPosition = new Vector2(camera.position.x, camera.position.y);
         _moveStartZoom = camera.zoom;
+
+        return this;
     }
 
     private void stopMove() {
@@ -92,6 +96,9 @@ public class TrackCameraController
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
+        input().addProcessor(_gestureDetector);
+        input().addProcessor(this);
+
         _moveActive = false;
 
         _trackPosition = new Vector2();
@@ -102,6 +109,8 @@ public class TrackCameraController
 
     @Override
     protected void doDestroy(ComponentFactory componentFactory) {
+        input().removeProcessor(_gestureDetector);
+        input().removeProcessor(this);
     }
 
     @Override

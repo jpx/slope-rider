@@ -1,6 +1,7 @@
 package com.sloperider.component;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
@@ -36,6 +37,10 @@ public abstract class Component extends Group implements PhysicsActor {
         super();
 
         _ready = false;
+    }
+
+    protected InputMultiplexer input() {
+        return (InputMultiplexer) Gdx.input.getInputProcessor();
     }
 
     public abstract void requireAssets(AssetManager assetManager);

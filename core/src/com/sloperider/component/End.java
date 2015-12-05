@@ -71,6 +71,8 @@ public class End extends Component {
     static class SleighEntry {
         Sleigh sleigh;
         Joint joint;
+        boolean caught;
+        boolean broken;
     }
 
     private TextureRegion _textureRegion;
@@ -82,6 +84,10 @@ public class End extends Component {
     private final List<Sleigh> _sleightsToAdd = new ArrayList<Sleigh>();
     private final List<Sleigh> _sleightsToRemove = new ArrayList<Sleigh>();
     private final List<SleighEntry> _activeSleighs = new ArrayList<SleighEntry>();
+
+    public final void sleighDestroyed(final Sleigh sleigh) {
+        removeSleigh(sleigh);
+    }
 
     private void addSleigh(Sleigh sleigh) {
         SleighEntry sleighEntry = null;
@@ -97,6 +103,8 @@ public class End extends Component {
         if (sleighEntry == null) {
             sleighEntry = new SleighEntry();
             sleighEntry.sleigh = sleigh;
+            sleighEntry.caught = false;
+            sleighEntry.broken = false;
 
             _activeSleighs.add(sleighEntry);
 
@@ -104,7 +112,7 @@ public class End extends Component {
             ropeJoint.maxLength = getWidth() / 2.f;
             ropeJoint.bodyA = _body;
             ropeJoint.bodyB = sleigh.body();
-            ropeJoint.localAnchorA.set(-getWidth() / 2.f, ropeJoint.bodyA.getLocalCenter().y);
+            ropeJoint.localAnchorA.set(-getWidth(), ropeJoint.bodyA.getLocalCenter().y);
             ropeJoint.localAnchorB.set(ropeJoint.bodyB.getLocalCenter());
             ropeJoint.collideConnected = true;
 
@@ -168,7 +176,9 @@ public class End extends Component {
 
     @Override
     protected void doDestroy(ComponentFactory componentFactory) {
-
+        while (!_activeSleighs.isEmpty()) {
+            removeSleigh(_activeSleighs.get(0).sleigh);
+        }
     }
 
     @Override
@@ -243,7 +253,9 @@ public class End extends Component {
             final float reactionForceValue = sleighEntry.joint.getReactionForce(1.f / Gdx.graphics.getDeltaTime()).len();
 
             if (reactionForceValue > 100.f) {
-                _sleightsToRemove.add(sleighEntry.sleigh);
+                sleighEntry.broken = true;
+            } else if (reactionForceValue > 1e-2f) {
+                sleighEntry.caught = true;
             }
         }
 
@@ -271,5 +283,25 @@ public class End extends Component {
     @Override
     public short collidesWith() {
         return CollisionGroup.SLEIGH.value();
+    }
+
+    public final boolean hasSleigh(final Sleigh sleigh) {
+        for (final SleighEntry entry : _activeSleighs) {
+            if (entry.sleigh == sleigh) {
+                return entry.caught;
+            }
+        }
+
+        return false;
+    }
+
+    public final boolean isBrokenBySleigh(final Sleigh sleigh) {
+        for (final SleighEntry entry : _activeSleighs) {
+            if (entry.sleigh == sleigh) {
+                return entry.broken;
+            }
+        }
+
+        return false;
     }
 }

@@ -4,11 +4,11 @@
   "components" : [
     {
       "type" : "Begin",
-      "position" : [ 0.0, 0.0 ]
+      "position" : [ 15.0, 0.0 ]
     },
     {
       "type" : "End",
-      "position" : [ 0.0, 0.0 ]
+      "position" : [ 55.0, 0.0 ]
     },
     {
       "type" : "Track",
@@ -25,31 +25,31 @@
         },
         {
           "x" : 0.2,
-          "y" : 0.0,
+          "y" : -0.2,
           "editable" : true,
           "material" : "BOOSTER"
         },
         {
           "x" : 0.4,
-          "y" : 0.0,
+          "y" : -0.4,
           "editable" : true,
-          "material" : "BOOSTER"
+          "material" : "SNOW"
         },
         {
           "x" : 0.6,
-          "y" : 0.0,
+          "y" : -0.5,
           "editable" : true,
           "material" : "SNOW"
         },
         {
           "x" : 0.8,
-          "y" : 0.0,
+          "y" : -0.5,
           "editable" : true,
           "material" : "STONE"
         },
         {
           "x" : 1.0,
-          "y" : 0.0,
+          "y" : -0.2,
           "editable" : true,
           "material" : "STONE"
         }

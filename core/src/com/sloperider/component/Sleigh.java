@@ -205,4 +205,8 @@ public class Sleigh extends Component {
     public void destroyBody(World world) {
         world.destroyBody(_body);
     }
+
+    public final boolean isMoving() {
+        return _body.getLinearVelocity().len() > 1e-2f;
+    }
 }
