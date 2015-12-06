@@ -13,5 +13,7 @@ void main()
     v_uv = a_uv;
     v_mask = a_mask;
 
-    gl_Position = u_worldToScreenMatrix * u_modelToWorldMatrix * vec4(a_position, 0.0, 1.0);
+    vec4 position = vec4(a_position, 0.0, 1.0);
+
+    gl_Position = u_worldToScreenMatrix * u_modelToWorldMatrix * position;
 }

@@ -516,7 +516,7 @@ public class Track extends Component {
         final List<GroundMaterial> materials = new ArrayList<GroundMaterial>();
 
         createPhysicsPolygon(
-            buildControlPoints(), _baseWidth, _baseHeight, PHYSICS_SPLINE_SAMPLE_COUNT, vertices, normals, materials
+                buildControlPoints(), _baseWidth, _baseHeight, PHYSICS_SPLINE_SAMPLE_COUNT, vertices, normals, materials
         );
 
         for (int i = 0; i < vertices.size / 2; ++i) {
@@ -571,11 +571,17 @@ public class Track extends Component {
         setSize(boundingBox.getWidth(), boundingBox.getHeight());
     }
 
+    private float noise(final float max) {
+        return MathUtils.randomTriangular(0.f, max, max / 2.f);
+    }
+
     private void createGraphicsPolygon(final Vector2[] controlPoints,
                                        float width, float height, float topLayer0Height, float topLayer1Height,
                                        int sampleCount,
                                        FloatArray vertices, ShortArray indices,
                                        IntArray metadata) {
+        MathUtils.random.setSeed(43l);
+
         SplineCache.reset(controlPoints, sampleCount, width, height);
 
         final List<Vector2> splinePositions = SplineCache.positions();
@@ -646,9 +652,30 @@ public class Track extends Component {
                 splinePosition.y
             );
 
+            float localTopLayer0Height = topLayer0Height;
+            float topLayer0HeightScale = 1.f;
+            float noiseAmplitude = 0.f;
+
+            if (groundMaterial.type == GroundMaterialType.SNOW) {
+                topLayer0HeightScale = 1.2f;
+                noiseAmplitude = 0.3f;
+            } else if (groundMaterial.type == GroundMaterialType.STONE) {
+                noiseAmplitude = 0.2f;
+            } else if (groundMaterial.type == GroundMaterialType.BOOSTER) {
+                topLayer0HeightScale = 0.8f;
+            }
+
+            if (topLayer0HeightScale != 1.f) {
+                localTopLayer0Height *= topLayer0HeightScale;
+            }
+
+            if (noiseAmplitude > 0.f) {
+                localTopLayer0Height *= 1.f + noise(noiseAmplitude);
+            }
+
             positions[1] = new Vector2(
-                MathUtils.clamp(positions[0].x + topLayer0Height * -splineNormal.x, 0.f, _baseWidth),
-                positions[0].y + topLayer0Height * -splineNormal.y
+                MathUtils.clamp(positions[0].x + localTopLayer0Height * -splineNormal.x, 0.f, _baseWidth),
+                positions[0].y + localTopLayer0Height * -splineNormal.y
             );
 
             positions[2] = new Vector2(

@@ -31,8 +31,7 @@ public class SlopeRider extends ApplicationAdapter {
         _masterScreen = new MasterScreen();
         _masterScreen.assetManager(_assetManager);
         _masterScreen.start();
-//        _masterScreen.push(new MainMenuScreen());
-        _masterScreen.push(new GameScreen(_masterScreen));
+        _masterScreen.push(new MainMenuScreen());
 	}
 
 	@Override

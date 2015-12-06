@@ -57,7 +57,7 @@ public class TrackCameraController
                 .scl(SlopeRider.PIXEL_PER_UNIT);
 
         // FIXME
-        _targetZoom = 3.5f;
+        _targetZoom = 4.5f;
     }
 
     public final TrackCameraController startMove() {
