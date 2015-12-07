@@ -3,6 +3,7 @@ package com.sloperider.component;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.input.GestureDetector;
@@ -29,6 +30,8 @@ public class Level extends Component {
     public interface Listener {
         void stageChanged(final String state);
     }
+
+    private boolean _startedAsViewOnly = false;
 
     private InputMultiplexer _input;
 
@@ -122,8 +125,11 @@ public class Level extends Component {
     }
 
     private void mainTrackChanged(final Track track) {
-        _begin.setPosition(_begin.getX(), track.heightAt(_begin.getX() - track.getX()));
-        _end.setPosition(_end.getX(), track.heightAt(_end.getX() - track.getX()));
+        if (_begin != null)
+            _begin.setPosition(_begin.getX(), track.heightAt(_begin.getX() - track.getX()));
+
+        if (_end != null)
+            _end.setPosition(_end.getX(), track.heightAt(_end.getX() - track.getX()));
 
         final Rectangle bounds = new Rectangle();
         computeBounds(bounds);
@@ -192,9 +198,9 @@ public class Level extends Component {
             boolean won = false;
             boolean lost = false;
 
-            if (_end.hasSleigh(_sleigh)) {
+            if (_end != null && _end.hasSleigh(_sleigh)) {
                 won = true;
-            } else if (_end.isBrokenBySleigh(_sleigh)) {
+            } else if (_end != null && _end.isBrokenBySleigh(_sleigh)) {
                 lost = true;
             } else {
                 if (sleighOutOfBounds()) {
@@ -267,23 +273,53 @@ public class Level extends Component {
         playingEnd();
         editingBegin();
 
-        _end.sleighDestroyed(_sleigh);
+        if (_end != null)
+            _end.sleighDestroyed(_sleigh);
         _componentFactory.destroyComponent(_sleigh);
         _sleigh = null;
 
         return this;
     }
 
+    public final Level startAsViewOnly() {
+        if (_startedAsViewOnly)
+            return this;
+
+        _startedAsViewOnly = true;
+
+        if (_editingCameraController != null)
+            _componentFactory.destroyComponent(_editingCameraController);
+
+        if (_mainTrack != null)
+            _mainTrack.editable(false);
+
+        getStage().getCamera().position.set(
+            new Vector2(35.f, 20.f).scl(SlopeRider.PIXEL_PER_UNIT),
+            0.f
+        );
+        ((OrthographicCamera) getStage().getCamera()).zoom = 3.f;
+
+        return this;
+    }
+
     private void playingBegin() {
+        if (_startedAsViewOnly)
+            return;
+
         if (_listener != null)
             _listener.stageChanged("playing");
     }
 
     private void playingEnd() {
+        if (_startedAsViewOnly)
+            return;
 
     }
 
     private void editingBegin() {
+        if (_startedAsViewOnly)
+            return;
+
         if (_listener != null)
             _listener.stageChanged("editing");
 
@@ -296,6 +332,9 @@ public class Level extends Component {
     }
 
     private void editingEnd() {
+        if (_startedAsViewOnly)
+            return;
+
         if (_editingCameraController != null)
             _componentFactory.destroyComponent(_editingCameraController);
 
