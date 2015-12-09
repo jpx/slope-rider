@@ -4,6 +4,8 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.sloperider.screen.LoadingScreen;
 import com.sloperider.screen.MainMenuScreen;
 import com.sloperider.screen.MasterScreen;
 
@@ -30,7 +32,9 @@ public class SlopeRider extends ApplicationAdapter {
         _masterScreen = new MasterScreen();
         _masterScreen.assetManager(_assetManager);
         _masterScreen.start();
-        _masterScreen.push(new MainMenuScreen(_masterScreen));
+        _masterScreen.push(new LoadingScreen());
+
+        _assetManager.load("ui/uiskin.json", Skin.class);
 	}
 
 	@Override
@@ -38,13 +42,12 @@ public class SlopeRider extends ApplicationAdapter {
         if (!_assetsLoaded) {
             if (_assetManager.update()) {
                 _assetsLoaded = true;
+                _masterScreen.ready();
             } else {
                 final float progress = _assetManager.getProgress();
 
                 Gdx.app.log(TAG, "loading progress: " + progress);
             }
-
-            return;
         }
 
 		Gdx.gl.glClearColor(1.f, 1.f, 1.f, 1.f);

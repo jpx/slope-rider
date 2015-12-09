@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 import com.sloperider.component.Level;
@@ -26,10 +27,22 @@ public class GameScreen extends Screen {
 
         private Table _parent;
 
-        UI(final Stage stage) {
-            _skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+        UI(final Stage stage, final MasterScreen masterScreen) {
+            _skin = masterScreen._assetManager.get("ui/uiskin.json", Skin.class);
 
             _parent = new Table(_skin);
+
+            final Button backButton = new Button(
+                new Image(new TextureRegion(new Texture("ui/back_button.png"))),
+                _skin
+            );
+
+            backButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    backButtonClicked(UI.this, (Button) actor);
+                }
+            });
 
             final Button playButton = new Button(
                 new Image(new TextureRegion(new Texture("ui/play_button.png"))),
@@ -43,8 +56,10 @@ public class GameScreen extends Screen {
                 }
             });
 
-            _parent.add(playButton).center();
-
+            _parent.setFillParent(true);
+            _parent.pad(42.f);
+            _parent.add(backButton).size(64.f).expand().align(Align.topLeft);
+            _parent.add(playButton).size(160.f).expand().align(Align.bottomRight);
             _parent.pack();
 
             stage.addActor(_parent);
@@ -59,6 +74,10 @@ public class GameScreen extends Screen {
             _parent.setTouchable(Touchable.enabled);
             _parent.setVisible(true);
         }
+    }
+
+    private void backButtonClicked(final UI ui, final Button button) {
+        _masterScreen.pop();
     }
 
     private void playButtonClicked(final UI ui, final Button button) {
@@ -78,7 +97,7 @@ public class GameScreen extends Screen {
     public GameScreen(final MasterScreen masterScreen) {
         _levelStage = new Stage();
         _uiStage = new Stage();
-        _ui = new UI(_uiStage);
+        _ui = new UI(_uiStage, masterScreen);
 
         _physicsWorld = new PhysicsWorld();
 
@@ -106,7 +125,8 @@ public class GameScreen extends Screen {
 
     @Override
     public void stop() {
-
+        _componentFactory.destroyComponent(_activeLevel);
+        _activeLevel = null;
     }
 
     @Override

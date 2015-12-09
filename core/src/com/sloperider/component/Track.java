@@ -69,7 +69,7 @@ public class Track extends Component {
     private static final int PHYSICS_SPLINE_SAMPLE_COUNT = 101;
     private static final int GRAPHICS_SPLINE_SAMPLE_COUNT = 101;
 
-    private static final float TOP_LAYER0_HEIGHT = 1.5f;
+    private static final float TOP_LAYER0_HEIGHT = 2.5f;
     private static final float TOP_LAYER1_HEIGHT = 0.7f;
 
     private static final float HORIZONTAL_SPLATTING_SIZE = 0.2f;

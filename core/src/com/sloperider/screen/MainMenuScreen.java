@@ -29,8 +29,8 @@ public class MainMenuScreen extends Screen {
 
         private Table _menuTable;
 
-        UI(final Stage stage) {
-            _skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+        UI(final Stage stage, final MasterScreen masterScreen) {
+            _skin = masterScreen._assetManager.get("ui/uiskin.json", Skin.class);
 
             _parent = new Table(_skin);
             _parent.setFillParent(true);
@@ -92,7 +92,7 @@ public class MainMenuScreen extends Screen {
     public MainMenuScreen(final MasterScreen masterScreen) {
         _uiStage = new Stage();
 
-        new UI(_uiStage);
+        new UI(_uiStage, masterScreen);
 
         _levelStage = new Stage();
         _physicsWorld = new PhysicsWorld();
@@ -120,6 +120,10 @@ public class MainMenuScreen extends Screen {
 
     @Override
     public void stop() {
+        _spawnSleighTimer.stop();
+        _spawnSleighTimer = null;
+        _backgroundLevel.destroySleigh();
+        _componentFactory.destroyComponent(_backgroundLevel);
     }
 
     @Override

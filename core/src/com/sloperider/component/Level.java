@@ -259,6 +259,9 @@ public class Level extends Component {
     }
 
     public final Level spawnSleigh() {
+        if (_sleigh != null)
+            destroySleigh();
+
         editingEnd();
         playingBegin();
 
@@ -272,6 +275,9 @@ public class Level extends Component {
     public final Level destroySleigh() {
         playingEnd();
         editingBegin();
+
+        if (_sleigh == null)
+            return this;
 
         if (_end != null)
             _end.sleighDestroyed(_sleigh);

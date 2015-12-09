@@ -26,7 +26,8 @@ public class MasterScreen extends Screen {
 
     public final void pop() {
         _activeScreen.stop();
-        _activeScreen = _screens.remove(_screens.size() - 1);
+        _screens.remove(_screens.size() - 1);
+        _activeScreen = _screens.get(_screens.size() - 1);
         _activeScreen.start();
     }
 
@@ -55,5 +56,13 @@ public class MasterScreen extends Screen {
     @Override
     public void dispose() {
         _activeScreen.dispose();
+    }
+
+    @Override
+    public void ready() {
+        super.ready();
+
+        if (_activeScreen != null)
+            _activeScreen.ready();
     }
 }
