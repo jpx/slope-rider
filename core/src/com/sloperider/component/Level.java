@@ -200,8 +200,6 @@ public class Level extends Component {
 
             if (_end != null && _end.hasSleigh(_sleigh)) {
                 won = true;
-            } else if (_end != null && _end.isBrokenBySleigh(_sleigh)) {
-                lost = true;
             } else {
                 if (sleighOutOfBounds()) {
                     lost = true;

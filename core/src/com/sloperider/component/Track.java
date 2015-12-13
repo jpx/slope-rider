@@ -428,6 +428,8 @@ public class Track extends Component {
 
         _shader.render(_renderable);
 
+        _shader.end();
+
         _context.end();
 
         batch.begin();
