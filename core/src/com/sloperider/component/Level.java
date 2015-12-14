@@ -18,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.sloperider.ComponentFactory;
+import com.sloperider.Layer;
 import com.sloperider.SlopeRider;
 
 import java.util.ArrayList;
@@ -148,6 +149,8 @@ public class Level extends Component {
         setSize(1000.f, 1000.f);
 
         setTouchable(Touchable.childrenOnly);
+
+        componentFactory.createComponent(Layer.BACKGROUND0, Vector2.Zero, Background.class);
 
         addListener(new InputListener() {
             @Override
@@ -291,8 +294,10 @@ public class Level extends Component {
 
         _startedAsViewOnly = true;
 
-        if (_editingCameraController != null)
+        if (_editingCameraController != null) {
             _componentFactory.destroyComponent(_editingCameraController);
+            _editingCameraController = null;
+        }
 
         if (_mainTrack != null)
             _mainTrack.editable(false);
@@ -307,6 +312,8 @@ public class Level extends Component {
     }
 
     private void playingBegin() {
+        playingEnd();
+
         if (_startedAsViewOnly)
             return;
 
@@ -321,6 +328,8 @@ public class Level extends Component {
     }
 
     private void editingBegin() {
+        editingEnd();
+
         if (_startedAsViewOnly)
             return;
 
@@ -339,8 +348,10 @@ public class Level extends Component {
         if (_startedAsViewOnly)
             return;
 
-        if (_editingCameraController != null)
+        if (_editingCameraController != null) {
             _componentFactory.destroyComponent(_editingCameraController);
+            _editingCameraController = null;
+        }
 
         if (_mainTrack != null)
             _mainTrack.editable(false);

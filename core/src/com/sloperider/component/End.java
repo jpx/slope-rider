@@ -195,7 +195,7 @@ public class End extends Component {
         final float height = getHeight();
 
         final Mesh mesh = new Mesh(true, 4, 6,
-                new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
+                new VertexAttribute(VertexAttributes.Usage.Position, 2, "a_position"),
                 new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_uv"));
 
         mesh.setIndices(new short[] {
@@ -204,10 +204,10 @@ public class End extends Component {
         });
 
         mesh.setVertices(new float[]{
-            0.f, 0.f, 0.f, 0.f, 0.f,
-            0.f, height, 0.f, 0.f, 1.f,
-            width, height, 0.f, 1.f, 1.f,
-            width, 0.f, 0.f, 1.f, 0.f
+            0.f, 0.f, 0.f, 0.f,
+            0.f, height, 0.f, 1.f,
+            width, height, 1.f, 1.f,
+            width, 0.f, 1.f, 0.f
         });
 
         builder.begin();

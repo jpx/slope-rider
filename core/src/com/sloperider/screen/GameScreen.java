@@ -18,6 +18,9 @@ import com.sloperider.SlopeRider;
 import com.sloperider.component.Level;
 import com.sloperider.physics.PhysicsWorld;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by jpx on 03/12/15.
  */
@@ -26,6 +29,12 @@ public class GameScreen extends Screen {
         private Skin _skin;
 
         private Table _parent;
+
+        private Button _playButton;
+        private Button _stopButton;
+
+        private final List<Actor> _playingActors = new ArrayList<Actor>();
+        private final List<Actor> _editingActors = new ArrayList<Actor>();
 
         UI(final Stage stage, final MasterScreen masterScreen) {
             _skin = masterScreen._assetManager.get("ui/uiskin.json", Skin.class);
@@ -44,35 +53,70 @@ public class GameScreen extends Screen {
                 }
             });
 
-            final Button playButton = new Button(
+            _playButton = new Button(
                 new Image(new TextureRegion(new Texture("ui/play_button.png"))),
                 _skin
             );
 
-            playButton.addListener(new ChangeListener() {
+            _playButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
                     playButtonClicked(UI.this, (Button) actor);
                 }
             });
 
+            _stopButton = new Button(
+                new Image(new TextureRegion(new Texture("ui/stop_button.png"))),
+                _skin
+            );
+
+            _stopButton.addListener(new ChangeListener() {
+
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    stopButtonClicked(UI.this, (Button) actor);
+                }
+            });
+
             _parent.setFillParent(true);
             _parent.pad(42.f);
             _parent.add(backButton).size(64.f).expand().align(Align.topLeft);
-            _parent.add(playButton).size(160.f).expand().align(Align.bottomRight);
+            _parent.add(_playButton).size(160.f).expand().align(Align.topRight).row();
+            _parent.add(_stopButton).size(160.f).expand().align(Align.bottomRight).colspan(2);
             _parent.pack();
 
             stage.addActor(_parent);
+
+            _editingActors.add(backButton);
+            _editingActors.add(_playButton);
+
+            _playingActors.add(_stopButton);
+
+            setEditingMode();
         }
 
-        public final void hide() {
-            _parent.setTouchable(Touchable.disabled);
-            _parent.setVisible(false);
+        public final void setPlayingMode() {
+            for (final Actor actor : _editingActors) {
+                actor.setTouchable(Touchable.disabled);
+                actor.setVisible(false);
+            }
+
+            for (final Actor actor : _playingActors) {
+                actor.setTouchable(Touchable.enabled);
+                actor.setVisible(true);
+            }
         }
 
-        public final void show() {
-            _parent.setTouchable(Touchable.enabled);
-            _parent.setVisible(true);
+        public final void setEditingMode() {
+            for (final Actor actor : _playingActors) {
+                actor.setTouchable(Touchable.disabled);
+                actor.setVisible(false);
+            }
+
+            for (final Actor actor : _editingActors) {
+                actor.setTouchable(Touchable.enabled);
+                actor.setVisible(true);
+            }
         }
     }
 
@@ -81,7 +125,13 @@ public class GameScreen extends Screen {
     }
 
     private void playButtonClicked(final UI ui, final Button button) {
+        ui.setPlayingMode();
         _activeLevel.spawnSleigh();
+    }
+
+    private void stopButtonClicked(final UI ui, final Button button) {
+        ui.setEditingMode();
+        _activeLevel.destroySleigh();
     }
 
     private Stage _levelStage;
@@ -115,9 +165,9 @@ public class GameScreen extends Screen {
             @Override
             public void stageChanged(final String state) {
                 if (state.equals("playing")) {
-                    _ui.hide();
+                    _ui.setPlayingMode();
                 } else if (state.equals("editing")) {
-                    _ui.show();
+                    _ui.setEditingMode();
                 }
             }
         });
