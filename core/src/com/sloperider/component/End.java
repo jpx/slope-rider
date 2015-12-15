@@ -88,7 +88,6 @@ public class End extends Component {
         Sleigh sleigh;
     }
 
-    private Mesh _mesh;
     private RenderContext _context;
     private Environment _environment;
     private Renderable _renderable;
@@ -182,12 +181,6 @@ public class End extends Component {
 
         setSize(8.f, 8.f);
         setOrigin(getWidth() / 2.f, getHeight() / 2.f);
-
-        final Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        pixmap.setColor(1.f, 0.f, 0.f, 0.5f);
-        pixmap.fill();
-
-        _textureRegion = new TextureRegion(new Texture(pixmap));
 
         final ModelBuilder builder = new ModelBuilder();
 
@@ -317,15 +310,6 @@ public class End extends Component {
         _context.end();
 
         batch.begin();
-
-//        batch.draw(
-//                _textureRegion,
-//                getX() * SlopeRider.PIXEL_PER_UNIT, getY() * SlopeRider.PIXEL_PER_UNIT,
-//                getOriginX(), getOriginY(),
-//                getWidth(), getHeight(),
-//                getScaleX() * SlopeRider.PIXEL_PER_UNIT, getScaleY() * SlopeRider.PIXEL_PER_UNIT,
-//                getRotation()
-//        );
     }
 
     @Override

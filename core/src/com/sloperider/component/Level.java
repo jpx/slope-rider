@@ -173,6 +173,9 @@ public class Level extends Component {
         mainTrackChanged(_mainTrack);
 
         editingBegin();
+
+        // tmp
+        componentFactory.createComponent(new Vector2(25.f, 25.f), Bumper.class);
     }
 
     @Override

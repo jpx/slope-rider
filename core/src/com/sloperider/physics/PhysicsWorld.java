@@ -101,6 +101,6 @@ public class PhysicsWorld {
             0.f
         );
 
-        _renderer.render(_world, projection);
+//        _renderer.render(_world, projection);
     }
 }
