@@ -1,0 +1,12 @@
+{
+  "levels" : [
+    {
+      "name" : "level0",
+      "filename" : "level/level0.lvl"
+    },
+    {
+      "name" : "level1",
+      "filename" : "level/level1.lvl"
+    }
+  ]
+}

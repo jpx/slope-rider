@@ -8,20 +8,34 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.List;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.sloperider.ComponentFactory;
+import com.sloperider.SlopeRider;
 import com.sloperider.component.Level;
 import com.sloperider.physics.PhysicsWorld;
+
+import java.util.ArrayList;
 
 /**
  * Created by jpx on 03/12/15.
  */
-public class MainMenuScreen extends Screen {
+public class LevelsMenuScreen extends Screen {
     private Stage _uiStage;
+
+    private class LevelEntry {
+        String name;
+        String filename;
+        boolean complete;
+        float bestScore;
+    }
 
     private class UI {
         private Skin _skin;
@@ -35,54 +49,25 @@ public class MainMenuScreen extends Screen {
             _parent = new Table(_skin);
             _parent.setFillParent(true);
 
+            final List<String> _menu = new List<String>(_skin);
+            final ScrollPane _scrollPane = new ScrollPane(_menu, _skin);
+
+            final Array items = new Array();
+
+            for (final LevelEntry level : _levels) {
+                items.add(level.name);
+            }
+            _menu.setItems(items);
+
+            _menu.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    setBackgroundLevel(_menu.getSelectedIndex());
+                }
+            });
+
             _parent.defaults().space(60.f);
-
-            final Image titleImage = new Image(new TextureRegion(new Texture("ui/title.png")));
-            _parent.add(titleImage).row();
-
-            _menuTable = new Table(_skin);
-
-            final float fontScale = 2.f;
-
-            final TextButton playButton = new TextButton("Play", _skin);
-            playButton.getLabel().setFontScale(fontScale);
-
-            playButton.addListener(new ChangeListener() {
-                @Override
-                public void changed(ChangeEvent event, Actor actor) {
-                    playButtonClicked();
-                }
-            });
-
-            final TextButton scoreButton = new TextButton("Scores", _skin);
-            scoreButton.getLabel().setFontScale(fontScale);
-
-            scoreButton.addListener(new ChangeListener() {
-                @Override
-                public void changed(ChangeEvent event, Actor actor) {
-                    scoreButtonClicked();
-                }
-            });
-
-            final TextButton levelsButton = new TextButton("Levels", _skin);
-            levelsButton.getLabel().setFontScale(fontScale);
-            levelsButton.addListener(new ChangeListener() {
-                @Override
-                public void changed(ChangeEvent event, Actor actor) {
-                    levelsButtonClicked();
-                }
-            });
-
-            final float width = 180.f;
-            final float height = 20.f;
-
-            _menuTable.defaults().space(15.f);
-            _menuTable.add(playButton).prefSize(width, height).row();
-            _menuTable.add(levelsButton).prefSize(width, height).row();
-            _menuTable.add(scoreButton).prefSize(width, height).row();
-            _menuTable.pack();
-
-            _parent.add(_menuTable);
+            _parent.add(_scrollPane).maxSize(480.f, 320.f);
             _parent.pack();
 
             stage.addActor(_parent);
@@ -96,20 +81,20 @@ public class MainMenuScreen extends Screen {
 
     private Timer _spawnSleighTimer;
 
-    private void playButtonClicked() {
-        _masterScreen.push(new GameScreen(_masterScreen));
-    }
+    private final java.util.List<LevelEntry> _levels = new ArrayList<LevelEntry>();
 
-    private void levelsButtonClicked() {
-        _masterScreen.push(new LevelsMenuScreen(_masterScreen));
-    }
-
-    private void scoreButtonClicked() {
-        _masterScreen.push(new GameScreen(_masterScreen));
-    }
-
-    public MainMenuScreen(final MasterScreen masterScreen) {
+    public LevelsMenuScreen(final MasterScreen masterScreen) {
         _uiStage = new Stage();
+
+        // tmp
+        for (int i = 0; i < 15; ++i) {
+            _levels.add(new LevelEntry());
+            _levels.get(_levels.size() - 1).name = "level0" + i;
+            _levels.get(_levels.size() - 1).filename = "level/level0.lvl";
+            _levels.add(new LevelEntry());
+            _levels.get(_levels.size() - 1).name = "level1" + i;
+            _levels.get(_levels.size() - 1).filename = "level/level1.lvl";
+        }
 
         new UI(_uiStage, masterScreen);
 
@@ -124,8 +109,7 @@ public class MainMenuScreen extends Screen {
     public void start() {
         Gdx.input.setInputProcessor(new InputMultiplexer(_uiStage, _levelStage));
 
-        _backgroundLevel = _componentFactory.createLevel("level/title_level.lvl")
-            .startAsViewOnly();
+        setBackgroundLevel(0);
 
         _spawnSleighTimer = new Timer();
         _spawnSleighTimer.scheduleTask(new Timer.Task() {
@@ -162,5 +146,15 @@ public class MainMenuScreen extends Screen {
     public void dispose() {
         _uiStage.dispose();
         _uiStage = null;
+    }
+
+    private void setBackgroundLevel(final int index) {
+        if (_backgroundLevel != null) {
+            _backgroundLevel.destroySleigh();
+            _componentFactory.destroyComponent(_backgroundLevel);
+        }
+
+        _backgroundLevel = _componentFactory.createLevel(_levels.get(index).filename)
+            .startAsViewOnly();
     }
 }
