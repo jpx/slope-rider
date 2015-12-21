@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.JsonValue;
 import com.sloperider.ComponentFactory;
+import com.sloperider.Layer;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.CollisionGroup;
 import com.sloperider.physics.PhysicsActor;
@@ -25,12 +26,20 @@ public abstract class Component extends Group implements PhysicsActor {
 
     private boolean _ready;
 
+    protected Layer _layer;
+
     private final List<Component> _components = new ArrayList<Component>();
 
     protected final <T extends Component> T addComponent(final T component) {
         _components.add(component);
 
         return component;
+    }
+
+    public final Component setLayer(final Layer layer) {
+        _layer = layer;
+
+        return this;
     }
 
     public Component() {

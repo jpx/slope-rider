@@ -445,12 +445,12 @@ public class Track extends Component {
         }
 
         @Override
-        public boolean contactBegin(ContactData data) {
+        public boolean contactBegin(ContactData data, Contact contact) {
             return false;
         }
 
         @Override
-        public boolean contactEnd(ContactData data) {
+        public boolean contactEnd(ContactData data, Contact contact) {
             return false;
         }
     }

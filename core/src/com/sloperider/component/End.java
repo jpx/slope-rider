@@ -26,6 +26,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Joint;
@@ -56,7 +57,7 @@ public class End extends Component {
         }
 
         @Override
-        public boolean contactBegin(PhysicsActor.ContactData data) {
+        public boolean contactBegin(PhysicsActor.ContactData data, Contact contact) {
             if (data instanceof Sleigh.ContactData) {
                 Sleigh.ContactData sleighContactData = (Sleigh.ContactData) data;
                 Sleigh sleigh = sleighContactData.sleigh;
@@ -70,7 +71,7 @@ public class End extends Component {
         }
 
         @Override
-        public boolean contactEnd(PhysicsActor.ContactData data) {
+        public boolean contactEnd(PhysicsActor.ContactData data, Contact contact) {
             if (data instanceof Sleigh.ContactData) {
                 Sleigh.ContactData sleighContactData = (Sleigh.ContactData) data;
                 Sleigh sleigh = sleighContactData.sleigh;

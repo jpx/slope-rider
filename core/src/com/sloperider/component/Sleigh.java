@@ -48,7 +48,7 @@ public class Sleigh extends Component {
         }
 
         @Override
-        public boolean contactBegin(PhysicsActor.ContactData data) {
+        public boolean contactBegin(PhysicsActor.ContactData data, Contact contact) {
             if (data instanceof Track.EdgeContactData) {
                 Track.EdgeContactData edgeContactData = (Track.EdgeContactData) data;
 
@@ -62,7 +62,7 @@ public class Sleigh extends Component {
         }
 
         @Override
-        public boolean contactEnd(PhysicsActor.ContactData data) {
+        public boolean contactEnd(PhysicsActor.ContactData data, Contact contact) {
             if (data instanceof Track.EdgeContactData) {
                 Track.EdgeContactData edgeContactData = (Track.EdgeContactData) data;
 
@@ -194,7 +194,7 @@ public class Sleigh extends Component {
             _body.applyForceToCenter(_persistentForceVector.cpy().scl(30.f), true);
         }
 
-        final Vector2 position = _body.getPosition().cpy();;
+        final Vector2 position = _body.getPosition().cpy();
         final float rotation = MathUtils.radiansToDegrees * _body.getAngle();
 
         setPosition(position.x, position.y);

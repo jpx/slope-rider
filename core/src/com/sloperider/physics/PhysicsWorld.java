@@ -41,8 +41,8 @@ public class PhysicsWorld {
                     final PhysicsActor.ContactData lhsData = (PhysicsActor.ContactData) lhsObject;
                     final PhysicsActor.ContactData rhsData = (PhysicsActor.ContactData) rhsObject;
 
-                    if (!lhsData.contactBegin(rhsData))
-                        rhsData.contactBegin(lhsData);
+                    if (!lhsData.contactBegin(rhsData, contact))
+                        rhsData.contactBegin(lhsData, contact);
                 }
             }
 
@@ -55,8 +55,8 @@ public class PhysicsWorld {
                     final PhysicsActor.ContactData lhsData = (PhysicsActor.ContactData) lhsObject;
                     final PhysicsActor.ContactData rhsData = (PhysicsActor.ContactData) rhsObject;
 
-                    if (!lhsData.contactEnd(rhsData))
-                        rhsData.contactEnd(lhsData);
+                    if (!lhsData.contactEnd(rhsData, contact))
+                        rhsData.contactEnd(lhsData, contact);
                 }
             }
 
@@ -101,6 +101,6 @@ public class PhysicsWorld {
             0.f
         );
 
-//        _renderer.render(_world, projection);
+        _renderer.render(_world, projection);
     }
 }

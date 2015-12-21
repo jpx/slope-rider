@@ -125,6 +125,8 @@ public class ComponentFactory {
     }
 
     public final <T extends Component> T initializeComponent(final Layer layer, final T component) {
+        component.setLayer(layer);
+
         if (!_runningPostPhase)
             _components.put(component, layer);
         else

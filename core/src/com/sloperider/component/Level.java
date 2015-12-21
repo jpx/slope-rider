@@ -74,13 +74,26 @@ public class Level extends Component {
 
             if (type.equals("Begin")) {
                 _begin = addComponent(componentFactory.createComponent(position, Begin.class));
-            }
-
-            if (type.equals("End")) {
+            } else if (type.equals("End")) {
                 _end = addComponent(componentFactory.createComponent(position, End.class));
-            }
+            } else if (type.equals("ObjectSpawner")) {
+                final ObjectSpawner objectSpawner = new ObjectSpawner();
+                objectSpawner.setPosition(position.x, position.y);
 
-            if (type.equals("Track")) {
+                final String spawnedObjectTypeName = componentNode.getString("spawnedObjectType");
+                Class<? extends Component> spawnedObjectType = null;
+
+                if (spawnedObjectTypeName.equals("RollingObject"))
+                    spawnedObjectType = RollingObject.class;
+
+                objectSpawner.setParameters(
+                    spawnedObjectType,
+                    componentNode.getFloat("cardinality"),
+                    componentNode.getFloat("delay")
+                );
+
+                addComponent(componentFactory.initializeComponent(Layer.BACKGROUND2, objectSpawner));
+            } else if (type.equals("Track")) {
                 final Track track = new Track();
 
                 if (_mainTrack == null) {
@@ -173,9 +186,6 @@ public class Level extends Component {
         mainTrackChanged(_mainTrack);
 
         editingBegin();
-
-        // tmp
-        componentFactory.createComponent(new Vector2(25.f, 25.f), Bumper.class);
     }
 
     @Override

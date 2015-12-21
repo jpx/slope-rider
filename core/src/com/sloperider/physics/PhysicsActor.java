@@ -1,5 +1,6 @@
 package com.sloperider.physics;
 
+import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.World;
 
 /**
@@ -7,8 +8,8 @@ import com.badlogic.gdx.physics.box2d.World;
  */
 public interface PhysicsActor {
     public interface ContactData {
-        boolean contactBegin(ContactData data);
-        boolean contactEnd(ContactData data);
+        boolean contactBegin(ContactData data, Contact contact);
+        boolean contactEnd(ContactData data, Contact contact);
     }
 
     short group();
