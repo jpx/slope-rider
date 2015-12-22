@@ -28,7 +28,7 @@ public abstract class Component extends Group implements PhysicsActor {
 
     protected Layer _layer;
 
-    private final List<Component> _components = new ArrayList<Component>();
+    protected final List<Component> _components = new ArrayList<Component>();
 
     protected final <T extends Component> T addComponent(final T component) {
         _components.add(component);
@@ -68,6 +68,9 @@ public abstract class Component extends Group implements PhysicsActor {
     protected abstract void doAct(float delta);
     protected abstract void doDraw(Batch batch);
     protected abstract void doDestroy(ComponentFactory componentFactory);
+
+    protected void levelPlayed(final Level level) { }
+    protected void levelStopped(final Level level) { }
 
     public final void ready(ComponentFactory componentFactory) {
         if (_ready)

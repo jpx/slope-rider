@@ -332,11 +332,19 @@ public class Level extends Component {
 
         if (_listener != null)
             _listener.stageChanged("playing");
+
+        for (final Component component : _components) {
+            component.levelPlayed(this);
+        }
     }
 
     private void playingEnd() {
         if (_startedAsViewOnly)
             return;
+
+        for (final Component component : _components) {
+            component.levelStopped(this);
+        }
 
     }
 

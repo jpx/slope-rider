@@ -12,6 +12,8 @@ import com.sloperider.ComponentFactory;
  * Created by jpx on 21/12/15.
  */
 public class ObjectSpawner extends Component {
+    private ComponentFactory _componentFactory;
+
     private Class<? extends Component> _spawnedType;
 
     private float _cardinality;
@@ -44,18 +46,20 @@ public class ObjectSpawner extends Component {
     }
 
     @Override
-    protected void doReady(final ComponentFactory componentFactory) {
+    protected void levelPlayed(Level level) {
+        super.levelPlayed(level);
+
         _timer = new Timer();
         _timer.start();
 
         final Timer.Task task = new Timer.Task() {
             @Override
             public void run() {
-                addComponent(componentFactory.createComponent(
-                    _layer,
-                    new Vector2(getX(), getY()),
-                    _spawnedType
-                ));
+            addComponent(_componentFactory.createComponent(
+                _layer,
+                new Vector2(getX(), getY()),
+                _spawnedType
+            ));
             }
         };
 
@@ -65,6 +69,27 @@ public class ObjectSpawner extends Component {
             _timer.scheduleTask(task, _delay);
         else
             _timer.scheduleTask(task, _delay, _delay);
+    }
+
+    @Override
+    protected void levelStopped(Level level) {
+        super.levelStopped(level);
+
+        for (final Component component : _components) {
+            _componentFactory.destroyComponent(component);
+        }
+        _components.clear();
+
+        if (_timer != null) {
+            _timer.stop();
+            _timer.clear();
+            _timer = null;
+        }
+    }
+
+    @Override
+    protected void doReady(final ComponentFactory componentFactory) {
+        _componentFactory = componentFactory;
     }
 
     @Override
@@ -79,9 +104,6 @@ public class ObjectSpawner extends Component {
 
     @Override
     protected void doDestroy(ComponentFactory componentFactory) {
-        _timer.stop();
-        _timer.clear();
-        _timer = null;
     }
 
     @Override

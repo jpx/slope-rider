@@ -17,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.sloperider.ComponentFactory;
+import com.sloperider.Layer;
 import com.sloperider.SlopeRider;
 
 /**
@@ -78,6 +79,13 @@ public class TrackPoint extends Component {
 
         setSize(_radius * 2.f, _radius * 2.f);
         setOrigin(getWidth() / 2.f, getHeight() / 2.f);
+
+        // tmp
+        addComponent(componentFactory.createComponent(
+                Layer.FRONT0,
+                new Vector2(getX(), getY()),
+                Draggable.class
+        ));
 
         addListener(new InputListener() {
             @Override
