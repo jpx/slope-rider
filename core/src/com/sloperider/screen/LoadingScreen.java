@@ -10,7 +10,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
  */
 public class LoadingScreen extends Screen {
     private final SpriteBatch batch = new SpriteBatch();
-    private final TextureRegion sprite = new TextureRegion(new Texture("texture/loading_image.png"));
+    private final TextureRegion sprite = new TextureRegion(new Texture("texture/loading_screen.png"));
 
     @Override
     public void start() {
