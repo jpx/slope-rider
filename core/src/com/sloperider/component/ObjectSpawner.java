@@ -46,8 +46,8 @@ public class ObjectSpawner extends Component {
     }
 
     @Override
-    protected void levelPlayed(Level level) {
-        super.levelPlayed(level);
+    protected void doLevelPlayed(Level level) {
+        super.doLevelPlayed(level);
 
         _timer = new Timer();
         _timer.start();
@@ -72,8 +72,8 @@ public class ObjectSpawner extends Component {
     }
 
     @Override
-    protected void levelStopped(Level level) {
-        super.levelStopped(level);
+    protected void doLevelStopped(Level level) {
+        super.doLevelStopped(level);
 
         for (final Component component : _components) {
             _componentFactory.destroyComponent(component);

@@ -76,12 +76,12 @@ public class TrackPoint extends Component {
         _draggable = new Draggable()
             .draggedComponent(this)
             .draggingMask(Vector2.Y)
-            .draggingBounds(new Vector2(getX(), getY()), new Vector2(0.f, -5.f), new Vector2(0.f, 5.f));
+            .draggingBounds(new Vector2(getX(), getY()), new Vector2(-0.5f, -2.f), new Vector2(0.5f, 5.f));
 
         addComponent(componentFactory.initializeComponent(Layer.FRONT0, _draggable)
             .registerListener(new Draggable.Listener() {
                 @Override
-                public void dragged(Draggable self, Vector2 move, Vector2 position) {
+                public void dragged(Draggable self, Vector2 move, Vector2 position, float deltaDistance) {
                     setTrackValue(_trackValue + move.y);
                 }
             }));

@@ -93,6 +93,11 @@ public class Level extends Component {
                 );
 
                 addComponent(componentFactory.initializeComponent(Layer.BACKGROUND2, objectSpawner));
+            } else if (type.equals("DraggableNetwork")) {
+                final DraggableNetwork draggableNetwork = new DraggableNetwork()
+                    .quota(componentNode.getFloat("quota"));
+
+                addComponent(componentFactory.initializeComponent(draggableNetwork));
             } else if (type.equals("Track")) {
                 final Track track = new Track();
 

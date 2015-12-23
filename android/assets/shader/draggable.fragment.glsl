@@ -39,7 +39,7 @@ void main()
     if (v_uv.x < OUTLINE_SIZE / u_size.x || v_uv.x > 1.0 - OUTLINE_SIZE / u_size.x ||
         v_uv.y < OUTLINE_SIZE / u_size.y || v_uv.y > 1.0 - OUTLINE_SIZE / u_size.y)
     {
-        diffuse = vec4(vec3(0.0), 0.6);
+//        diffuse = vec4(vec3(0.0), 0.6);
     }
     else
     {

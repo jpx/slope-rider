@@ -19,6 +19,7 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -29,20 +30,28 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by jpx on 21/12/15.
  */
 public class Draggable extends Component {
     public interface Listener {
-        void dragged(final Draggable self, final Vector2 move, final Vector2 position);
+        void dragged(final Draggable self,
+                     final Vector2 move,
+                     final Vector2 position,
+                     final float deltaDistance);
     }
 
     private Component _draggedComponent;
-    private Listener _listener;
+    private final List<Listener> _listeners = new ArrayList<Listener>();
 
     private Vector2 _anchorPosition;
     private Vector2 _draggingMinBound;
     private Vector2 _draggingMaxBound;
+
+    private float _limit;
 
     private RenderContext _context;
     private Environment _environment;
@@ -67,7 +76,13 @@ public class Draggable extends Component {
     }
 
     public final Draggable registerListener(final Listener listener) {
-        _listener = listener;
+        _listeners.add(listener);
+
+        return this;
+    }
+
+    public final Draggable unregisterListener(final Listener listener) {
+        _listeners.remove(listener);
 
         return this;
     }
@@ -86,8 +101,14 @@ public class Draggable extends Component {
         _draggingMaxBound = draggingMaxBound;
 
         final Vector2 graphicsScale = new Vector2(2.f, 1.f);
-        _graphicsSize = _draggingMaxBound.cpy().sub(_draggingMinBound).add(1.f, 1.f).scl(graphicsScale);
-        _graphicsOrigin = _graphicsSize.cpy().scl(0.5f);
+        _graphicsSize = _draggingMaxBound.cpy().sub(_draggingMinBound).scl(graphicsScale);
+        _graphicsOrigin = _draggingMinBound.cpy().scl(-1.f).scl(graphicsScale);
+
+        return this;
+    }
+
+    public final Draggable limitChanged(final float value) {
+        _limit = value;
 
         return this;
     }
@@ -184,8 +205,8 @@ public class Draggable extends Component {
                 program.setUniformMatrix("u_worldToScreenMatrix", camera.combined);
 
                 program.setUniformf("u_size", _graphicsSize);
-                program.setUniformf("u_anchorPosition", 0.5f, 0.5f);
-                program.setUniformf("u_limit", 0.4f);
+                program.setUniformf("u_anchorPosition", _draggingMinBound.cpy().scl(-1.f).scl(1.f / _graphicsSize.x, 1.f / _graphicsSize.y));
+                program.setUniformf("u_limit", _limit / _graphicsSize.len());
                 program.setUniformf("u_limitMask", 0.f, 1.f);
             }
 
@@ -248,13 +269,36 @@ public class Draggable extends Component {
 
             final Vector2 position = new Vector2(getX(), getY()).add(move);
 
-            position.y = Math.min(position.y, _anchorPosition.y + _draggingMaxBound.y);
-            position.y = Math.max(position.y, _anchorPosition.y + _draggingMinBound.y);
+            position.x = MathUtils.clamp(
+                position.x,
+                _anchorPosition.x + _draggingMinBound.x,
+                _anchorPosition.x + _draggingMaxBound.x
+            );
+
+            position.y = MathUtils.clamp(
+                position.y,
+                _anchorPosition.y + _draggingMinBound.y,
+                _anchorPosition.y + _draggingMaxBound.y
+            );
+
+            position.x = MathUtils.clamp(
+                position.x,
+                _anchorPosition.x - _limit,
+                _anchorPosition.x + _limit
+            );
+
+            position.y = MathUtils.clamp(
+                position.y,
+                _anchorPosition.y - _limit,
+                _anchorPosition.y + _limit
+            );
 
             final Vector2 actualMove = position.cpy().sub(getX(), getY());
 
-            if (_listener != null)
-                _listener.dragged(this, actualMove, position);
+            final float deltaDistance = position.dst(_anchorPosition) - new Vector2(getX(), getY()).dst(_anchorPosition);
+
+            for (final Listener listener : _listeners)
+                listener.dragged(this, actualMove, position, deltaDistance);
 
             _draggedComponent.setPosition(position.x, position.y);
         }
@@ -373,5 +417,21 @@ public class Draggable extends Component {
     @Override
     public float getScaleY() {
         return _draggedComponent.getScaleY();
+    }
+
+    @Override
+    protected void doLevelPlayed(Level level) {
+        super.doLevelPlayed(level);
+
+        setTouchable(Touchable.disabled);
+        setVisible(false);
+    }
+
+    @Override
+    protected void doLevelStopped(Level level) {
+        super.doLevelStopped(level);
+
+        setTouchable(Touchable.enabled);
+        setVisible(true);
     }
 }

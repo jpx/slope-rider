@@ -22,6 +22,12 @@ import java.util.Map;
  * Created by jpx on 12/11/15.
  */
 public class ComponentFactory {
+    public interface Listener {
+        void componentCreated(final Component component);
+
+        void componentDestroyed(final Component component);
+    }
+
     private boolean _ready;
     private boolean _runningPostPhase;
 
@@ -34,6 +40,8 @@ public class ComponentFactory {
     private Map<Component, Layer> _componentsToAdd;
 
     private final Map<Layer, Group> _roots = new HashMap<Layer, Group>();
+
+    private final List<Listener> _listeners = new ArrayList<Listener>();
 
     public ComponentFactory(final Stage stage, final AssetManager assetManager, final PhysicsWorld physicsWorld) {
         _ready = false;
@@ -51,6 +59,18 @@ public class ComponentFactory {
             _stage.addActor(root);
             _roots.put(layer, root);
         }
+    }
+
+    public final ComponentFactory registerListener(final Listener listener) {
+        _listeners.add(listener);
+
+        return this;
+    }
+
+    public final ComponentFactory unregisterListener(final Listener listener) {
+        _listeners.remove(listener);
+
+        return this;
     }
 
     public final void requireAssets() {
@@ -145,11 +165,17 @@ public class ComponentFactory {
             _physicsWorld.addActor(component);
         }
 
+        for (final Listener listener : _listeners)
+            listener.componentCreated(component);
+
         return component;
     }
 
     public final void destroyComponent(final Component component) {
         final Layer layer = _components.remove(component);
+
+        for (final Listener listener : _listeners)
+            listener.componentDestroyed(component);
 
         component.releaseAssets(_assetManager);
 
