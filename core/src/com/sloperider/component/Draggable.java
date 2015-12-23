@@ -21,6 +21,10 @@ import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
@@ -29,7 +33,16 @@ import com.sloperider.SlopeRider;
  * Created by jpx on 21/12/15.
  */
 public class Draggable extends Component {
+    public interface Listener {
+        void dragged(final Draggable self, final Vector2 move, final Vector2 position);
+    }
+
+    private Component _draggedComponent;
+    private Listener _listener;
+
     private Vector2 _anchorPosition;
+    private Vector2 _draggingMinBound;
+    private Vector2 _draggingMaxBound;
 
     private RenderContext _context;
     private Environment _environment;
@@ -37,6 +50,47 @@ public class Draggable extends Component {
     private Shader _shader;
     private String _vertexShaderSource;
     private String _fragmentShaderSource;
+
+    private Vector2 _graphicsSize;
+    private Vector2 _graphicsOrigin;
+
+    private Vector2 _draggingMask;
+
+    private boolean _draggingActive;
+    private Vector2 _draggingLastTouchPosition;
+    private Vector2 _draggingTouchPosition;
+
+    public final Draggable draggedComponent(final Component component) {
+        _draggedComponent = component;
+
+        return this;
+    }
+
+    public final Draggable registerListener(final Listener listener) {
+        _listener = listener;
+
+        return this;
+    }
+
+    public final Draggable draggingMask(final Vector2 value) {
+        _draggingMask = value.cpy().nor();
+
+        return this;
+    }
+
+    public final Draggable draggingBounds(final Vector2 anchorPosition,
+                                          final Vector2 draggingMinBound,
+                                          final Vector2 draggingMaxBound) {
+        _anchorPosition = anchorPosition;
+        _draggingMinBound = draggingMinBound;
+        _draggingMaxBound = draggingMaxBound;
+
+        final Vector2 graphicsScale = new Vector2(2.f, 1.f);
+        _graphicsSize = _draggingMaxBound.cpy().sub(_draggingMinBound).add(1.f, 1.f).scl(graphicsScale);
+        _graphicsOrigin = _graphicsSize.cpy().scl(0.5f);
+
+        return this;
+    }
 
     @Override
     public void requireAssets(AssetManager assetManager) {
@@ -56,13 +110,12 @@ public class Draggable extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
-        setSize(2.f, 6.f);
-        setOrigin(getWidth() / 2.f, getHeight() / 2.f);
+        setTouchable(Touchable.enabled);
 
         final ModelBuilder builder = new ModelBuilder();
 
-        final float width = getWidth();
-        final float height = getHeight();
+        final float width = _graphicsSize.x;
+        final float height = _graphicsSize.y;
 
         final Mesh mesh = new Mesh(true, 4, 6,
             new VertexAttribute(VertexAttributes.Usage.Position, 2, "a_position"),
@@ -90,9 +143,9 @@ public class Draggable extends Component {
         _renderable = new Renderable();
         _renderable.worldTransform
             .idt()
-            .translate(-getOriginX() * SlopeRider.PIXEL_PER_UNIT, -getOriginY() * SlopeRider.PIXEL_PER_UNIT, 0.f)
+            .translate(-_graphicsOrigin.x * SlopeRider.PIXEL_PER_UNIT, -_graphicsOrigin.y * SlopeRider.PIXEL_PER_UNIT, 0.f)
             .scale(getScaleX() * SlopeRider.PIXEL_PER_UNIT, getScaleY() * SlopeRider.PIXEL_PER_UNIT, 1.f)
-            .translate(getX(), getY(), 0.f);
+            .translate(_anchorPosition.x, _anchorPosition.y, 0.f);
         _renderable.environment = _environment;
         _renderable.meshPart.set(model.meshParts.first());
         _renderable.material = model.materials.first();
@@ -130,9 +183,9 @@ public class Draggable extends Component {
 
                 program.setUniformMatrix("u_worldToScreenMatrix", camera.combined);
 
-                program.setUniformf("u_size", getWidth(), getHeight());
+                program.setUniformf("u_size", _graphicsSize);
                 program.setUniformf("u_anchorPosition", 0.5f, 0.5f);
-                program.setUniformf("u_limit", 0.25f);
+                program.setUniformf("u_limit", 0.4f);
                 program.setUniformf("u_limitMask", 0.f, 1.f);
             }
 
@@ -155,11 +208,56 @@ public class Draggable extends Component {
         };
 
         _shader.init();
+
+        addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (!_draggingActive)
+                    startDragging(new Vector2(x, y));
+
+                return true;
+            }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                if (_draggingActive)
+                    stopDragging(new Vector2(x, y));
+
+                super.touchUp(event, x, y, pointer, button);
+            }
+
+            @Override
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                if (_draggingActive)
+                    updateDragging(new Vector2(x, y));
+
+                super.touchDragged(event, x, y, pointer);
+            }
+        });
     }
 
     @Override
     protected void doAct(float delta) {
+        if (_draggingActive) {
+            final Vector2 move = _draggingTouchPosition.cpy()
+                .sub(_draggingLastTouchPosition)
+                .scl(1.f / SlopeRider.PIXEL_PER_UNIT)
+                .scl(_draggingMask);
 
+            _draggingLastTouchPosition = _draggingTouchPosition;
+
+            final Vector2 position = new Vector2(getX(), getY()).add(move);
+
+            position.y = Math.min(position.y, _anchorPosition.y + _draggingMaxBound.y);
+            position.y = Math.max(position.y, _anchorPosition.y + _draggingMinBound.y);
+
+            final Vector2 actualMove = position.cpy().sub(getX(), getY());
+
+            if (_listener != null)
+                _listener.dragged(this, actualMove, position);
+
+            _draggedComponent.setPosition(position.x, position.y);
+        }
     }
 
     @Override
@@ -199,5 +297,81 @@ public class Draggable extends Component {
     @Override
     public void destroyBody(World world) {
 
+    }
+
+    @Override
+    public Actor doHit(float x, float y, boolean touchable) {
+        final float additionalHitScale = 1.5f;
+
+        final Vector2 minBound = new Vector2(
+            -getOriginX() - getWidth() * additionalHitScale / 2.f,
+            -getOriginY() - getHeight() * additionalHitScale / 2.f
+        );
+
+        final Vector2 maxBound =  new Vector2(
+            -getOriginX() + getWidth() * (1.f + additionalHitScale / 2.f),
+            -getOriginY() + getHeight() * (1.f + additionalHitScale / 2.f)
+        );
+
+        if (x >= minBound.x && x < maxBound.x &&
+            y >= minBound.y && y < maxBound.y)
+            return this;
+
+        return null;
+    }
+
+    private void startDragging(final Vector2 position) {
+        _draggingActive = true;
+
+        _draggingTouchPosition = position;
+        _draggingLastTouchPosition = _draggingTouchPosition;
+    }
+
+    private void stopDragging(final Vector2 position) {
+        _draggingActive = false;
+    }
+
+    private void updateDragging(final Vector2 position) {
+        _draggingTouchPosition = position;
+    }
+
+    @Override
+    public float getX() {
+        return _draggedComponent.getX();
+    }
+
+    @Override
+    public float getY() {
+        return _draggedComponent.getY();
+    }
+
+    @Override
+    public float getWidth() {
+        return _draggedComponent.getWidth();
+    }
+
+    @Override
+    public float getHeight() {
+        return _draggedComponent.getHeight();
+    }
+
+    @Override
+    public float getOriginX() {
+        return _draggedComponent.getOriginX();
+    }
+
+    @Override
+    public float getOriginY() {
+        return _draggedComponent.getOriginY();
+    }
+
+    @Override
+    public float getScaleX() {
+        return _draggedComponent.getScaleX();
+    }
+
+    @Override
+    public float getScaleY() {
+        return _draggedComponent.getScaleY();
     }
 }
