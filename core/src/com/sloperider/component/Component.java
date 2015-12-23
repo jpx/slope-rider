@@ -3,6 +3,7 @@ package com.sloperider.component;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -155,5 +156,9 @@ public abstract class Component extends Group implements PhysicsActor {
     @Override
     public short collidesWith() {
         return CollisionGroup.NOTHING.value();
+    }
+
+    protected final OrthographicCamera getCamera() {
+        return (OrthographicCamera) getStage().getCamera();
     }
 }

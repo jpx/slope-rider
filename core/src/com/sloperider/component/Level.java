@@ -45,6 +45,8 @@ public class Level extends Component {
     private End _end;
 
     private TrackCameraController _editingCameraController;
+    private final Vector2 _targetEditingCameraPosition = new Vector2();
+    private float _targetEditingCameraZoom;
 
     private Sleigh _sleigh;
     private boolean _sleighIsMoving = false;
@@ -189,6 +191,9 @@ public class Level extends Component {
         });
 
         mainTrackChanged(_mainTrack);
+
+        _targetEditingCameraPosition.set(_begin.getX() * SlopeRider.PIXEL_PER_UNIT, _begin.getY() * SlopeRider.PIXEL_PER_UNIT);
+        _targetEditingCameraZoom = 3.f;
 
         editingBegin();
     }
@@ -367,7 +372,7 @@ public class Level extends Component {
 
         _editingCameraController = _componentFactory.createComponent(Vector2.Zero, TrackCameraController.class)
             .setTrack(_mainTrack)
-            .startMove();
+            .moveTo(_targetEditingCameraPosition, _targetEditingCameraZoom);
     }
 
     private void editingEnd() {
@@ -375,6 +380,11 @@ public class Level extends Component {
             return;
 
         if (_editingCameraController != null) {
+            final OrthographicCamera camera = getCamera();
+
+            _targetEditingCameraPosition.set(camera.position.x, camera.position.y);
+            _targetEditingCameraZoom = camera.zoom;
+
             _componentFactory.destroyComponent(_editingCameraController);
             _editingCameraController = null;
         }

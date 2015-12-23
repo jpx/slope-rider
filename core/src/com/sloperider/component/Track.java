@@ -570,7 +570,7 @@ public class Track extends Component {
         BoundingBox boundingBox = new BoundingBox();
         _mesh.calculateBoundingBox(boundingBox);
 
-        setSize(boundingBox.getWidth(), boundingBox.getHeight());
+        setSize(boundingBox.getWidth(), boundingBox.getHeight() + 100.f);
     }
 
     private float noise(final float max) {

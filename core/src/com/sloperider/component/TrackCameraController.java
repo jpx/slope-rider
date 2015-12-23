@@ -47,20 +47,10 @@ public class TrackCameraController
         return this;
     }
 
-    private OrthographicCamera getCamera() {
-        return (OrthographicCamera) getStage().getCamera();
-    }
-
     private void trackBoundsChanged(float x, float y, float width, float height) {
-        _targetPosition = new Vector2(x, y)
-                .add(new Vector2(width * 0.5f, height * 0.75f))
-                .scl(SlopeRider.PIXEL_PER_UNIT);
-
-        // FIXME
-        _targetZoom = 4.5f;
     }
 
-    public final TrackCameraController startMove() {
+    public final TrackCameraController startMove(final Vector2 targetPosition, final float targetZoom) {
         final OrthographicCamera camera = getCamera();
 
         _moveDuration = 0.5f;
@@ -71,6 +61,16 @@ public class TrackCameraController
 
         _moveStartPosition = new Vector2(camera.position.x, camera.position.y);
         _moveStartZoom = camera.zoom;
+
+        _targetPosition = targetPosition;
+        _targetZoom = targetZoom;
+
+        return this;
+    }
+
+    public final TrackCameraController moveTo(final Vector2 targetPosition, final float targetZoom) {
+        getCamera().zoom = targetZoom;
+        setCameraPosition(new Vector3(targetPosition.x, targetPosition.y, 0.f));
 
         return this;
     }
@@ -103,8 +103,6 @@ public class TrackCameraController
 
         _trackPosition = new Vector2();
         _trackSize = new Vector2();
-
-        startMove();
     }
 
     @Override
@@ -124,6 +122,8 @@ public class TrackCameraController
             _trackSize.set(trackSize);
 
             trackBoundsChanged(trackPosition.x, trackPosition.y, trackSize.x, trackSize.y);
+
+            setCameraPosition(getCamera().position);
         }
 
         if (_moveActive) {
@@ -139,7 +139,7 @@ public class TrackCameraController
                 final Vector2 position = _moveStartPosition.cpy().lerp(_targetPosition, rate);
                 final float zoom = MathUtils.lerp(_moveStartZoom, _targetZoom, rate);
 
-                camera.position.set(position.x, position.y, camera.position.z);
+                setCameraPosition(new Vector3(position.x, position.y, camera.position.z));
                 camera.zoom = zoom;
             }
         }
@@ -215,7 +215,7 @@ public class TrackCameraController
     @Override
     public boolean tap(float x, float y, int count, int button) {
         if (!_moveActive && count == 2) {
-            startMove();
+//            startMove();
         }
 
         return true;
@@ -243,7 +243,7 @@ public class TrackCameraController
 
         final Vector3 offset = viewPosition.cpy().sub(previousViewPosition);
 
-        camera.position.add(offset);
+        setCameraPosition(camera.position.cpy().add(offset));
 
         return true;
     }
@@ -278,5 +278,24 @@ public class TrackCameraController
     @Override
     public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
         return false;
+    }
+
+    private void setCameraPosition(final Vector3 position) {
+        final OrthographicCamera camera = getCamera();
+
+        final Vector2 minBound = _trackPosition.cpy()
+            .scl(SlopeRider.PIXEL_PER_UNIT)
+            .add(new Vector2(camera.viewportWidth, camera.viewportHeight).scl(camera.zoom * 0.5f));
+
+        final Vector2 maxBound = _trackPosition.cpy().add(_trackSize).scl(SlopeRider.PIXEL_PER_UNIT)
+            .sub(new Vector2(camera.viewportWidth, camera.viewportHeight).scl(camera.zoom * 0.5f));
+
+        final Vector3 boundPosition = new Vector3(
+            MathUtils.clamp(position.x, minBound.x, maxBound.x),
+            MathUtils.clamp(position.y, minBound.y, maxBound.y),
+            position.z
+        );
+
+        camera.position.set(boundPosition);
     }
 }
