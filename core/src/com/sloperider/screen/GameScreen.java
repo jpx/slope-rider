@@ -163,7 +163,7 @@ public class GameScreen extends Screen {
 
         _activeLevel.setListener(new Level.Listener() {
             @Override
-            public void stageChanged(final String state) {
+            public void stateChanged(final String state) {
                 if (state.equals("playing")) {
                     _ui.setPlayingMode();
                 } else if (state.equals("editing")) {

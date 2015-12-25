@@ -856,4 +856,8 @@ public class Track extends Component {
     public final float heightAtX(float x) {
         return SplineCache.heightAtX(x) + getY();
     }
+
+    public final float heightAt(float location) {
+        return SplineCache.heightAt(location) + getY();
+    }
 }

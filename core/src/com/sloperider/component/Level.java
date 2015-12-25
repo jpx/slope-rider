@@ -22,14 +22,24 @@ import com.sloperider.Layer;
 import com.sloperider.SlopeRider;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by jpx on 30/11/15.
  */
 public class Level extends Component {
     public interface Listener {
-        void stageChanged(final String state);
+        void stateChanged(final String state);
+    }
+
+    private static class TrackBoundComponent {
+        Component component;
+        String trackName;
+        float location;
+        float offset;
+        Track track;
     }
 
     private boolean _startedAsViewOnly = false;
@@ -41,6 +51,8 @@ public class Level extends Component {
     private Track _mainTrack;
     private Begin _begin;
     private End _end;
+
+    private final Map<Track, List<TrackBoundComponent>> _trackBoundComponents = new HashMap<Track, List<TrackBoundComponent>>();
 
     private TrackCameraController _editingCameraController;
     private final Vector2 _targetEditingCameraPosition = new Vector2();
@@ -63,21 +75,48 @@ public class Level extends Component {
         _name = root.getString("name");
         _description = root.getString("description");
 
+        final List<TrackBoundComponent> trackBoundComponents = new ArrayList<TrackBoundComponent>();
+
         for (final JsonValue componentNode : root.get("components")) {
+            Component component = null;
+            TrackBoundComponent trackBoundComponent = null;
+            Vector2 position = null;
+
             final String type = componentNode.getString("type");
 
             final JsonValue positionNode = componentNode.get("position");
-            final Vector2 position = new Vector2(
-                positionNode.get(0).asFloat(),
-                positionNode.get(1).asFloat()
-            );
+
+            if (positionNode.isArray()) {
+                position = new Vector2(
+                    positionNode.get(0).asFloat(),
+                    positionNode.get(1).asFloat()
+                );
+            } else {
+                position = Vector2.Zero;
+
+                trackBoundComponent = new TrackBoundComponent();
+
+                trackBoundComponent.trackName = positionNode.getString("track");
+                trackBoundComponent.location = positionNode.getFloat("location");
+                trackBoundComponent.offset = positionNode.has("offset")
+                    ? positionNode.getFloat("offset")
+                    : 0.f;
+
+                trackBoundComponents.add(trackBoundComponent);
+            }
 
             if (type.equals("Begin")) {
                 _begin = addComponent(componentFactory.createComponent(position, Begin.class));
+                component = _begin;
             } else if (type.equals("End")) {
                 _end = addComponent(componentFactory.createComponent(position, End.class));
+                component = _end;
+            } else if (type.equals("FallingSign")) {
+                component = addComponent(componentFactory.createComponent(position, FallingSign.class));
             } else if (type.equals("ObjectSpawner")) {
                 final ObjectSpawner objectSpawner = new ObjectSpawner();
+                component = objectSpawner;
+
                 objectSpawner.setPosition(position.x, position.y);
 
                 final String spawnedObjectTypeName = componentNode.getString("spawnedObjectType");
@@ -96,10 +135,12 @@ public class Level extends Component {
             } else if (type.equals("DraggableNetwork")) {
                 final DraggableNetwork draggableNetwork = new DraggableNetwork()
                     .quota(componentNode.getFloat("quota"));
+                component = draggableNetwork;
 
                 addComponent(componentFactory.initializeComponent(draggableNetwork));
             } else if (type.equals("Track")) {
                 final Track track = new Track();
+                component = track;
 
                 if (_mainTrack == null) {
                     _mainTrack = track;
@@ -125,7 +166,28 @@ public class Level extends Component {
 
                 addComponent(componentFactory.initializeComponent(track));
             }
+
+            if (trackBoundComponent != null) {
+                trackBoundComponent.component = component;
+            }
         }
+
+        final Track track = _mainTrack;
+        _trackBoundComponents.put(track, new ArrayList<TrackBoundComponent>());
+
+        for (final TrackBoundComponent trackBoundComponent : trackBoundComponents) {
+            trackBoundComponent.track = track;
+            _trackBoundComponents.get(track).add(trackBoundComponent);
+
+            updateTrackBoundComponent(trackBoundComponent);
+        }
+    }
+
+    private void updateTrackBoundComponent(final TrackBoundComponent trackBoundComponent) {
+        trackBoundComponent.component.setPosition(
+            trackBoundComponent.track.getX() + trackBoundComponent.track.getWidth() * trackBoundComponent.location,
+            trackBoundComponent.track.heightAt(trackBoundComponent.location) + trackBoundComponent.offset
+        );
     }
 
     @Override
@@ -144,11 +206,9 @@ public class Level extends Component {
     }
 
     private void mainTrackChanged(final Track track) {
-        if (_begin != null)
-            _begin.setPosition(_begin.getX(), track.heightAtX(_begin.getX() - track.getX()));
-
-        if (_end != null)
-            _end.setPosition(_end.getX(), track.heightAtX(_end.getX() - track.getX()));
+        for (final Map.Entry<Track, List<TrackBoundComponent>> entry : _trackBoundComponents.entrySet())
+            for (final TrackBoundComponent trackBoundComponent : entry.getValue())
+                updateTrackBoundComponent(trackBoundComponent);
 
         final Rectangle bounds = new Rectangle();
         computeBounds(bounds);
@@ -322,7 +382,7 @@ public class Level extends Component {
             return;
 
         if (_listener != null)
-            _listener.stageChanged("playing");
+            _listener.stateChanged("playing");
 
         for (final Component component : _components) {
             component.levelPlayed(this);
@@ -343,7 +403,7 @@ public class Level extends Component {
             return;
 
         if (_listener != null)
-            _listener.stageChanged("editing");
+            _listener.stateChanged("editing");
 
         if (_mainTrack != null)
             _mainTrack.editable(true);

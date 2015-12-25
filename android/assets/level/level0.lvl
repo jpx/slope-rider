@@ -4,25 +4,55 @@
   "components" : [
     {
       "type" : "Begin",
-      "position" : [ 15.0, 0.0 ]
+      "position" : {
+        "track" : "track0",
+        "location" : 0.05
+      }
     },
     {
       "type" : "End",
-      "position" : [ 125.0, 0.0 ]
+      "position" : {
+        "track" : "track0",
+        "location" : 0.95
+      }
     },
     {
       "type" : "ObjectSpawner",
-      "position" : [ 25.0, 30.0 ],
+      "position" : {
+        "track" : "track0",
+        "location" : 0.15,
+        "offset" : 1.0
+      },
       "cardinality" : 1.0,
       "delay" : 2.0,
       "spawnedObjectType" : "RollingObject"
     },
     {
+      "type" : "FallingSign",
+      "position" : {
+        "track" : "track0",
+        "location" : 0.15,
+        "offset" : 0.0
+      }
+    },
+    {
       "type" : "ObjectSpawner",
-      "position" : [ 40.0, 30.0 ],
+      "position" : {
+        "track" : "track0",
+        "location" : 0.25,
+        "offset" : 15.0
+      },
       "cardinality" : 0.0,
-      "delay" : 1.0,
+      "delay" : 0.05,
       "spawnedObjectType" : "RollingObject"
+    },
+    {
+      "type" : "FallingSign",
+      "position" : {
+        "track" : "track0",
+        "location" : 0.25,
+        "offset" : 0.0
+      }
     },
     {
       "type" : "DraggableNetwork",
