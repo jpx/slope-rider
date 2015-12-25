@@ -25,8 +25,12 @@ public class SplineCache {
         return _normals;
     }
 
-    public static float heightAt(float x) {
-        return _positions.get((int) ((x / _width) * (_positions.size() - 1))).y;
+    public static float heightAt(final float rate) {
+        return _positions.get((int) (rate * (_positions.size() - 1))).y;
+    }
+
+    public static float heightAtX(final float x) {
+        return heightAt(x / _width);
     }
 
     public static void reset(float[] controlPoints,

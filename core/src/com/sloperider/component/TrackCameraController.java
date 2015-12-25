@@ -27,7 +27,7 @@ public class TrackCameraController
 
     private float _moveDuration;
 
-    private Vector2 _targetPosition;
+    private final Vector2 _targetPosition = new Vector2();
     private float _targetZoom;
 
     private boolean _moveActive;
@@ -38,6 +38,8 @@ public class TrackCameraController
     private float _initialZoomDistance;
     private float _lastZoomDistance;
 
+    private boolean _hasTarget;
+
     public TrackCameraController() {
         _gestureDetector = new GestureDetector(this);
     }
@@ -45,6 +47,10 @@ public class TrackCameraController
     public final TrackCameraController setTrack(Track track) {
         _track = track;
         return this;
+    }
+
+    public final boolean hasTarget() {
+        return _hasTarget;
     }
 
     private void trackBoundsChanged(float x, float y, float width, float height) {
@@ -62,15 +68,20 @@ public class TrackCameraController
         _moveStartPosition = new Vector2(camera.position.x, camera.position.y);
         _moveStartZoom = camera.zoom;
 
-        _targetPosition = targetPosition;
+        _targetPosition.set(targetPosition);
         _targetZoom = targetZoom;
 
         return this;
     }
 
     public final TrackCameraController moveTo(final Vector2 targetPosition, final float targetZoom) {
-        getCamera().zoom = targetZoom;
-        setCameraPosition(new Vector3(targetPosition.x, targetPosition.y, 0.f));
+        _targetPosition.set(targetPosition);
+        _targetZoom = targetZoom;
+
+        getCamera().zoom = _targetZoom;
+        setCameraPosition(new Vector3(_targetPosition.x, _targetPosition.y, 0.f));
+
+        _hasTarget = true;
 
         return this;
     }
@@ -103,6 +114,8 @@ public class TrackCameraController
 
         _trackPosition = new Vector2();
         _trackSize = new Vector2();
+
+        _hasTarget = false;
     }
 
     @Override
@@ -123,7 +136,12 @@ public class TrackCameraController
 
             trackBoundsChanged(trackPosition.x, trackPosition.y, trackSize.x, trackSize.y);
 
-            setCameraPosition(getCamera().position);
+            if (_hasTarget) {
+                if (!_moveActive)
+                    moveTo(_targetPosition, _targetZoom);
+                else
+                    setCameraPosition(getCamera().position);
+            }
         }
 
         if (_moveActive) {
@@ -182,8 +200,6 @@ public class TrackCameraController
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (_moveActive)
-            stopMove();
         return false;
     }
 
@@ -214,10 +230,6 @@ public class TrackCameraController
 
     @Override
     public boolean tap(float x, float y, int count, int button) {
-        if (!_moveActive && count == 2) {
-//            startMove();
-        }
-
         return true;
     }
 
@@ -245,6 +257,8 @@ public class TrackCameraController
 
         setCameraPosition(camera.position.cpy().add(offset));
 
+        _hasTarget = false;
+
         return true;
     }
 
@@ -267,7 +281,11 @@ public class TrackCameraController
 
             OrthographicCamera camera = getCamera();
 
-            camera.zoom = MathUtils.clamp(camera.zoom + delta * zoomSpeed, minZoom, maxZoom);
+            final float newValue = MathUtils.clamp(camera.zoom + delta * zoomSpeed, minZoom, maxZoom);
+            final float finalDelta = newValue - camera.zoom;
+
+            _hasTarget = false;
+            camera.zoom = newValue;
 
             _lastZoomDistance = distance;
         }
@@ -280,22 +298,25 @@ public class TrackCameraController
         return false;
     }
 
-    private void setCameraPosition(final Vector3 position) {
+    private Vector3 checkPosition(final Vector3 position) {
         final OrthographicCamera camera = getCamera();
 
-        final Vector2 minBound = _trackPosition.cpy()
-            .scl(SlopeRider.PIXEL_PER_UNIT)
+        final Vector2 minBound = _trackPosition.cpy().scl(SlopeRider.PIXEL_PER_UNIT)
             .add(new Vector2(camera.viewportWidth, camera.viewportHeight).scl(camera.zoom * 0.5f));
 
         final Vector2 maxBound = _trackPosition.cpy().add(_trackSize).scl(SlopeRider.PIXEL_PER_UNIT)
             .sub(new Vector2(camera.viewportWidth, camera.viewportHeight).scl(camera.zoom * 0.5f));
 
-        final Vector3 boundPosition = new Vector3(
+        return new Vector3(
             MathUtils.clamp(position.x, minBound.x, maxBound.x),
             MathUtils.clamp(position.y, minBound.y, maxBound.y),
             position.z
         );
+    }
 
-        camera.position.set(boundPosition);
+    private void setCameraPosition(final Vector3 position) {
+        final OrthographicCamera camera = getCamera();
+
+        camera.position.set(checkPosition(position));
     }
 }

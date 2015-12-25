@@ -34,8 +34,6 @@ public class Level extends Component {
 
     private boolean _startedAsViewOnly = false;
 
-    private InputMultiplexer _input;
-
     private ComponentFactory _componentFactory;
     private String _name;
     private String _description;
@@ -147,10 +145,10 @@ public class Level extends Component {
 
     private void mainTrackChanged(final Track track) {
         if (_begin != null)
-            _begin.setPosition(_begin.getX(), track.heightAt(_begin.getX() - track.getX()));
+            _begin.setPosition(_begin.getX(), track.heightAtX(_begin.getX() - track.getX()));
 
         if (_end != null)
-            _end.setPosition(_end.getX(), track.heightAt(_end.getX() - track.getX()));
+            _end.setPosition(_end.getX(), track.heightAtX(_end.getX() - track.getX()));
 
         final Rectangle bounds = new Rectangle();
         computeBounds(bounds);
@@ -162,26 +160,11 @@ public class Level extends Component {
     protected void doReady(final ComponentFactory componentFactory) {
         Gdx.app.log(SlopeRider.TAG, toString());
 
-        _input = (InputMultiplexer) Gdx.input.getInputProcessor();
-
         _componentFactory = componentFactory;
-
-        setSize(1000.f, 1000.f);
 
         setTouchable(Touchable.childrenOnly);
 
         componentFactory.createComponent(Layer.BACKGROUND0, Vector2.Zero, Background.class);
-
-        addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                final Vector2 position = new Vector2(x, y).scl(1.f / SlopeRider.PIXEL_PER_UNIT);
-
-                final Sleigh sleigh = addComponent(componentFactory.createComponent(position, Sleigh.class));
-
-                return super.touchDown(event, x, y, pointer, button);
-            }
-        });
 
         _mainTrack.addListener(new Track.Listener() {
             @Override
@@ -335,8 +318,6 @@ public class Level extends Component {
     }
 
     private void playingBegin() {
-        playingEnd();
-
         if (_startedAsViewOnly)
             return;
 
@@ -355,12 +336,9 @@ public class Level extends Component {
         for (final Component component : _components) {
             component.levelStopped(this);
         }
-
     }
 
     private void editingBegin() {
-        editingEnd();
-
         if (_startedAsViewOnly)
             return;
 

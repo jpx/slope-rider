@@ -853,7 +853,7 @@ public class Track extends Component {
         return CollisionGroup.ANYTHING.value();
     }
 
-    public final float heightAt(float x) {
-        return SplineCache.heightAt(x) + getY();
+    public final float heightAtX(float x) {
+        return SplineCache.heightAtX(x) + getY();
     }
 }
