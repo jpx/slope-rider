@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.JsonValue;
 import com.sloperider.ComponentFactory;
 import com.sloperider.Layer;
@@ -33,6 +34,12 @@ public abstract class Component extends Group implements PhysicsActor {
 
     protected final <T extends Component> T addComponent(final T component) {
         _components.add(component);
+
+        return component;
+    }
+
+    protected final <T extends Component> T removeComponent(final T component) {
+        _components.remove(component);
 
         return component;
     }
@@ -146,6 +153,14 @@ public abstract class Component extends Group implements PhysicsActor {
 
     protected Actor doHit(float x, float y, boolean touchable) {
         return super.hit(x, y, touchable);
+    }
+
+    @Override
+    protected void setStage(Stage stage) {
+        super.setStage(stage);
+
+        if (stage == null)
+            _ready = false;
     }
 
     @Override

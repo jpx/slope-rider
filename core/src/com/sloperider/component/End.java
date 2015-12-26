@@ -72,14 +72,14 @@ public class End extends Component {
 
         @Override
         public boolean contactEnd(PhysicsActor.ContactData data, Contact contact) {
-            if (data instanceof Sleigh.ContactData) {
-                Sleigh.ContactData sleighContactData = (Sleigh.ContactData) data;
-                Sleigh sleigh = sleighContactData.sleigh;
-
-                end._sleightsToRemove.add(sleigh);
-
-                return true;
-            }
+//            if (data instanceof Sleigh.ContactData) {
+//                Sleigh.ContactData sleighContactData = (Sleigh.ContactData) data;
+//                Sleigh sleigh = sleighContactData.sleigh;
+//
+//                end._sleightsToRemove.add(sleigh);
+//
+//                return true;
+//            }
 
             return false;
         }
@@ -93,8 +93,14 @@ public class End extends Component {
     private Environment _environment;
     private Renderable _renderable;
     private Shader _shader;
+    private ShaderProgram _shaderProgram;
     private String _vertexShaderSource;
     private String _fragmentShaderSource;
+    private float _time;
+
+    private boolean _animationActive;
+    private float _animationStartTime;
+    private final float _animationDuration = 1.0f;
 
     private TextureRegion _textureRegion;
 
@@ -127,6 +133,9 @@ public class End extends Component {
 
             _activeSleighs.add(sleighEntry);
         }
+
+        startAnimation(_time);
+        sleigh.disablePhysics();
     }
 
     private void removeSleigh(final Sleigh sleigh) {
@@ -179,6 +188,7 @@ public class End extends Component {
     @Override
     protected void doReady(ComponentFactory componentFactory) {
         _bodyNeedsUpdate = false;
+        _animationActive = false;
 
         setSize(8.f, 8.f);
         setOrigin(getWidth() / 2.f, getHeight() / 2.f);
@@ -215,8 +225,8 @@ public class End extends Component {
 
         _renderable = new Renderable();
         _renderable.worldTransform
-                .scale(getScaleX() * SlopeRider.PIXEL_PER_UNIT, getScaleY() * SlopeRider.PIXEL_PER_UNIT, 1.f)
-                .translate(getX(), getY(), 0.f);
+            .scale(getScaleX() * SlopeRider.PIXEL_PER_UNIT, getScaleY() * SlopeRider.PIXEL_PER_UNIT, 1.f)
+            .translate(getX(), getY(), 0.f);
         _renderable.environment = _environment;
         _renderable.meshPart.set(model.meshParts.first());
         _renderable.material = model.materials.first();
@@ -227,13 +237,20 @@ public class End extends Component {
             ShaderProgram program;
             Camera camera;
             RenderContext context;
-            float time;
 
             @Override
             public void init() {
                 program = new ShaderProgram(_vertexShaderSource, _fragmentShaderSource);
                 if (!program.isCompiled())
                     throw new GdxRuntimeException(program.getLog());
+
+                program.begin();
+
+                program.setUniformf("u_animationMask", 0.0f);
+                program.setUniformf("u_animationStartTime", 0.0f);
+                program.setUniformf("u_animationDuration", 0.0f);
+
+                _shaderProgram = program;
             }
 
             @Override
@@ -260,12 +277,8 @@ public class End extends Component {
             public void render(Renderable renderable) {
                 program.setUniformMatrix("u_modelToWorldMatrix", renderable.worldTransform);
 
-                time += Gdx.graphics.getDeltaTime();
-                if (time > 15.f)
-                    time = 0.f;
-
                 if (program.hasUniform("u_time"))
-                    program.setUniformf("u_time", time);
+                    program.setUniformf("u_time", _time);
 
                 renderable.meshPart.render(program);
             }
@@ -293,7 +306,28 @@ public class End extends Component {
 
     @Override
     protected void doAct(float delta) {
+        _time += delta;
 
+        if (_animationActive) {
+            for (final SleighEntry sleighEntry : _activeSleighs) {
+                final Sleigh sleigh = sleighEntry.sleigh;
+
+                final Vector2 targetPosition = new Vector2(getX(), getY());
+                final Vector2 position = new Vector2(sleigh.getX(), sleigh.getY());
+
+                final Vector2 offset = targetPosition.cpy()
+                    .sub(position)
+                    .scl(3.f * delta);
+
+                sleigh.moveBy(offset.x, offset.y);
+                sleigh.rotateBy(360.f * delta);
+                sleigh.scaleBy(-0.8f * delta);
+            }
+
+            if (_time - _animationStartTime >= _animationDuration) {
+                animationComplete();
+            }
+        }
     }
 
     @Override
@@ -348,7 +382,7 @@ public class End extends Component {
         fixtureDef.filter.maskBits = collidesWith();
 
         final CircleShape shape = new CircleShape();
-        shape.setRadius(Math.max(getWidth(), getHeight()) / 2.f);
+        shape.setRadius(Math.max(getWidth(), getHeight()) / 2.f * 0.9f);
 
         fixtureDef.shape = shape;
 
@@ -360,7 +394,6 @@ public class End extends Component {
     public void updateBody(World world) {
         if (_bodyNeedsUpdate) {
             _bodyNeedsUpdate = false;
-            Gdx.app.log(SlopeRider.TAG, "resetting body");
             resetBody(world);
         }
 
@@ -391,6 +424,9 @@ public class End extends Component {
     }
 
     public final boolean hasSleigh(final Sleigh sleigh) {
+        if (_animationActive)
+            return false;
+
         for (final SleighEntry entry : _activeSleighs) {
             if (entry.sleigh == sleigh) {
                 return true;
@@ -398,5 +434,28 @@ public class End extends Component {
         }
 
         return false;
+    }
+
+    private void startAnimation(final float time) {
+        if (_animationActive)
+            return;
+
+        _animationActive = true;
+
+        _animationStartTime = time;
+
+        _shaderProgram.begin();
+        _shaderProgram.setUniformf("u_animationMask", 1.0f);
+        _shaderProgram.setUniformf("u_animationStartTime", _animationStartTime);
+        _shaderProgram.setUniformf("u_animationDuration", _animationDuration);
+    }
+
+    private void animationComplete() {
+        _animationActive = false;
+
+        _shaderProgram.begin();
+        _shaderProgram.setUniformf("u_animationMask", 0.0f);
+
+        setVisible(false);
     }
 }

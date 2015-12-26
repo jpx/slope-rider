@@ -34,6 +34,7 @@ public class Sleigh extends Component {
     private TextureRegion _textureRegion;
 
     private Body _body;
+    private boolean _physicsEnabled;
 
     private Vector2 _persistentForceVector;
 
@@ -106,6 +107,8 @@ public class Sleigh extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
+        _physicsEnabled = true;
+
         setTouchable(Touchable.disabled);
         _textureRegion = new TextureRegion(_texture);
     }
@@ -190,6 +193,9 @@ public class Sleigh extends Component {
 
     @Override
     public void updateBody(World world) {
+        if (!_physicsEnabled)
+            return;
+
         if (_persistentForceVector != null) {
             _body.applyForceToCenter(_persistentForceVector.cpy().scl(30.f), true);
         }
@@ -208,5 +214,11 @@ public class Sleigh extends Component {
 
     public final boolean isMoving() {
         return _body.getLinearVelocity().len() > 1e-2f;
+    }
+
+    public final Sleigh disablePhysics() {
+        _physicsEnabled = false;
+
+        return this;
     }
 }

@@ -171,7 +171,7 @@ public class ComponentFactory {
         return component;
     }
 
-    public final void destroyComponent(final Component component) {
+    public final <T extends Component> T destroyComponent(final T component) {
         final Layer layer = _components.remove(component);
 
         for (final Listener listener : _listeners)
@@ -183,5 +183,7 @@ public class ComponentFactory {
 
         _physicsWorld.removeActor(component);
         _roots.get(layer).removeActor(component);
+
+        return component;
     }
 }

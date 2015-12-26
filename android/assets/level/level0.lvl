@@ -13,26 +13,8 @@
       "type" : "End",
       "position" : {
         "track" : "track0",
-        "location" : 0.95
-      }
-    },
-    {
-      "type" : "ObjectSpawner",
-      "position" : {
-        "track" : "track0",
-        "location" : 0.15,
-        "offset" : 1.0
-      },
-      "cardinality" : 1.0,
-      "delay" : 2.0,
-      "spawnedObjectType" : "RollingObject"
-    },
-    {
-      "type" : "FallingSign",
-      "position" : {
-        "track" : "track0",
-        "location" : 0.15,
-        "offset" : 0.0
+        "location" : 0.95,
+        "offset" : 3.0
       }
     },
     {
@@ -43,7 +25,7 @@
         "offset" : 15.0
       },
       "cardinality" : 0.0,
-      "delay" : 0.05,
+      "delay" : 5.0,
       "spawnedObjectType" : "RollingObject"
     },
     {

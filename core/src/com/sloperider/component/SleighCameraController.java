@@ -1,0 +1,124 @@
+package com.sloperider.component;
+
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.World;
+import com.sloperider.ComponentFactory;
+import com.sloperider.SlopeRider;
+
+/**
+ * Created by jpx on 26/12/15.
+ */
+public class SleighCameraController extends Component {
+    private final Vector3 _targetPosition = new Vector3();
+    private float _targetZoom;
+
+    private Sleigh _target;
+
+    public SleighCameraController target(final Sleigh sleigh) {
+        _target = sleigh;
+
+        updateTargetPosition();
+
+        return this;
+    }
+
+    @Override
+    public void requireAssets(AssetManager assetManager) {
+
+    }
+
+    @Override
+    public void manageAssets(AssetManager assetManager) {
+
+    }
+
+    @Override
+    public void doReleaseAssets(AssetManager assetManager) {
+
+    }
+
+    @Override
+    protected void doReady(ComponentFactory componentFactory) {
+    }
+
+    @Override
+    protected void doAct(float delta) {
+        updateTargetZoom();
+        updateTargetPosition();
+
+        final OrthographicCamera camera = getCamera();
+
+        camera.position.lerp(_targetPosition, 0.8f);
+        camera.zoom = MathUtils.lerp(camera.zoom, _targetZoom, 0.8f);
+    }
+
+    @Override
+    protected void doDraw(Batch batch) {
+
+    }
+
+    @Override
+    protected void doDestroy(ComponentFactory componentFactory) {
+
+    }
+
+    @Override
+    public void initializeBody(World world) {
+
+    }
+
+    @Override
+    public void updateBody(World world) {
+
+    }
+
+    @Override
+    public void destroyBody(World world) {
+
+    }
+
+    private void updateTargetPosition() {
+        final Vector3 position = new Vector3(_target.getX(), _target.getY(), 0.f)
+            .scl(SlopeRider.PIXEL_PER_UNIT);
+
+        _targetPosition.set(checkPosition(position));
+    }
+
+    private void updateTargetZoom() {
+        _targetZoom = MathUtils.clamp(
+            2.f,
+            minZoom(),
+            maxZoom()
+        );
+    }
+
+    private Vector3 checkPosition(final Vector3 position) {
+        final OrthographicCamera camera = getCamera();
+
+        final Vector2 minBound = new Vector2(getX(), getY()).scl(SlopeRider.PIXEL_PER_UNIT)
+            .add(new Vector2(camera.viewportWidth, camera.viewportHeight).scl(camera.zoom * 0.5f));
+
+        final Vector2 maxBound = new Vector2(getRight(), getTop()).scl(SlopeRider.PIXEL_PER_UNIT)
+            .sub(new Vector2(camera.viewportWidth, camera.viewportHeight).scl(camera.zoom * 0.5f));
+
+        return new Vector3(
+            MathUtils.clamp(position.x, minBound.x, maxBound.x),
+            MathUtils.clamp(position.y, minBound.y, maxBound.y),
+            position.z
+        );
+    }
+
+    private float minZoom() {
+        return 1.f;
+    }
+
+    private float maxZoom() {
+        // FIXME
+        return 6.f;
+    }
+}

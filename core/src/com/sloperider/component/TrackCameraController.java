@@ -282,10 +282,11 @@ public class TrackCameraController
             OrthographicCamera camera = getCamera();
 
             final float newValue = MathUtils.clamp(camera.zoom + delta * zoomSpeed, minZoom, maxZoom);
-            final float finalDelta = newValue - camera.zoom;
 
             _hasTarget = false;
             camera.zoom = newValue;
+
+            setCameraPosition(camera.position);
 
             _lastZoomDistance = distance;
         }

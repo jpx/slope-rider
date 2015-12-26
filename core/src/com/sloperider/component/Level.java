@@ -55,6 +55,7 @@ public class Level extends Component {
     private final Map<Track, List<TrackBoundComponent>> _trackBoundComponents = new HashMap<Track, List<TrackBoundComponent>>();
 
     private TrackCameraController _editingCameraController;
+    private SleighCameraController _playingCameraController;
     private final Vector2 _targetEditingCameraPosition = new Vector2();
     private float _targetEditingCameraZoom;
 
@@ -112,7 +113,7 @@ public class Level extends Component {
                 _end = addComponent(componentFactory.createComponent(position, End.class));
                 component = _end;
             } else if (type.equals("FallingSign")) {
-                component = addComponent(componentFactory.createComponent(position, FallingSign.class));
+                component = addComponent(componentFactory.createComponent(Layer.BACKGROUND2, position, FallingSign.class));
             } else if (type.equals("ObjectSpawner")) {
                 final ObjectSpawner objectSpawner = new ObjectSpawner();
                 component = objectSpawner;
@@ -282,14 +283,16 @@ public class Level extends Component {
             }
 
             if (won) {
-                Gdx.app.log(SlopeRider.TAG, "won");
-
                 destroySleigh();
+
+                if (_listener != null)
+                    _listener.stateChanged("won");
 
             } else if (lost) {
-                Gdx.app.log(SlopeRider.TAG, "lost");
-
                 destroySleigh();
+
+                if (_listener != null)
+                    _listener.stateChanged("lost");
             }
         }
     }
@@ -330,11 +333,12 @@ public class Level extends Component {
             destroySleigh();
 
         editingEnd();
-        playingBegin();
 
         final Vector2 position = new Vector2(_begin.getX(), _begin.getY()).add(0.f, 1.f);
 
         _sleigh = _componentFactory.createComponent(position, Sleigh.class);
+
+        playingBegin(_sleigh);
 
         return this;
     }
@@ -377,7 +381,7 @@ public class Level extends Component {
         return this;
     }
 
-    private void playingBegin() {
+    private void playingBegin(final Sleigh sleigh) {
         if (_startedAsViewOnly)
             return;
 
@@ -387,6 +391,10 @@ public class Level extends Component {
         for (final Component component : _components) {
             component.levelPlayed(this);
         }
+
+        _playingCameraController = addComponent(_componentFactory.createComponent(Vector2.Zero, SleighCameraController.class))
+            .target(sleigh);
+        _playingCameraController.setBounds(getX(), getY(), getWidth(), getHeight());
     }
 
     private void playingEnd() {
@@ -395,6 +403,11 @@ public class Level extends Component {
 
         for (final Component component : _components) {
             component.levelStopped(this);
+        }
+
+        if (_playingCameraController != null) {
+            removeComponent(_componentFactory.destroyComponent(_playingCameraController));
+            _playingCameraController = null;
         }
     }
 
