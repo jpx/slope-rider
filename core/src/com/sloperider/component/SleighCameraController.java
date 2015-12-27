@@ -53,8 +53,10 @@ public class SleighCameraController extends Component {
 
         final OrthographicCamera camera = getCamera();
 
-        camera.position.lerp(_targetPosition, 0.8f);
-        camera.zoom = MathUtils.lerp(camera.zoom, _targetZoom, 0.8f);
+        camera.position.lerp(_targetPosition, 0.1f);
+        camera.zoom = MathUtils.lerp(camera.zoom, _targetZoom, 0.1f);
+
+        camera.position.set(checkPosition(camera.position));
     }
 
     @Override
@@ -83,15 +85,40 @@ public class SleighCameraController extends Component {
     }
 
     private void updateTargetPosition() {
-        final Vector3 position = new Vector3(_target.getX(), _target.getY(), 0.f)
+        final Vector2 velocity = _target.body().getLinearVelocity();
+
+        final Vector3 offset = new Vector3(velocity.x, velocity.y, 0.f)
+            .scl(0.2f)
             .scl(SlopeRider.PIXEL_PER_UNIT);
+
+        final OrthographicCamera camera = getCamera();
+
+        offset.set(
+            Math.min(offset.x, camera.viewportWidth / 4.f),
+            Math.min(offset.y, camera.viewportHeight / 4.f),
+            offset.z
+        );
+
+        final Vector3 position = new Vector3(_target.getX(), _target.getY(), 0.f)
+            .scl(SlopeRider.PIXEL_PER_UNIT)
+            .add(offset);
 
         _targetPosition.set(checkPosition(position));
     }
 
     private void updateTargetZoom() {
+        final float minVelocity = 0.f;
+        final float maxVelocity = 50.f;
+        final float velocity = _target.body().getLinearVelocity().len();
+
+        final float zoom = MathUtils.lerp(
+            minZoom(),
+            maxZoom(),
+            MathUtils.clamp((velocity - minVelocity) / (maxVelocity - minVelocity), 0.f, 1.f)
+        );
+
         _targetZoom = MathUtils.clamp(
-            2.f,
+            zoom,
             minZoom(),
             maxZoom()
         );
@@ -114,11 +141,11 @@ public class SleighCameraController extends Component {
     }
 
     private float minZoom() {
-        return 1.f;
+        return 2.f;
     }
 
     private float maxZoom() {
         // FIXME
-        return 6.f;
+        return 8.f;
     }
 }

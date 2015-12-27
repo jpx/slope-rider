@@ -1,10 +1,12 @@
 package com.sloperider.component;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.sloperider.ComponentFactory;
+import com.sloperider.SlopeRider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +28,7 @@ public class DraggableNetwork extends Component {
             public void dragged(Draggable self, Vector2 move, Vector2 position, float deltaDistance) {
                 _currentValue += deltaDistance;
 
-                currentValueChanged(_currentValue);
+                currentValueChanged(self, _currentValue);
             }
         });
 
@@ -79,7 +81,6 @@ public class DraggableNetwork extends Component {
 
     @Override
     protected void doAct(float delta) {
-
     }
 
     @Override
@@ -111,7 +112,7 @@ public class DraggableNetwork extends Component {
         draggable.limitChanged(value);
     }
 
-    private void currentValueChanged(final float value) {
+    private void currentValueChanged(final Draggable changedDraggable, final float value) {
         final float left = _quota - value;
 
         for (final Draggable draggable : _draggables)

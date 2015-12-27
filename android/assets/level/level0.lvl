@@ -33,13 +33,13 @@
       "position" : {
         "track" : "track0",
         "location" : 0.25,
-        "offset" : 0.0
+        "offset" : -0.2
       }
     },
     {
       "type" : "DraggableNetwork",
       "position" : [ 0.0, 0.0 ],
-      "quota" : 20.0
+      "quota" : 15.0
     },
     {
       "type" : "Track",
@@ -52,67 +52,89 @@
           "x" : 0.0,
           "y" : 0.0,
           "editable" : false,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.1,
           "y" : -0.1,
           "editable" : true,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.2,
           "y" : -0.2,
           "editable" : true,
-          "material" : "BOOSTER"
+          "material" : "BOOSTER",
+          "minBound" : -2.0,
+          "maxBound" : 30.0
         },
         {
           "x" : 0.3,
           "y" : -0.2,
           "editable" : true,
-          "material" : "BOOSTER"
+          "material" : "BOOSTER",
+          "minBound" : -2.0,
+          "maxBound" : 15.0
         },
         {
           "x" : 0.4,
           "y" : -0.3,
           "editable" : true,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.5,
           "y" : -0.2,
           "editable" : true,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.6,
           "y" : -0.4,
           "editable" : false,
-          "material" : "STONE"
+          "material" : "STONE",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.7,
           "y" : -0.5,
           "editable" : true,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.8,
           "y" : -0.5,
           "editable" : true,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.9,
           "y" : -0.3,
           "editable" : true,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 1.0,
           "y" : 0.0,
           "editable" : true,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         }
       ]
     }

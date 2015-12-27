@@ -108,7 +108,9 @@ public class Draggable extends Component {
     }
 
     public final Draggable limitChanged(final float value) {
-        _limit = value;
+        final float distanceFromAnchor = new Vector2(getX(), getY()).dst(_anchorPosition);
+
+        _limit = Math.abs(value + distanceFromAnchor);
 
         return this;
     }
@@ -205,7 +207,10 @@ public class Draggable extends Component {
                 program.setUniformMatrix("u_worldToScreenMatrix", camera.combined);
 
                 program.setUniformf("u_size", _graphicsSize);
-                program.setUniformf("u_anchorPosition", _draggingMinBound.cpy().scl(-1.f).scl(1.f / _graphicsSize.x, 1.f / _graphicsSize.y));
+                if (program.hasUniform("u_position"))
+                    program.setUniformf("u_position", new Vector2(getX(), getY()).sub(_anchorPosition).scl(1.f / _graphicsSize.x, 1.f / _graphicsSize.y));
+                if (program.hasUniform("u_anchorPosition"))
+                    program.setUniformf("u_anchorPosition", _draggingMinBound.cpy().scl(-1.f).scl(1.f / _graphicsSize.x, 1.f / _graphicsSize.y));
                 program.setUniformf("u_limit", _limit / _graphicsSize.len());
                 program.setUniformf("u_limitMask", 0.f, 1.f);
             }

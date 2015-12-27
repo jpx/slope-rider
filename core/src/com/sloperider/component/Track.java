@@ -96,12 +96,16 @@ public class Track extends Component {
         float y;
         boolean editable;
         GroundMaterialType groundMaterial;
+        float minBound;
+        float maxBound;
 
-        public PointData(float x, float y, boolean editable, GroundMaterialType groundMaterial) {
+        public PointData(float x, float y, boolean editable, GroundMaterialType groundMaterial, float minBound, float maxBound) {
             this.x = x;
             this.y = y;
             this.editable = editable;
             this.groundMaterial = groundMaterial;
+            this.minBound = minBound;
+            this.maxBound = maxBound;
         }
     }
 
@@ -223,15 +227,21 @@ public class Track extends Component {
 
             final Vector2 position = parentPosition.cpy().add(x * size.x, y * size.y + size.y);
 
-            TrackPoint trackPoint = addComponent(_componentFactory.createComponent(
-                position,
-                TrackPoint.class
-            ).setChangedHandler(new TrackPoint.ChangedHandler() {
+            final TrackPoint trackPoint = new TrackPoint()
+            .setChangedHandler(new TrackPoint.ChangedHandler() {
                 @Override
                 public void changed(TrackPoint self, float value) {
                     updateTrackPoint(_trackPoints.get(self), value);
                 }
-            })).setInitialTrackValue(position.y);
+            })
+            .setInitialTrackValue(position.y)
+            .setBounds(pointData.minBound, pointData.maxBound);
+
+            trackPoint.setPosition(position.x, position.y);
+
+            addComponent(_componentFactory.initializeComponent(
+                trackPoint
+            ));
 
             _trackPoints.put(trackPoint, i);
         }

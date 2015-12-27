@@ -3,6 +3,7 @@ precision mediump float;
 #endif
 
 uniform vec2 u_size;
+uniform vec2 u_position;
 uniform vec2 u_anchorPosition;
 uniform float u_limit;
 uniform vec2 u_limitMask;
@@ -15,8 +16,8 @@ void main()
 {
     vec4 diffuse = vec4(0.0);
 
-    float distanceFromAnchor = distance(u_anchorPosition * u_limitMask, v_uv * u_limitMask);
-    float distanceFromLimit = distanceFromAnchor - u_limit;
+    float distance = distance(u_anchorPosition * u_limitMask, v_uv * u_limitMask);
+    float distanceFromLimit = distance - u_limit;
 
     diffuse += mix(
         vec4(0.0, 0.7, 0.0, 0.0),

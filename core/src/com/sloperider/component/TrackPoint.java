@@ -37,6 +37,8 @@ public class TrackPoint extends Component {
     private float _radius;
 
     private float _trackValue;
+    private float _minBound;
+    private float _maxBound;
 
     public TrackPoint setChangedHandler(ChangedHandler handler) {
         _changedHandler = handler;
@@ -45,6 +47,13 @@ public class TrackPoint extends Component {
 
     public TrackPoint setInitialTrackValue(float value) {
         _trackValue = value;
+        return this;
+    }
+
+    public TrackPoint setBounds(float minBound, float maxBound) {
+        _minBound = minBound;
+        _maxBound = maxBound;
+
         return this;
     }
 
@@ -76,7 +85,7 @@ public class TrackPoint extends Component {
         _draggable = new Draggable()
             .draggedComponent(this)
             .draggingMask(Vector2.Y)
-            .draggingBounds(new Vector2(getX(), getY()), new Vector2(-0.5f, -2.f), new Vector2(0.5f, 5.f));
+            .draggingBounds(new Vector2(getX(), getY()), new Vector2(-0.5f, _minBound), new Vector2(0.5f, _maxBound));
 
         addComponent(componentFactory.initializeComponent(Layer.FRONT0, _draggable)
             .registerListener(new Draggable.Listener() {

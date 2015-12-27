@@ -17,37 +17,49 @@
           "x" : 0.0,
           "y" : 0.0,
           "editable" : false,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.2,
           "y" : -0.3,
           "editable" : false,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.4,
           "y" : -0.5,
           "editable" : false,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.6,
           "y" : -0.5,
           "editable" : false,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 0.8,
           "y" : -0.3,
           "editable" : false,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         },
         {
           "x" : 1.0,
           "y" : -0.2,
           "editable" : false,
-          "material" : "SNOW"
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
         }
       ]
     }
