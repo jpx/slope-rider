@@ -107,9 +107,13 @@ public class ComponentFactory {
         _componentsToAdd.clear();
     }
 
-    public Level createLevel(final String filename) {
+    public final Level createLevel(final String filename) {
         final Level level = new Level();
 
+        return initializeLevel(level, filename);
+    }
+
+    public final Level initializeLevel(final Level level, final String filename) {
         final JsonReader reader = new JsonReader();
 
         final JsonValue root = reader.parse(Gdx.files.internal(filename));

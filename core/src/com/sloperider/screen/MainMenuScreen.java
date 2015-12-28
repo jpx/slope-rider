@@ -51,17 +51,6 @@ public class MainMenuScreen extends Screen {
                 }
             });
 
-            final TextButton scoreButton = new TextButton("Scores", _skin);
-
-                scoreButton.addListener(new
-
-                ChangeListener() {
-                    @Override
-                    public void changed (ChangeEvent event, Actor actor){
-                        scoreButtonClicked();
-                }
-            });
-
             final TextButton levelsButton = new TextButton("Levels", _skin);
             levelsButton.addListener(new ChangeListener() {
                 @Override
@@ -70,13 +59,12 @@ public class MainMenuScreen extends Screen {
                 }
             });
 
-            final float width = 180.f;
-            final float height = 20.f;
+            final float width = 200.f;
+            final float height = 25.f;
 
             _menuTable.defaults().space(15.f);
             _menuTable.add(playButton).prefSize(width, height).row();
             _menuTable.add(levelsButton).prefSize(width, height).row();
-            _menuTable.add(scoreButton).prefSize(width, height).row();
             _menuTable.pack();
 
             _parent.add(_menuTable);
@@ -99,10 +87,6 @@ public class MainMenuScreen extends Screen {
 
     private void levelsButtonClicked() {
         _masterScreen.push(new LevelsMenuScreen(_masterScreen));
-    }
-
-    private void scoreButtonClicked() {
-        _masterScreen.push(new GameScreen(_masterScreen).startingLevel("level/level0.lvl"));
     }
 
     public MainMenuScreen(final MasterScreen masterScreen) {

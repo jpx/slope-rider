@@ -32,6 +32,8 @@ import java.util.Map;
 public class Level extends Component {
     public interface Listener {
         void stateChanged(final String state);
+
+        void limitChanged(final float limit, final float quota);
     }
 
     private static class TrackBoundComponent {
@@ -63,6 +65,8 @@ public class Level extends Component {
     private boolean _sleighIsMoving = false;
 
     private float _elapsedTimeSinceSleighMoveStoped;
+
+    private boolean _over;
 
     private Listener _listener;
 
@@ -135,7 +139,14 @@ public class Level extends Component {
                 addComponent(componentFactory.initializeComponent(Layer.BACKGROUND2, objectSpawner));
             } else if (type.equals("DraggableNetwork")) {
                 final DraggableNetwork draggableNetwork = new DraggableNetwork()
-                    .quota(componentNode.getFloat("quota"));
+                    .quota(componentNode.getFloat("quota"))
+                    .listener(new DraggableNetwork.Listener() {
+                        @Override
+                        public void valueChanged(DraggableNetwork self, float value, float quota) {
+                            if (_listener != null)
+                                _listener.limitChanged(value, quota);
+                        }
+                    });
                 component = draggableNetwork;
 
                 addComponent(componentFactory.initializeComponent(draggableNetwork));
@@ -223,6 +234,8 @@ public class Level extends Component {
     protected void doReady(final ComponentFactory componentFactory) {
         Gdx.app.log(SlopeRider.TAG, toString());
 
+        _over = false;
+
         _componentFactory = componentFactory;
 
         setTouchable(Touchable.childrenOnly);
@@ -285,7 +298,9 @@ public class Level extends Component {
             }
 
             if (won) {
-                destroySleigh();
+                _over = true;
+
+                destroySleigh(true);
 
                 if (_listener != null)
                     _listener.stateChanged("won");
@@ -346,8 +361,20 @@ public class Level extends Component {
     }
 
     public final Level destroySleigh() {
+        return destroySleigh(false);
+    }
+
+    public final Level destroySleigh(final boolean end) {
         playingEnd();
-        editingBegin();
+
+        if (!end)
+            editingBegin();
+
+        if (end) {
+            for (final Component component : _components) {
+                component.levelComplete(this);
+            }
+        }
 
         if (_sleigh == null)
             return this;

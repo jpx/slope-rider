@@ -1,10 +1,7 @@
 {
 com.badlogic.gdx.graphics.g2d.BitmapFont: { default-font: { file: ui/default32.fnt } },
 com.badlogic.gdx.graphics.g2d.BitmapFont: { default24-font: { file: ui/default24.fnt } },
-com.badlogic.gdx.graphics.g2d.BitmapFont: { blue24-font: { file: ui/blue24.fnt } },
-com.badlogic.gdx.graphics.g2d.BitmapFont: { blue32-font: { file: ui/blue32.fnt } },
-com.badlogic.gdx.graphics.g2d.BitmapFont: { blue48-font: { file: ui/blue48.fnt } },
-com.badlogic.gdx.graphics.g2d.BitmapFont: { blue64-font: { file: ui/blue64.fnt } },
+com.badlogic.gdx.graphics.g2d.BitmapFont: { default64-font: { file: ui/default64.fnt } }
 com.badlogic.gdx.graphics.Color: {
 	green: { a: 1, b: 0, g: 1, r: 0 },
 	white: { a: 1, b: 1, g: 1, r: 1 },
@@ -19,8 +16,8 @@ com.badlogic.gdx.scenes.scene2d.ui.Button$ButtonStyle: {
 	toggle: { down: default-round-down, checked: default-round-down, up: default-round }
 },
 com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
-	default: { down: default-round-down, up: default-round, font: blue48-font, fontColor: white },
-	toggle: { down: default-round-down, up: default-round, checked: default-round-down, font: blue48-font, fontColor: white, downFontColor: red }
+	default: { down: default-round-down, up: default-round, font: default-font, fontColor: white },
+	toggle: { down: default-round-down, up: default-round, checked: default-round-down, font: default-font, fontColor: white, downFontColor: red }
 },
 com.badlogic.gdx.scenes.scene2d.ui.ScrollPane$ScrollPaneStyle: {
 	default: { vScroll: default-scroll, hScrollKnob: default-round-large, background: default-rect, hScroll: default-scroll, vScrollKnob: default-round-large }

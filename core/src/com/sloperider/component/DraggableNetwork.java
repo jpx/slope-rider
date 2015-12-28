@@ -15,6 +15,12 @@ import java.util.List;
  * Created by jpx on 23/12/15.
  */
 public class DraggableNetwork extends Component {
+    public static interface Listener {
+        void valueChanged(final DraggableNetwork self, final float value, final float quota);
+    }
+
+    private Listener _listener;
+
     private final List<Draggable> _draggables = new ArrayList<Draggable>();
 
     private float _quota;
@@ -41,6 +47,14 @@ public class DraggableNetwork extends Component {
 
     public final DraggableNetwork quota(final float value) {
         _quota = value;
+
+        return this;
+    }
+
+    public final DraggableNetwork listener(final Listener listener) {
+        _listener = listener;
+
+        _listener.valueChanged(this, _quota, _quota);
 
         return this;
     }
@@ -114,6 +128,9 @@ public class DraggableNetwork extends Component {
 
     private void currentValueChanged(final Draggable changedDraggable, final float value) {
         final float left = _quota - value;
+
+        if (_listener != null)
+            _listener.valueChanged(this, left, _quota);
 
         for (final Draggable draggable : _draggables)
             if (draggable != changedDraggable)

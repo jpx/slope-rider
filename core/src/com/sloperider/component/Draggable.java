@@ -445,4 +445,12 @@ public class Draggable extends Component {
         setTouchable(Touchable.enabled);
         setVisible(true);
     }
+
+    @Override
+    protected void doLevelComplete(Level level) {
+        super.doLevelComplete(level);
+
+        setTouchable(Touchable.disabled);
+        setVisible(false);
+    }
 }
