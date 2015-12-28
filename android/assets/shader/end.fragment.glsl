@@ -10,7 +10,7 @@ uniform float u_animationDuration;
 
 varying vec2 v_uv;
 
-#define OUTLINE_WIDTH 0.05
+#define OUTLINE_WIDTH 0.02
 
 vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -106,11 +106,11 @@ void main()
 
     if (distance > internalThresholdDistance)
     {
-        diffuse = vec4(vec3(0.0), 0.6);
+        diffuse = vec4(vec3(0.3), 0.5);
     }
     else
     {
-        diffuse.a = 0.8;
+        diffuse.a = 1.0;
     }
 
     gl_FragColor = diffuse;

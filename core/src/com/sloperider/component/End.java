@@ -336,6 +336,8 @@ public class End extends Component {
 
         _context.begin();
 
+        _context.setBlending(true, Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
+
         _shader.begin(getStage().getCamera(), _context);
 
         _shader.render(_renderable);

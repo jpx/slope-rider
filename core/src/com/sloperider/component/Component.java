@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.JsonValue;
 import com.sloperider.ComponentFactory;
 import com.sloperider.Layer;
@@ -175,5 +176,21 @@ public abstract class Component extends Group implements PhysicsActor {
 
     protected final OrthographicCamera getCamera() {
         return (OrthographicCamera) getStage().getCamera();
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+
+        for (final Component component : _components)
+            component.setVisible(visible);
+    }
+
+    @Override
+    public void setTouchable(Touchable touchable) {
+        super.setTouchable(touchable);
+
+        for (final Component component : _components)
+            component.setTouchable(touchable);
     }
 }

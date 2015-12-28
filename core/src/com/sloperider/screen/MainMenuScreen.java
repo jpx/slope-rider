@@ -42,10 +42,7 @@ public class MainMenuScreen extends Screen {
 
             _menuTable = new Table(_skin);
 
-            final float fontScale = 2.f;
-
             final TextButton playButton = new TextButton("Play", _skin);
-            playButton.getLabel().setFontScale(fontScale);
 
             playButton.addListener(new ChangeListener() {
                 @Override
@@ -55,17 +52,17 @@ public class MainMenuScreen extends Screen {
             });
 
             final TextButton scoreButton = new TextButton("Scores", _skin);
-            scoreButton.getLabel().setFontScale(fontScale);
 
-            scoreButton.addListener(new ChangeListener() {
-                @Override
-                public void changed(ChangeEvent event, Actor actor) {
-                    scoreButtonClicked();
+                scoreButton.addListener(new
+
+                ChangeListener() {
+                    @Override
+                    public void changed (ChangeEvent event, Actor actor){
+                        scoreButtonClicked();
                 }
             });
 
             final TextButton levelsButton = new TextButton("Levels", _skin);
-            levelsButton.getLabel().setFontScale(fontScale);
             levelsButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
@@ -97,7 +94,7 @@ public class MainMenuScreen extends Screen {
     private Timer _spawnSleighTimer;
 
     private void playButtonClicked() {
-        _masterScreen.push(new GameScreen(_masterScreen));
+        _masterScreen.push(new GameScreen(_masterScreen).startingLevel("level/level0.lvl"));
     }
 
     private void levelsButtonClicked() {
@@ -105,7 +102,7 @@ public class MainMenuScreen extends Screen {
     }
 
     private void scoreButtonClicked() {
-        _masterScreen.push(new GameScreen(_masterScreen));
+        _masterScreen.push(new GameScreen(_masterScreen).startingLevel("level/level0.lvl"));
     }
 
     public MainMenuScreen(final MasterScreen masterScreen) {

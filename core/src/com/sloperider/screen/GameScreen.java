@@ -144,6 +144,8 @@ public class GameScreen extends Screen {
 
     private Level _activeLevel;
 
+    private String _startingLevel;
+
     public GameScreen(final MasterScreen masterScreen) {
         _levelStage = new Stage();
         _uiStage = new Stage();
@@ -155,11 +157,17 @@ public class GameScreen extends Screen {
         _componentFactory.ready();
     }
 
+    public final GameScreen startingLevel(final String filename) {
+        _startingLevel = filename;
+
+        return this;
+    }
+
     @Override
     public void start() {
         Gdx.input.setInputProcessor(new InputMultiplexer(_uiStage, _levelStage));
 
-        _activeLevel = _componentFactory.createLevel("level/level0.lvl");
+        _activeLevel = _componentFactory.createLevel(_startingLevel);
 
         _activeLevel.setListener(new Level.Listener() {
             @Override

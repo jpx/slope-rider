@@ -6,15 +6,16 @@
       "type" : "Begin",
       "position" : {
         "track" : "track0",
-        "location" : 0.05
+        "location" : 0.05,
+        "offset" : -0.2
       }
     },
     {
       "type" : "End",
       "position" : {
         "track" : "track0",
-        "location" : 0.95,
-        "offset" : 3.0
+        "location" : 0.6,
+        "offset" : 20.0
       }
     },
     {
