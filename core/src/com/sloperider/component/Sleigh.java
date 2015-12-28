@@ -99,7 +99,7 @@ public class Sleigh extends Component {
     protected void setParent(Group parent) {
         super.setParent(parent);
 
-        final float baseSize = 1.f;
+        final float baseSize = 1.5f;
 
         setSize(baseSize, baseSize / _spriteRatio);
         setOrigin(getWidth() / 2.f, getHeight() / 2.f);
@@ -179,7 +179,7 @@ public class Sleigh extends Component {
         FixtureDef fixtureDef = new FixtureDef();
 
         fixtureDef.shape = shape;
-        fixtureDef.density = 2.f;
+        fixtureDef.density = 1.f;
         fixtureDef.friction = 0.1f;
         fixtureDef.restitution = 0.0f;
 

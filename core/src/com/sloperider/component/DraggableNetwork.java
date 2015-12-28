@@ -116,6 +116,7 @@ public class DraggableNetwork extends Component {
         final float left = _quota - value;
 
         for (final Draggable draggable : _draggables)
-            updateDraggable(draggable, left);
+            if (draggable != changedDraggable)
+                updateDraggable(draggable, left);
     }
 }

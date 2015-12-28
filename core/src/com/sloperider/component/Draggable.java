@@ -272,6 +272,9 @@ public class Draggable extends Component {
 
             _draggingLastTouchPosition = _draggingTouchPosition;
 
+            if (move.len() < 1e-2f)
+                return;
+
             final Vector2 position = new Vector2(getX(), getY()).add(move);
 
             position.x = MathUtils.clamp(
@@ -299,6 +302,9 @@ public class Draggable extends Component {
             );
 
             final Vector2 actualMove = position.cpy().sub(getX(), getY());
+
+            if (actualMove.len() < 1e-2f)
+                return;
 
             final float deltaDistance = position.dst(_anchorPosition) - new Vector2(getX(), getY()).dst(_anchorPosition);
 
