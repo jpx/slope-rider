@@ -1,11 +1,15 @@
 {
   "levels" : [
     {
-      "name" : "level0",
+      "name" : "Tutorial",
+      "filename" : "level/tutorial.lvl"
+    },
+    {
+      "name" : "Level 0",
       "filename" : "level/level0.lvl"
     },
     {
-      "name" : "level1",
+      "name" : "Level 1",
       "filename" : "level/level1.lvl"
     }
   ]

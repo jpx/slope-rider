@@ -27,6 +27,8 @@ void main()
         distanceFromLimit * 50.0
     );
 
+    vec4 anchorGraduationDiffuse = vec4(0.0);
+
     if (v_uv.x > 0.6)
     {
         float graduationSize = 1.0 / u_size.y;
@@ -34,7 +36,7 @@ void main()
         if (mod(distance, graduationSize) < GRADUATION_SIZE / u_size.y)
         {
             if (distance < GRADUATION_SIZE / u_size.y)
-                diffuse = vec4(0.4, 0.2, 1.0, 0.6);
+                anchorGraduationDiffuse = vec4(0.4, 0.2, 1.0, 0.6);
             else
                 diffuse = vec4(1.0, 1.0, 1.0, 0.4);
         }
@@ -45,6 +47,9 @@ void main()
     {
         diffuse = vec4(vec3(0.5), 0.4);
     }
+
+    if (anchorGraduationDiffuse.a > 0.0)
+        diffuse = anchorGraduationDiffuse;
 
     gl_FragColor = diffuse;
 }

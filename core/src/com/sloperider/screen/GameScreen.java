@@ -274,7 +274,6 @@ public class GameScreen extends Screen {
 
     private void levelEndNextLevelButtonClicked(final UI ui, final Button button) {
         ++_startingLevel;
-        LevelSet.instance().updateCurrentLevel(_startingLevel);
         changeLevel(LevelSet.instance().levels().get(_startingLevel));
     }
 
@@ -379,6 +378,8 @@ public class GameScreen extends Screen {
 
                         LevelSet.instance().updateLevel(nextLevelInfo);
                     }
+
+                    LevelSet.instance().updateCurrentLevel(_startingLevel + 1);
 
                     _ui.leastAttemptCount((int) levelInfo.bestScore);
                     _ui.showLevelEnd(true, nextLevelInfo != null);
