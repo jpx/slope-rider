@@ -26,6 +26,8 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.sloperider.ComponentFactory;
+import com.sloperider.LevelInfo;
+import com.sloperider.LevelSet;
 import com.sloperider.SlopeRider;
 import com.sloperider.component.Level;
 import com.sloperider.physics.PhysicsWorld;
@@ -38,18 +40,9 @@ import java.util.ArrayList;
 public class LevelsMenuScreen extends Screen {
     private Stage _uiStage;
 
-    private class LevelEntry {
-        String name;
-        String filename;
-        boolean unlocked;
-        float bestScore;
-    }
-
     private class UI {
         private Skin _skin;
         private Table _parent;
-
-        private Table _menuTable;
 
         Stack levelInfoStack;
         Table levelInfoTable;
@@ -57,17 +50,24 @@ public class LevelsMenuScreen extends Screen {
         TextButton playButton;
         Image lockedImage;
 
+        Label bestScoreValueLabel;
+
         void currentIndexChanged(final int index) {
             if (_levelIndex == index)
                 return;
 
             _levelIndex = index;
 
-            final LevelEntry levelEntry = _levels.get(index);
+            final LevelInfo levelEntry = LevelSet.instance().levels().get(index);
 
             if (levelEntry.unlocked) {
                 levelInfoStack.add(levelInfoTable);
                 levelInfoStack.removeActor(lockedImageTable);
+
+                if (levelEntry.bestScore > 0)
+                    bestScoreValueLabel.setText(String.format("%d", (int) levelEntry.bestScore));
+                else
+                    bestScoreValueLabel.setText("");
             } else {
                 levelInfoStack.add(lockedImageTable);
                 levelInfoStack.removeActor(levelInfoTable);
@@ -87,7 +87,7 @@ public class LevelsMenuScreen extends Screen {
 
             final Array items = new Array();
 
-            for (final LevelEntry level : _levels) {
+            for (final LevelInfo level : LevelSet.instance().levels()) {
                 items.add(level.name);
             }
             _menu.setItems(items);
@@ -104,8 +104,8 @@ public class LevelsMenuScreen extends Screen {
             levelInfoStack = new Stack();
 
             levelInfoTable = new Table(_skin);
-            final Label bestScoreLabel = new Label("BEST", _skin);
-            final Label bestScoreValueLabel = new Label("42", _skin);
+            final Label bestScoreLabel = new Label("Least attempts", _skin);
+            bestScoreValueLabel = new Label("", _skin);
 
             playButton = new TextButton("Play", _skin);
 
@@ -130,11 +130,11 @@ public class LevelsMenuScreen extends Screen {
             levelInfoStack.add(levelInfoTable);
             levelInfoStack.add(lockedImageTable);
 
-            levelInfoTable.defaults().spaceLeft(20.f).spaceRight(20.f);
+            levelInfoTable.defaults().padTop(50.f).spaceLeft(20.f).spaceRight(20.f);
             levelInfoTable.setBackground(background);
-            levelInfoTable.add(bestScoreLabel).align(Align.right).expand();
-            levelInfoTable.add(bestScoreValueLabel).align(Align.left).expand().row();
-            levelInfoTable.add(playButton).colspan(2).expand();
+            levelInfoTable.add(bestScoreLabel).align(Align.right).row();
+            levelInfoTable.add(bestScoreValueLabel).align(Align.top).expand().row();
+            levelInfoTable.add(playButton).minSize(150.f, 30.f).colspan(2).expand();
             levelInfoTable.pack();
 
             _parent.add(_scrollPane).size(300.f, 400.f).align(Align.right);
@@ -153,23 +153,9 @@ public class LevelsMenuScreen extends Screen {
 
     private Timer _spawnSleighTimer;
 
-    private final java.util.List<LevelEntry> _levels = new ArrayList<LevelEntry>();
-
     public LevelsMenuScreen(final MasterScreen masterScreen) {
         _levelIndex = -1;
         _uiStage = new Stage();
-
-        // tmp
-        for (int i = 0; i < 15; ++i) {
-            _levels.add(new LevelEntry());
-            _levels.get(_levels.size() - 1).name = "level0" + i;
-            _levels.get(_levels.size() - 1).filename = "level/level0.lvl";
-            _levels.get(_levels.size() - 1).unlocked = true;
-            _levels.add(new LevelEntry());
-            _levels.get(_levels.size() - 1).name = "level1" + i;
-            _levels.get(_levels.size() - 1).filename = "level/level1.lvl";
-            _levels.get(_levels.size() - 1).unlocked = true;
-        }
 
         final UI ui = new UI(_uiStage, masterScreen);
 
@@ -232,13 +218,14 @@ public class LevelsMenuScreen extends Screen {
             _componentFactory.destroyComponent(_backgroundLevel);
         }
 
-        _backgroundLevel = _componentFactory.createLevel(_levels.get(index).filename)
-            .startAsViewOnly();
+        _backgroundLevel = _componentFactory.createLevel(
+            LevelSet.instance().levels().get(index).filename
+        ).startAsViewOnly();
     }
 
     private void playLevel(final int index) {
         _masterScreen.push(new GameScreen(_masterScreen)
-            .startingLevel(_levels.get(index).filename)
+            .startingLevel(index)
         );
     }
 }

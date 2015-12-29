@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Timer;
 import com.sloperider.ComponentFactory;
+import com.sloperider.LevelSet;
 import com.sloperider.component.Level;
 import com.sloperider.physics.PhysicsWorld;
 
@@ -81,8 +82,10 @@ public class MainMenuScreen extends Screen {
 
     private Timer _spawnSleighTimer;
 
+    private int _currentLevelIndex;
+
     private void playButtonClicked() {
-        _masterScreen.push(new GameScreen(_masterScreen).startingLevel("level/level0.lvl"));
+        _masterScreen.push(new GameScreen(_masterScreen).startingLevel(_currentLevelIndex));
     }
 
     private void levelsButtonClicked() {
@@ -104,6 +107,8 @@ public class MainMenuScreen extends Screen {
     @Override
     public void start() {
         Gdx.input.setInputProcessor(new InputMultiplexer(_uiStage, _levelStage));
+
+        findCurrentLevelIndex();
 
         _backgroundLevel = _componentFactory.createLevel("level/title_level.lvl")
             .startAsViewOnly();
@@ -143,5 +148,9 @@ public class MainMenuScreen extends Screen {
     public void dispose() {
         _uiStage.dispose();
         _uiStage = null;
+    }
+
+    private void findCurrentLevelIndex() {
+        _currentLevelIndex = LevelSet.instance().findCurrentLevel();
     }
 }

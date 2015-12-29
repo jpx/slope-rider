@@ -19,6 +19,12 @@ public class SlopeRider extends ApplicationAdapter {
     private AssetManager _assetManager;
     private boolean _assetsLoaded;
 
+    public final SlopeRider io(final PersistentIO io) {
+        LevelSet.instance().io(io);
+
+        return this;
+    }
+
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
@@ -33,6 +39,8 @@ public class SlopeRider extends ApplicationAdapter {
         _masterScreen.assetManager(_assetManager);
         _masterScreen.start();
         _masterScreen.push(new LoadingScreen());
+
+        LevelSet.instance().loadFromFile("level/main.lvl");
 
         _assetManager.load("ui/uiskin.json", Skin.class);
 	}

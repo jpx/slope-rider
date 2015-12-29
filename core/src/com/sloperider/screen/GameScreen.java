@@ -17,6 +17,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.sloperider.ComponentFactory;
+import com.sloperider.LevelInfo;
+import com.sloperider.LevelSet;
 import com.sloperider.SlopeRider;
 import com.sloperider.component.Level;
 import com.sloperider.physics.PhysicsWorld;
@@ -50,6 +52,11 @@ public class GameScreen extends Screen {
         private Table _remainingTable;
         private Label _remainingLabel;
         private Label _remainingValueLabel;
+
+        private Label _levelEndScoreValueLabel;
+        private Label _levelEndBestScoreValueLabel;
+
+        private TextButton _levelEndNextLevelButton;
 
         UI(final Stage stage, final MasterScreen masterScreen) {
             _skin = masterScreen._assetManager.get("ui/uiskin.json", Skin.class);
@@ -129,11 +136,13 @@ public class GameScreen extends Screen {
             final Table levelEndTable = new Table(_skin);
 
             final Label levelEndScoreLabel = new Label("Attempts", _skin, "default-font", Color.WHITE);
-            final Label levelEndScoreValueLabel = new Label("0", _skin, "default-font", Color.WHITE);
+            final Label levelEndBestScoreLabel = new Label("Least attempts", _skin, "default-font", Color.WHITE);
+            _levelEndScoreValueLabel = new Label("0", _skin, "default-font", Color.WHITE);
+            _levelEndBestScoreValueLabel = new Label("0", _skin, "default-font", Color.WHITE);
 
             final TextButton levelEndBackButton = new TextButton("Menu", _skin);
-            final TextButton levelEndNextLevelButton = new TextButton("Next level", _skin);
-            levelEndNextLevelButton.getLabel().getStyle().font = _skin.getFont("default24-font");
+            _levelEndNextLevelButton = new TextButton("Next level", _skin);
+            _levelEndNextLevelButton.getLabel().getStyle().font = _skin.getFont("default24-font");
 
             levelEndBackButton.addListener(new ChangeListener() {
                 @Override
@@ -142,7 +151,7 @@ public class GameScreen extends Screen {
                 }
             });
 
-            levelEndNextLevelButton.addListener(new ChangeListener() {
+            _levelEndNextLevelButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
                     levelEndNextLevelButtonClicked(UI.this, (Button) actor);
@@ -152,9 +161,11 @@ public class GameScreen extends Screen {
             levelEndTable.defaults().pad(30.f);
             levelEndTable.setBackground(_skin.getDrawable("default-rect"));
             levelEndTable.add(levelEndScoreLabel).expand().align(Align.right);
-            levelEndTable.add(levelEndScoreValueLabel).expand().align(Align.left).row();
+            levelEndTable.add(_levelEndScoreValueLabel).expand().align(Align.left).row();
+            levelEndTable.add(levelEndBestScoreLabel).expand().align(Align.right);
+            levelEndTable.add(_levelEndBestScoreValueLabel).expand().align(Align.left).row();
             levelEndTable.add(levelEndBackButton).minWidth(220.f);
-            levelEndTable.add(levelEndNextLevelButton).minWidth(220f);
+            levelEndTable.add(_levelEndNextLevelButton).minWidth(220f);
 
             levelEndLayoutTable.add().expand();
             levelEndLayoutTable.add(levelEndTable).colspan(2).expand();
@@ -179,8 +190,6 @@ public class GameScreen extends Screen {
             _editingActors.add(_labelTable);
 
             _playingActors.add(_stopButton);
-
-            setEditingMode();
         }
 
         public final void setPlayingMode() {
@@ -213,9 +222,14 @@ public class GameScreen extends Screen {
 
         public final void attemptCount(final int value) {
             _tryCountValueLabel.setText(String.format("%d", value));
+            _levelEndScoreValueLabel.setText(String.format("%d", value));
         }
 
-        public final void showLevelEnd(final boolean visible) {
+        public final void leastAttemptCount(final int value) {
+            _levelEndBestScoreValueLabel.setText(String.format("%d", value));
+        }
+
+        public final void showLevelEnd(final boolean visible, final boolean hasNextLevel) {
             if (visible) {
                 for (final Actor actor : _playingActors) {
                     actor.setTouchable(Touchable.disabled);
@@ -225,6 +239,11 @@ public class GameScreen extends Screen {
                 for (final Actor actor : _editingActors) {
                     actor.setTouchable(Touchable.disabled);
                     actor.setVisible(false);
+                }
+
+                if (!hasNextLevel) {
+                    _levelEndNextLevelButton.setTouchable(Touchable.disabled);
+                    _levelEndNextLevelButton.setVisible(false);
                 }
             }
 
@@ -254,7 +273,9 @@ public class GameScreen extends Screen {
     }
 
     private void levelEndNextLevelButtonClicked(final UI ui, final Button button) {
-
+        ++_startingLevel;
+        LevelSet.instance().updateCurrentLevel(_startingLevel);
+        changeLevel(LevelSet.instance().levels().get(_startingLevel));
     }
 
     private Stage _levelStage;
@@ -267,7 +288,7 @@ public class GameScreen extends Screen {
 
     private Level _activeLevel;
 
-    private String _startingLevel;
+    private int _startingLevel;
 
     private int _attemptCount;
 
@@ -277,7 +298,7 @@ public class GameScreen extends Screen {
         _levelStage = new Stage();
         _uiStage = new Stage();
         _ui = new UI(_uiStage, masterScreen);
-        _ui.showLevelEnd(false);
+        _ui.showLevelEnd(false, true);
 
         _physicsWorld = new PhysicsWorld();
 
@@ -285,8 +306,8 @@ public class GameScreen extends Screen {
         _componentFactory.ready();
     }
 
-    public final GameScreen startingLevel(final String filename) {
-        _startingLevel = filename;
+    public final GameScreen startingLevel(final int index) {
+        _startingLevel = index;
 
         return this;
     }
@@ -295,31 +316,7 @@ public class GameScreen extends Screen {
     public void start() {
         Gdx.input.setInputProcessor(new InputMultiplexer(_uiStage, _levelStage));
 
-        _attemptCount = 0;
-        _ui.attemptCount(_attemptCount);
-
-        _activeLevel = new Level().setListener(new Level.Listener() {
-            @Override
-            public void stateChanged(final String state) {
-                if (state.equals("playing")) {
-                    ++_attemptCount;
-                    _ui.attemptCount(_attemptCount);
-
-                    _ui.setPlayingMode();
-                } else if (state.equals("editing")) {
-                    _ui.setEditingMode();
-                } else if (state.equals("won")) {
-                    _ui.showLevelEnd(true);
-                }
-            }
-
-            @Override
-            public void limitChanged(float limit, float quota) {
-                _ui.limit(limit, quota);
-            }
-        });
-
-        _activeLevel = _componentFactory.initializeLevel(_activeLevel, _startingLevel);
+        changeLevel(LevelSet.instance().levels().get(_startingLevel));
     }
 
     @Override
@@ -346,5 +343,64 @@ public class GameScreen extends Screen {
 
     @Override
     public void dispose() {
+    }
+
+    private void changeLevel(final LevelInfo levelInfo) {
+        if (_activeLevel != null) {
+            _componentFactory.destroyComponent(_activeLevel);
+        }
+
+        _attemptCount = 0;
+        _ui.attemptCount(_attemptCount);
+
+        _activeLevel = new Level().setListener(new Level.Listener() {
+            @Override
+            public void stateChanged(final String state) {
+                if (state.equals("playing")) {
+                    ++_attemptCount;
+                    _ui.attemptCount(_attemptCount);
+
+                    _ui.setPlayingMode();
+                } else if (state.equals("editing")) {
+                    _ui.setEditingMode();
+                } else if (state.equals("won")) {
+                    final LevelInfo levelInfo = LevelSet.instance().levels().get(_startingLevel);
+
+                    levelInfo.bestScore = levelInfo.bestScore > 0 ?
+                        Math.min(levelInfo.bestScore, _attemptCount)
+                        : _attemptCount;
+
+                    LevelSet.instance().updateLevel(levelInfo);
+
+                    final LevelInfo nextLevelInfo = nextLevelInfo();
+
+                    if (nextLevelInfo != null && !nextLevelInfo.unlocked) {
+                        nextLevelInfo.unlocked = true;
+
+                        LevelSet.instance().updateLevel(nextLevelInfo);
+                    }
+
+                    _ui.leastAttemptCount((int) levelInfo.bestScore);
+                    _ui.showLevelEnd(true, nextLevelInfo != null);
+                }
+            }
+
+            @Override
+            public void limitChanged(float limit, float quota) {
+                _ui.limit(limit, quota);
+            }
+        });
+
+        _activeLevel = _componentFactory.initializeLevel(_activeLevel, levelInfo.filename);
+
+        _ui.setEditingMode();
+        _ui.showLevelEnd(false, true);
+    }
+
+    private LevelInfo nextLevelInfo() {
+        if (_startingLevel >= LevelSet.instance().levels().size() - 1)
+            return null;
+
+        return LevelSet.instance().levels().get(_startingLevel + 1);
     }
 }
