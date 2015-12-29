@@ -24,6 +24,50 @@ public class LevelSet {
 
     private final List<LevelInfo> _levels = new ArrayList<LevelInfo>();
 
+    public LevelSet() {
+        _io = new PersistentIO() {
+            @Override
+            public boolean readBoolean(String key, boolean defaultValue) {
+                return false;
+            }
+
+            @Override
+            public int readInt(String key, int defaultValue) {
+                return 0;
+            }
+
+            @Override
+            public String readString(String key, String defaultValue) {
+                return "";
+            }
+
+            @Override
+            public void beginWrite() {
+
+            }
+
+            @Override
+            public void writeBoolean(String key, boolean value) {
+
+            }
+
+            @Override
+            public void writeInt(String key, int value) {
+
+            }
+
+            @Override
+            public void writeString(String key, String value) {
+
+            }
+
+            @Override
+            public void endWrite() {
+
+            }
+        };
+    }
+
     public final LevelSet io(final PersistentIO io) {
         _io = io;
 

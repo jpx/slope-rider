@@ -178,7 +178,7 @@ public class GameScreen extends Screen {
             _parent.pad(42.f);
             _parent.add(backButton).size(64.f).expand().align(Align.topLeft);
             _parent.add(_playButton).size(160.f).expand().align(Align.topRight).row();
-            _parent.add(_stopButton).size(160.f).expand().align(Align.bottomRight).colspan(2);
+            _parent.add(_stopButton).size(80.f).expand().align(Align.bottomRight).colspan(2);
             _parent.pack();
 
             stage.addActor(_labelTable);
