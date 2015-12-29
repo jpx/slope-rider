@@ -78,6 +78,16 @@ public class LevelSet {
         return _levels;
     }
 
+    public final void updateDescription(final String name, final String description) {
+        for (final LevelInfo level : levels()) {
+            if (level.name.equals(name)) {
+                level.description = description;
+
+                return;
+            }
+        }
+    }
+
     public final boolean loadFromFile(final String filename) {
         _levels.clear();
 

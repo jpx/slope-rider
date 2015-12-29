@@ -50,6 +50,7 @@ public class LevelsMenuScreen extends Screen {
         TextButton playButton;
         Image lockedImage;
 
+        Label descriptionLabel;
         Label bestScoreValueLabel;
 
         void currentIndexChanged(final int index) {
@@ -58,11 +59,15 @@ public class LevelsMenuScreen extends Screen {
 
             _levelIndex = index;
 
+            setBackgroundLevel(index);
+
             final LevelInfo levelEntry = LevelSet.instance().levels().get(index);
 
             if (levelEntry.unlocked) {
                 levelInfoStack.add(levelInfoTable);
                 levelInfoStack.removeActor(lockedImageTable);
+
+                descriptionLabel.setText(levelEntry.description);
 
                 if (levelEntry.bestScore > 0)
                     bestScoreValueLabel.setText(String.format("%d", (int) levelEntry.bestScore));
@@ -72,8 +77,6 @@ public class LevelsMenuScreen extends Screen {
                 levelInfoStack.add(lockedImageTable);
                 levelInfoStack.removeActor(levelInfoTable);
             }
-
-            setBackgroundLevel(index);
         }
 
         UI(final Stage stage, final MasterScreen masterScreen) {
@@ -106,6 +109,7 @@ public class LevelsMenuScreen extends Screen {
             levelInfoTable = new Table(_skin);
             final Label bestScoreLabel = new Label("Least attempts", _skin);
             bestScoreValueLabel = new Label("", _skin);
+            descriptionLabel = new Label("", _skin);
 
             playButton = new TextButton("Play", _skin);
 
@@ -132,6 +136,7 @@ public class LevelsMenuScreen extends Screen {
 
             levelInfoTable.defaults().padTop(50.f).spaceLeft(20.f).spaceRight(20.f);
             levelInfoTable.setBackground(background);
+//            levelInfoTable.add(descriptionLabel).expand().row();
             levelInfoTable.add(bestScoreLabel).align(Align.right).row();
             levelInfoTable.add(bestScoreValueLabel).align(Align.top).expand().row();
             levelInfoTable.add(playButton).minSize(150.f, 30.f).colspan(2).expand();

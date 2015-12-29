@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.sloperider.ComponentFactory;
 import com.sloperider.Layer;
+import com.sloperider.LevelSet;
 import com.sloperider.SlopeRider;
 
 import java.util.ArrayList;
@@ -79,6 +80,8 @@ public class Level extends Component {
     public final void initialize(final ComponentFactory componentFactory, final JsonValue root) {
         _name = root.getString("name");
         _description = root.getString("description");
+
+        LevelSet.instance().updateDescription(_name, _description);
 
         final List<TrackBoundComponent> trackBoundComponents = new ArrayList<TrackBoundComponent>();
 

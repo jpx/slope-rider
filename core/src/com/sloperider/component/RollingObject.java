@@ -131,7 +131,7 @@ public class RollingObject extends Component {
         bodyDef.position.set(getX(), getY());
 
         final FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.density = 2.f;
+        fixtureDef.density = 3.f;
 
         final Shape shape = new CircleShape();
         shape.setRadius(Math.max(getWidth(), getHeight()) * 0.9f / 2.f);

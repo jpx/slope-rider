@@ -60,10 +60,10 @@ public class MainMenuScreen extends Screen {
                 }
             });
 
-            final float width = 200.f;
-            final float height = 25.f;
+            final float width = 180.f;
+            final float height = 30.f;
 
-            _menuTable.defaults().space(15.f);
+            _menuTable.defaults().space(20.f);
             _menuTable.add(playButton).prefSize(width, height).row();
             _menuTable.add(levelsButton).prefSize(width, height).row();
             _menuTable.pack();
