@@ -276,7 +276,7 @@ public class TrackCameraController
             final float delta = _lastZoomDistance - distance;
 
             final float minZoom = 1.5f;
-            final float maxZoom = 4.0f;
+            final float maxZoom = maxZoom();
             final float zoomSpeed = 0.005f;
 
             OrthographicCamera camera = getCamera();
@@ -319,5 +319,12 @@ public class TrackCameraController
         final OrthographicCamera camera = getCamera();
 
         camera.position.set(checkPosition(position));
+    }
+
+    private float maxZoom() {
+        final float hRatio = _track.getWidth() * SlopeRider.PIXEL_PER_UNIT / getCamera().viewportWidth;
+        final float vRatio = _track.getHeight() * SlopeRider.PIXEL_PER_UNIT / getCamera().viewportHeight;
+
+        return Math.min(hRatio, vRatio);
     }
 }

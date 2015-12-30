@@ -16,7 +16,8 @@
         "track" : "track0",
         "location" : 0.8,
         "offset" : 2.0
-      }
+      },
+      "scale" : [ 8.0, 8.0 ]
     },
     {
       "type" : "DraggableNetwork",

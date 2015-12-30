@@ -90,6 +90,17 @@ public class Level extends Component {
             TrackBoundComponent trackBoundComponent = null;
             Vector2 position = null;
 
+            final Vector2 scale = new Vector2(1.f, 1.f);
+
+            if (componentNode.has("scale")) {
+                final JsonValue scaleNode = componentNode.get("scale");
+
+                scale.set(
+                    scaleNode.get(0).asFloat(),
+                    scaleNode.get(1).asFloat()
+                );
+            }
+
             final String type = componentNode.getString("type");
 
             final JsonValue positionNode = componentNode.get("position");
@@ -117,7 +128,11 @@ public class Level extends Component {
                 _begin = addComponent(componentFactory.createComponent(position, Begin.class));
                 component = _begin;
             } else if (type.equals("End")) {
-                _end = addComponent(componentFactory.createComponent(position, End.class));
+                final End end = new End();
+                end.setPosition(position.x, position.y);
+                end.setSize(scale.x, scale.y);
+
+                _end = addComponent(componentFactory.initializeComponent(end));
                 component = _end;
             } else if (type.equals("FallingSign")) {
                 component = addComponent(componentFactory.createComponent(Layer.BACKGROUND2, position, FallingSign.class));

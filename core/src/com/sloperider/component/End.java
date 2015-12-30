@@ -190,7 +190,6 @@ public class End extends Component {
         _bodyNeedsUpdate = false;
         _animationActive = false;
 
-        setSize(8.f, 8.f);
         setOrigin(getWidth() / 2.f, getHeight() / 2.f);
 
         final ModelBuilder builder = new ModelBuilder();

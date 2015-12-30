@@ -1,5 +1,6 @@
 package com.sloperider.component;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -145,7 +146,9 @@ public class SleighCameraController extends Component {
     }
 
     private float maxZoom() {
-        // FIXME
-        return 8.f;
+        final float hRatio = getWidth() * SlopeRider.PIXEL_PER_UNIT / getCamera().viewportWidth;
+        final float vRatio = getHeight() * SlopeRider.PIXEL_PER_UNIT / getCamera().viewportHeight;
+
+        return Math.min(hRatio, vRatio);
     }
 }
