@@ -148,7 +148,7 @@ public class RollingObject extends Component {
     }
 
     @Override
-    public void updateBody(World world) {
+    public void updateBody(World world, float deltaTime) {
         final Vector2 position = _body.getPosition();
 
         setPosition(position.x, position.y);

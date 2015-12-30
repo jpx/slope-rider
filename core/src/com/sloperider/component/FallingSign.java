@@ -79,7 +79,7 @@ public class FallingSign extends Component {
     }
 
     @Override
-    public void updateBody(World world) {
+    public void updateBody(World world, float deltaTime) {
 
     }
 

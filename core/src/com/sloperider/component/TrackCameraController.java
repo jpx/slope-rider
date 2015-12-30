@@ -174,7 +174,7 @@ public class TrackCameraController
     }
 
     @Override
-    public void updateBody(World world) {
+    public void updateBody(World world, float deltaTime) {
 
     }
 

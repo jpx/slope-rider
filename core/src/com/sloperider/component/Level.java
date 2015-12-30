@@ -342,7 +342,7 @@ public class Level extends Component {
     }
 
     @Override
-    public void updateBody(World world) {
+    public void updateBody(World world, float deltaTime) {
     }
 
     @Override

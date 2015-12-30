@@ -540,7 +540,7 @@ public class Track extends Component {
     }
 
     @Override
-    public void updateBody(World world) {
+    public void updateBody(World world, float deltaTime) {
         if (_physicsTrackUpdateNeeded) {
             _physicsTrackUpdateNeeded = false;
 

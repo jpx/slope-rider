@@ -192,7 +192,7 @@ public class Sleigh extends Component {
     }
 
     @Override
-    public void updateBody(World world) {
+    public void updateBody(World world, float deltaTime) {
         if (!_physicsEnabled)
             return;
 

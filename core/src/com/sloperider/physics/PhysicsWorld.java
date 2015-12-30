@@ -19,15 +19,23 @@ import java.util.List;
  */
 public class PhysicsWorld {
 
+    private static final float FIXED_TIMESTEP = 1.f / 60.f;
+    private static final int MAX_STEP_COUNT = 5;
+
+    private float _fixedTimestepAccumulator;
+
     private World _world;
     private List<PhysicsActor> _actors;
 
     private Box2DDebugRenderer _renderer;
 
     public PhysicsWorld() {
+        _fixedTimestepAccumulator = 0.f;
+
         _renderer = new Box2DDebugRenderer();
 
         _world = new World(new Vector2(0.f, -10.f), true);
+        _world.setAutoClearForces(false);
 
         _actors = new ArrayList<PhysicsActor>();
 
@@ -85,12 +93,25 @@ public class PhysicsWorld {
     }
 
     public final void update(float deltaTime) {
+        _fixedTimestepAccumulator += deltaTime;
 
-        for (PhysicsActor actor : _actors) {
-            actor.updateBody(_world);
+        final int stepCount = (int) Math.floor((double) (_fixedTimestepAccumulator / FIXED_TIMESTEP));
+
+        if (stepCount > 0) {
+            _fixedTimestepAccumulator -= stepCount * FIXED_TIMESTEP;
         }
 
-        _world.step(deltaTime, 6, 2);
+        final int boundStepCount = Math.min(stepCount, MAX_STEP_COUNT);
+
+        for (int i = 0; i < boundStepCount; ++i) {
+            for (PhysicsActor actor : _actors) {
+                actor.updateBody(_world, FIXED_TIMESTEP);
+            }
+
+            _world.step(FIXED_TIMESTEP, 6, 2);
+        }
+
+        _world.clearForces();
     }
 
     public final void render(Camera camera) {
