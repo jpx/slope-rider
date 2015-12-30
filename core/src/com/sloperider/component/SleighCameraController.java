@@ -149,6 +149,6 @@ public class SleighCameraController extends Component {
         final float hRatio = getWidth() * SlopeRider.PIXEL_PER_UNIT / getCamera().viewportWidth;
         final float vRatio = getHeight() * SlopeRider.PIXEL_PER_UNIT / getCamera().viewportHeight;
 
-        return Math.min(hRatio, vRatio);
+        return Math.min(hRatio, vRatio) * 0.75f;
     }
 }

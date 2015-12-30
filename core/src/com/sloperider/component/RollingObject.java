@@ -33,8 +33,8 @@ public class RollingObject extends Component {
         "texture/pokeball.png"
     };
     private final float[] _weights = {
-        29.f / 30.f,
-        1.f / 30.f
+        99.f / 100.f,
+        1.f / 100.f
     };
 
     private final List<Texture> _textures = new ArrayList<Texture>();

@@ -528,7 +528,7 @@ public class Track extends Component {
         final List<GroundMaterial> materials = new ArrayList<GroundMaterial>();
 
         createPhysicsPolygon(
-                buildControlPoints(), _baseWidth, _baseHeight, PHYSICS_SPLINE_SAMPLE_COUNT, vertices, normals, materials
+            buildControlPoints(), _baseWidth, _baseHeight, (int) (PHYSICS_SPLINE_SAMPLE_COUNT * _baseWidth / 100.f), vertices, normals, materials
         );
 
         for (int i = 0; i < vertices.size / 2; ++i) {
@@ -554,10 +554,10 @@ public class Track extends Component {
         final IntArray metadata = new IntArray();
 
         createGraphicsPolygon(
-                buildControlPoints(),
-                _baseWidth, _baseHeight, TOP_LAYER0_HEIGHT, TOP_LAYER1_HEIGHT,
-                GRAPHICS_SPLINE_SAMPLE_COUNT,
-                vertices, indices, metadata
+            buildControlPoints(),
+            _baseWidth, _baseHeight, TOP_LAYER0_HEIGHT, TOP_LAYER1_HEIGHT,
+            (int) (GRAPHICS_SPLINE_SAMPLE_COUNT * _baseWidth / 100.f),
+            vertices, indices, metadata
         );
 
         if (_mesh == null) {

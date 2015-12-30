@@ -379,7 +379,8 @@ public class GameScreen extends Screen {
                         LevelSet.instance().updateLevel(nextLevelInfo);
                     }
 
-                    LevelSet.instance().updateCurrentLevel(_startingLevel + 1);
+                    if (nextLevelInfo != null)
+                        LevelSet.instance().updateCurrentLevel(_startingLevel + 1);
 
                     _ui.leastAttemptCount((int) levelInfo.bestScore);
                     _ui.showLevelEnd(true, nextLevelInfo != null);

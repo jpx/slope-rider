@@ -351,7 +351,7 @@ public class Level extends Component {
     }
 
     private Level computeBounds(final Rectangle bounds) {
-        bounds.set(_mainTrack.getX(), _mainTrack.getY(), _mainTrack.getWidth(), 100.f);
+        bounds.set(_mainTrack.getX(), _mainTrack.getY(), _mainTrack.getWidth(), 250.f);
 
         return this;
     }
