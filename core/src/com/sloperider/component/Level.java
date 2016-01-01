@@ -419,11 +419,9 @@ public class Level extends Component {
         if (_mainTrack != null)
             _mainTrack.editable(false);
 
-        getStage().getCamera().position.set(
-            new Vector2(35.f, 20.f).scl(SlopeRider.PIXEL_PER_UNIT),
-            0.f
-        );
-        ((OrthographicCamera) getStage().getCamera()).zoom = 3.f;
+        addComponent(
+            _componentFactory.createComponent(Vector2.Zero, OverviewCameraController.class)
+        ).setBounds(getX(), getY(), getWidth(), getHeight());
 
         return this;
     }
