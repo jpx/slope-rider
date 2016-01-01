@@ -31,17 +31,12 @@ public class OverviewCameraController extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
-
+        updateCamera();
     }
 
     @Override
     protected void doAct(float delta) {
-        final OrthographicCamera camera = getCamera();
-
-        final Vector3 position = checkPosition(new Vector3(getX(), getY(), 0.f));
-
-        camera.position.set(position);
-        camera.zoom = optimalZoom();
+        updateCamera();
     }
 
     @Override
@@ -67,6 +62,15 @@ public class OverviewCameraController extends Component {
     @Override
     public void destroyBody(World world) {
 
+    }
+
+    private void updateCamera() {
+        final OrthographicCamera camera = getCamera();
+
+        final Vector3 position = checkPosition(new Vector3(getX(), getY(), 0.f));
+
+        camera.position.set(position);
+        camera.zoom = optimalZoom();
     }
 
     private Vector3 checkPosition(final Vector3 position) {

@@ -419,9 +419,12 @@ public class Level extends Component {
         if (_mainTrack != null)
             _mainTrack.editable(false);
 
+        final OverviewCameraController overviewCameraController = new OverviewCameraController();
+        overviewCameraController.setBounds(getX(), getY(), getWidth(), getHeight());
+
         addComponent(
-            _componentFactory.createComponent(Vector2.Zero, OverviewCameraController.class)
-        ).setBounds(getX(), getY(), getWidth(), getHeight());
+            _componentFactory.initializeComponent(overviewCameraController)
+        );
 
         return this;
     }
