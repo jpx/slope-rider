@@ -35,7 +35,6 @@ public class PhysicsWorld {
         _renderer = new Box2DDebugRenderer();
 
         _world = new World(new Vector2(0.f, -10.f), true);
-        _world.setAutoClearForces(false);
 
         _actors = new ArrayList<PhysicsActor>();
 
@@ -110,8 +109,6 @@ public class PhysicsWorld {
 
             _world.step(FIXED_TIMESTEP, 6, 2);
         }
-
-        _world.clearForces();
     }
 
     public final void render(Camera camera) {
