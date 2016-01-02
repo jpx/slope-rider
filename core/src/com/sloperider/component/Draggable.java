@@ -321,7 +321,7 @@ public class Draggable extends Component {
 
         _context.begin();
 
-        _context.setBlending(true, Gdx.gl.GL_BLEND_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
+        _context.setBlending(true, Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
 
         _shader.begin(getStage().getCamera(), _context);
 
