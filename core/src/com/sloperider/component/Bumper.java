@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.sloperider.ComponentFactory;
@@ -25,6 +27,8 @@ import com.sloperider.SlopeRider;
  * Created by jpx on 14/12/15.
  */
 public class Bumper  extends Component {
+    private static final float _spriteRatio = 960.f / 720.f;
+
     private RenderContext _context;
     private Environment _environment;
     private Renderable _renderable;
@@ -32,26 +36,45 @@ public class Bumper  extends Component {
     private String _vertexShaderSource;
     private String _fragmentShaderSource;
 
+    private Texture _diffuseMask;
+
+    @Override
+    public void setPosition(float x, float y) {
+        super.setPosition(x, y);
+
+        if (_renderable != null) {
+            _renderable.worldTransform
+                .idt()
+                .scale(getScaleX() * SlopeRider.PIXEL_PER_UNIT, getScaleY() * SlopeRider.PIXEL_PER_UNIT, 1.f)
+                .translate(getX(), getY(), 0.f)
+                .rotate(Vector3.Z, getRotation())
+                .translate(-getOriginX(), -getOriginY(), 0.f);
+        }
+    }
+
     @Override
     public void requireAssets(AssetManager assetManager) {
+        assetManager.load("texture/bumper.png", Texture.class);
+
         _vertexShaderSource = Gdx.files.internal("shader/bumper.vertex.glsl").readString();
         _fragmentShaderSource = Gdx.files.internal("shader/bumper.fragment.glsl").readString();
     }
 
     @Override
     public void manageAssets(AssetManager assetManager) {
-
+        _diffuseMask = assetManager.get("texture/bumper.png", Texture.class);
     }
 
     @Override
     public void doReleaseAssets(AssetManager assetManager) {
-
+        if (assetManager.isLoaded("texture/bumpber.png", Texture.class))
+            assetManager.unload("texture/bumper.png");
     }
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
-        setSize(8.f, 8.f);
-        setOrigin(getWidth() / 2.f, getHeight() / 2.f);
+        setSize(getWidth(), getHeight() * 1.f / _spriteRatio);
+        setOrigin(getWidth() / 2.f, getHeight() * 0.92f);
 
         final ModelBuilder builder = new ModelBuilder();
 
@@ -64,15 +87,15 @@ public class Bumper  extends Component {
         );
 
         mesh.setIndices(new short[]{
-                0, 1, 2,
-                0, 2, 3
+            0, 1, 2,
+            0, 2, 3
         });
 
         mesh.setVertices(new float[]{
-                0.f, 0.f, 0.f, 0.f,
-                0.f, height, 0.f, 1.f,
-                width, height, 1.f, 1.f,
-                width, 0.f, 1.f, 0.f
+            0.f, 0.f, 0.f, 1.f,
+            0.f, height, 0.f, 0.f,
+            width, height, 1.f, 0.f,
+            width, 0.f, 1.f, 1.f
         });
 
         builder.begin();
@@ -83,9 +106,6 @@ public class Bumper  extends Component {
         _environment = new Environment();
 
         _renderable = new Renderable();
-        _renderable.worldTransform
-            .scale(getScaleX() * SlopeRider.PIXEL_PER_UNIT, getScaleY() * SlopeRider.PIXEL_PER_UNIT, 1.f)
-            .translate(getX(), getY(), 0.f);
         _renderable.environment = _environment;
         _renderable.meshPart.set(model.meshParts.first());
         _renderable.material = model.materials.first();
@@ -136,6 +156,9 @@ public class Bumper  extends Component {
                 if (program.hasUniform("u_time"))
                     program.setUniformf("u_time", time);
 
+                _diffuseMask.bind(0);
+                program.setUniformi("u_diffuseMask", 0);
+
                 renderable.meshPart.render(program);
             }
 
@@ -163,6 +186,7 @@ public class Bumper  extends Component {
         batch.end();
 
         _context.begin();
+        _context.setBlending(true, Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
 
         _shader.begin(getStage().getCamera(), _context);
 

@@ -25,6 +25,16 @@
       "quota" : 50000.0
     },
     {
+      "type" : "Bumper",
+      "position" : {
+        "track" : "track0",
+        "location" : 0.2,
+        "offset" : 0.0,
+        "rotate" : true
+      },
+      "scale" : [ 8.0, 8.0 ]
+    },
+    {
       "type" : "Track",
       "name" : "track0",
       "position" : [ 0.0, 0.0 ],
@@ -67,17 +77,17 @@
           "x" : 0.4,
           "y" : -0.2,
           "editable" : true,
-          "material" : "STONE",
-          "minBound" : -2.0,
-          "maxBound" : 1.0
+          "material" : "BOOSTER",
+          "minBound" : -10.0,
+          "maxBound" : 10.0
         },
         {
           "x" : 0.5,
-          "y" : 1.0,
-          "editable" : false,
+          "y" : -0.2,
+          "editable" : true,
           "material" : "STONE",
-          "minBound" : 0.0,
-          "maxBound" : 0.0
+          "minBound" : -10.0,
+          "maxBound" : 10.0
         },
         {
           "x" : 0.6,
@@ -91,7 +101,7 @@
           "x" : 0.7,
           "y" : -0.5,
           "editable" : false,
-          "material" : "SNOW",
+          "material" : "STONE",
           "minBound" : 0.0,
           "maxBound" : 0.0
         },

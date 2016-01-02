@@ -33,6 +33,10 @@ public class SplineCache {
         return heightAt(x / _width);
     }
 
+    public static Vector2 normalAt(final float rate) {
+        return _normals.get((int) (rate * (_normals.size() - 1)));
+    }
+
     public static void reset(float[] controlPoints,
                              int sampleCount,
                              float width, float height) {

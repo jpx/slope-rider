@@ -3,6 +3,7 @@ precision mediump float;
 #endif
 
 uniform float u_time;
+uniform sampler2D u_diffuseMask;
 
 varying vec2 v_uv;
 
@@ -20,22 +21,25 @@ vec3 radialImpulse(vec2 uv, float time, vec3 color0, vec3 color1)
     return mix(color0, color1, abs(sin(offset + pulseRate)));
 }
 
+vec3 impulse(vec3 color0, vec3 color1, vec2 uv, vec2 uvMask, float amplitude, float frequency, float time)
+{
+    float offset = dot(uv, uvMask) / amplitude;
+    float pulseRate = time * PI_2 * frequency;
+
+    return mix(color1, color0, abs(sin(offset + pulseRate)));
+}
+
 void main()
 {
-    vec3 color0 = vec3(0.2, 0.9, 0.1);
-    vec3 color1 = color0 * 0.6;
+    vec3 diffuse = vec3(0.0);
 
-    vec3 diffuse = radialImpulse(v_uv, u_time, color0, color1);
+    vec4 diffuseMask = texture2D(u_diffuseMask, v_uv);
 
-    float distance = distance(vec2(0.5, 0.5), v_uv);
+    vec3 topColor1 = vec3(0.2, 0.95, 0.6);
+    vec3 topColor0 = topColor1 * 0.5;
 
-    float dotValue = dot(vec2(0.5) - v_uv, vec2(-1.0, 1.0));
+    diffuse += impulse(topColor0, topColor1, v_uv, vec2(0.0, 1.0), 0.1, 4.0, u_time) * diffuseMask.r;
+    diffuse += vec3(1.0) * diffuseMask.g;
 
-    if (distance > 0.55 ||
-        v_uv.x < 0.05 || v_uv.x > 0.95 ||
-        v_uv.y < 0.05 || v_uv.y > 0.95 ||
-        dotValue > 0.0)
-        discard;
-
-    gl_FragColor = vec4(diffuse, 1.0);
+    gl_FragColor = vec4(diffuse, diffuseMask.a);
 }

@@ -533,7 +533,7 @@ public class Track extends Component {
         final List<GroundMaterial> materials = new ArrayList<GroundMaterial>();
 
         createPhysicsPolygon(
-            buildControlPoints(), _baseWidth, _baseHeight, (int) (PHYSICS_SPLINE_SAMPLE_COUNT * _baseWidth / 100.f), vertices, normals, materials
+                buildControlPoints(), _baseWidth, _baseHeight, (int) (PHYSICS_SPLINE_SAMPLE_COUNT * _baseWidth / 100.f), vertices, normals, materials
         );
 
         for (int i = 0; i < vertices.size / 2; ++i) {
@@ -889,5 +889,9 @@ public class Track extends Component {
 
     public final float heightAt(float location) {
         return SplineCache.heightAt(location) + getY();
+    }
+
+    public final Vector2 normalAt(float location) {
+        return SplineCache.normalAt(location);
     }
 }

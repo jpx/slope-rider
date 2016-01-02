@@ -42,6 +42,7 @@ public class Level extends Component {
         String trackName;
         float location;
         float offset;
+        boolean rotate;
         Track track;
     }
 
@@ -120,6 +121,9 @@ public class Level extends Component {
                 trackBoundComponent.offset = positionNode.has("offset")
                     ? positionNode.getFloat("offset")
                     : 0.f;
+                trackBoundComponent.rotate = positionNode.has("rotate")
+                    ? positionNode.getBoolean("rotate")
+                    : false;
 
                 trackBoundComponents.add(trackBoundComponent);
             }
@@ -134,6 +138,12 @@ public class Level extends Component {
 
                 _end = addComponent(componentFactory.initializeComponent(end));
                 component = _end;
+            } else if (type.equals("Bumper")) {
+                final Bumper bumper = new Bumper();
+                bumper.setPosition(position.x, position.y);
+                bumper.setSize(scale.x, scale.y);
+
+                component = addComponent(componentFactory.initializeComponent(bumper));
             } else if (type.equals("FallingSign")) {
                 component = addComponent(componentFactory.createComponent(Layer.BACKGROUND2, position, FallingSign.class));
             } else if (type.equals("ObjectSpawner")) {
@@ -220,6 +230,13 @@ public class Level extends Component {
             trackBoundComponent.track.getX() + trackBoundComponent.track.getWidth() * trackBoundComponent.location,
             trackBoundComponent.track.heightAt(trackBoundComponent.location) + trackBoundComponent.offset
         );
+
+        if (trackBoundComponent.rotate) {
+            final Vector2 normal = trackBoundComponent.track.normalAt(trackBoundComponent.location);
+            final float angle = -90.f + (float) Math.acos(normal.dot(Vector2.X)) / (float) Math.PI * 180.f;
+
+            trackBoundComponent.component.setRotation(angle);
+        }
     }
 
     @Override
