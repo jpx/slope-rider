@@ -56,6 +56,7 @@ import com.sloperider.physics.PhysicsActor;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,11 @@ public class Track extends Component {
         SNOW,
         STONE,
         DIRT,
-        BOOSTER
+        BOOSTER,
+        _RESERVED0,
+        _RESERVED1,
+        _RESERVED2,
+        _RESERVED3
     }
 
     public static class GroundMaterial {
@@ -569,8 +574,10 @@ public class Track extends Component {
                 vertexCount,
                 indexCount,
                 new VertexAttribute(VertexAttributes.Usage.Position, 2, "a_position"),
+                new VertexAttribute(VertexAttributes.Usage.Normal, 2, "a_normal"),
                 new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_uv"),
-                new VertexAttribute(VertexAttributes.Usage.Generic, 4, "a_mask")
+                new VertexAttribute(VertexAttributes.Usage.Generic, 4, "a_mask0"),
+                new VertexAttribute(VertexAttributes.Usage.Generic, 4, "a_mask1")
             );
         }
 
@@ -599,9 +606,10 @@ public class Track extends Component {
         final List<Vector2> splinePositions = SplineCache.positions();
         final List<Vector2> splineNormals = SplineCache.normals();
 
+        final int maskSize = 8;
         final int layerCount = 4;
         final int vertexCount = sampleCount * layerCount;
-        final int vertexSize = 2 + 2 + 4;
+        final int vertexSize = 2 + 2 + 2 + maskSize;
         final int indexCount = (sampleCount - 1) * 6 * (layerCount - 1);
 
         metadata.add(vertexCount);
@@ -707,7 +715,7 @@ public class Track extends Component {
                 uv[j] = new Vector2(positions[j].x, positions[j].y).scl(uvScale);
             }
 
-            final float[][] mask = new float[4][layerCount];
+            final float[][] mask = new float[maskSize][layerCount];
 
             float currentGroundMaterialMask = 1.f;
             GroundMaterial secondaryGroundMaterial = groundMaterial;
@@ -733,22 +741,32 @@ public class Track extends Component {
 
             final float secondaryGroundMaterialMask = 1.f - currentGroundMaterialMask;
 
-            final float[] maskXScale = new float[] { 0.f, 0.f, 0.f, 0.f };
+            final float[] maskXScale = new float[maskSize];
+            Arrays.fill(maskXScale, 0.f);
 
             maskXScale[groundMaterial.index] += currentGroundMaterialMask;
             maskXScale[secondaryGroundMaterial.index] += secondaryGroundMaterialMask;
 
-            final float[] maskY0Scale = new float[] { 0.f, 0.f, 0.f, 0.f };
+            final float[] maskY0Scale = new float[maskSize];
+            Arrays.fill(maskY0Scale, 0.f);
             maskY0Scale[groundMaterial.index] = 1.f;
 
-            final float[] maskY1Scale = new float[] { 0.f, 0.f, 0.f, 0.f };
+            final float[] maskY1Scale = new float[maskSize];
+            Arrays.fill(maskY1Scale, 0.f);
             maskY1Scale[groundMaterial.index] = 0.8f;
             maskY1Scale[_materials.get(GroundMaterialType.DIRT).index] = 0.2f;
 
-            mask[0] = new float[] { maskXScale[0] * maskY0Scale[0], maskXScale[1] * maskY0Scale[1], maskXScale[2] * maskY0Scale[2], maskXScale[3] * maskY0Scale[3] };
-            mask[1] = new float[] { maskXScale[0] * maskY1Scale[0], maskXScale[1] * maskY1Scale[1], maskXScale[2] * maskY1Scale[2], maskXScale[3] * maskY1Scale[3] };
-            mask[2] = new float[] { 0.f, 1.f, 0.f, 0.f };
-            mask[3] = new float[] { 0.f, 1.f, 0.f, 0.f };
+            for (int j = 0; j < layerCount; ++j) {
+                mask[j] = new float[maskSize];
+                Arrays.fill(mask[j], 0.f);
+            }
+
+            for (int j = 0; j < maskSize; ++j) {
+                mask[0][j] = maskXScale[j] * maskY0Scale[j];
+                mask[1][j] = maskXScale[j] * maskY1Scale[j];
+                mask[2][j] = j == 1 ? 1.f : 0.f;
+                mask[3][j] = j == 1 ? 1.f : 0.f;
+            }
 
             for (int j = 0; j < layerCount; ++j) {
                 final int vertexIndex = (i * layerCount + j) * vertexSize;
@@ -756,13 +774,15 @@ public class Track extends Component {
                 vertices.set(vertexIndex + 0, positions[j].x);
                 vertices.set(vertexIndex + 1, positions[j].y);
 
-                vertices.set(vertexIndex + 2, uv[j].x);
-                vertices.set(vertexIndex + 3, uv[j].y);
+                vertices.set(vertexIndex + 2, splineNormal.x);
+                vertices.set(vertexIndex + 3, splineNormal.y);
 
-                vertices.set(vertexIndex + 4, mask[j][0]);
-                vertices.set(vertexIndex + 5, mask[j][1]);
-                vertices.set(vertexIndex + 6, mask[j][2]);
-                vertices.set(vertexIndex + 7, mask[j][3]);
+                vertices.set(vertexIndex + 4, uv[j].x);
+                vertices.set(vertexIndex + 5, uv[j].y);
+
+                for (int k = 0; k < maskSize; ++k) {
+                    vertices.set(vertexIndex + 6 + k, mask[j][k]);
+                }
             }
         }
 
