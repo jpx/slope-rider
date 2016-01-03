@@ -4,6 +4,7 @@ precision mediump float;
 
 uniform float u_time;
 uniform sampler2D u_diffuseMask;
+uniform sampler2D u_baseDiffuseMask;
 
 varying vec2 v_uv;
 
@@ -34,12 +35,19 @@ void main()
     vec3 diffuse = vec3(0.0);
 
     vec4 diffuseMask = texture2D(u_diffuseMask, v_uv);
+    vec4 baseDiffuseMask = texture2D(u_baseDiffuseMask, v_uv);
 
     vec3 topColor1 = vec3(0.2, 0.95, 0.6);
     vec3 topColor0 = topColor1 * 0.5;
 
     diffuse += impulse(topColor0, topColor1, v_uv, vec2(0.0, 1.0), 0.1, 4.0, u_time) * diffuseMask.r;
-    diffuse += vec3(1.0) * diffuseMask.g;
+
+    vec3 baseColor0 = vec3(0.0);
+    vec3 baseColor1 = vec3(1.0);
+
+    diffuse += (baseColor0 * baseDiffuseMask.r +
+                baseColor1 * (1.0 - baseDiffuseMask.r)) *
+                diffuseMask.g;
 
     gl_FragColor = vec4(diffuse, diffuseMask.a);
 }

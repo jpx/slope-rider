@@ -32,14 +32,15 @@
         "offset" : 0.0,
         "rotate" : true
       },
-      "scale" : [ 8.0, 8.0 ]
+      "scale" : [ 4.0, 4.0 ],
+      "force" : 5.0
     },
     {
       "type" : "Track",
       "name" : "track0",
       "position" : [ 0.0, 0.0 ],
       "width" : 100.0,
-      "height" : 15.0,
+      "height" : 50.0,
       "points" : [
         {
           "x" : 0.0,

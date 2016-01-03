@@ -17,11 +17,21 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
+import com.sloperider.physics.CollisionGroup;
+import com.sloperider.physics.PhysicsActor;
 
 /**
  * Created by jpx on 14/12/15.
@@ -37,6 +47,51 @@ public class Bumper  extends Component {
     private String _fragmentShaderSource;
 
     private Texture _diffuseMask;
+    private Texture _baseDiffuseMask;
+
+    private float _force;
+
+    private float _deltaTimeSinceContactBegin;
+    private Sleigh _sleigh;
+
+    private Body _body;
+
+    static class ContactData implements PhysicsActor.ContactData {
+        Bumper bumper;
+
+        ContactData(final Bumper bumper) {
+            this.bumper = bumper;
+        }
+
+        @Override
+        public boolean contactBegin(PhysicsActor.ContactData data, Contact contact) {
+            if (data instanceof Sleigh.ContactData) {
+                final Sleigh.ContactData sleighContactData = (Sleigh.ContactData) data;
+
+                bumper._deltaTimeSinceContactBegin = 0.f;
+                bumper._sleigh = sleighContactData.sleigh;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public boolean contactEnd(PhysicsActor.ContactData data, Contact contact) {
+            if (data instanceof Sleigh.ContactData) {
+                bumper._sleigh = null;
+            }
+
+            return false;
+        }
+    }
+
+    public final Bumper force(final float value) {
+        _force = value;
+
+        return this;
+    }
 
     @Override
     public void setPosition(float x, float y) {
@@ -50,11 +105,21 @@ public class Bumper  extends Component {
                 .rotate(Vector3.Z, getRotation())
                 .translate(-getOriginX(), -getOriginY(), 0.f);
         }
+
+        updateBodyTransform();
+    }
+
+    @Override
+    public void setRotation(float degrees) {
+        super.setRotation(degrees);
+
+        updateBodyTransform();
     }
 
     @Override
     public void requireAssets(AssetManager assetManager) {
         assetManager.load("texture/bumper.png", Texture.class);
+        assetManager.load("texture/bumper_base.png", Texture.class);
 
         _vertexShaderSource = Gdx.files.internal("shader/bumper.vertex.glsl").readString();
         _fragmentShaderSource = Gdx.files.internal("shader/bumper.fragment.glsl").readString();
@@ -63,12 +128,15 @@ public class Bumper  extends Component {
     @Override
     public void manageAssets(AssetManager assetManager) {
         _diffuseMask = assetManager.get("texture/bumper.png", Texture.class);
+        _baseDiffuseMask = assetManager.get("texture/bumper_base.png", Texture.class);
     }
 
     @Override
     public void doReleaseAssets(AssetManager assetManager) {
         if (assetManager.isLoaded("texture/bumpber.png", Texture.class))
             assetManager.unload("texture/bumper.png");
+        if (assetManager.isLoaded("texture/bumpber_base.png", Texture.class))
+            assetManager.unload("texture/bumper_base.png");
     }
 
     @Override
@@ -158,6 +226,8 @@ public class Bumper  extends Component {
 
                 _diffuseMask.bind(0);
                 program.setUniformi("u_diffuseMask", 0);
+                _baseDiffuseMask.bind(1);
+                program.setUniformi("u_baseDiffuseMask", 1);
 
                 renderable.meshPart.render(program);
             }
@@ -206,16 +276,90 @@ public class Bumper  extends Component {
 
     @Override
     public void initializeBody(World world) {
+        final BodyDef bodyDef = new BodyDef();
 
+        bodyDef.type = BodyDef.BodyType.KinematicBody;
+
+        final PolygonShape topShape = new PolygonShape();
+        final PolygonShape baseShape = new PolygonShape();
+
+        final float width = getWidth();
+        final float height = getHeight();
+
+        topShape.set(new float[] {
+            -width * 0.45f, -height * 0.05f,
+            0.f, height * 0.05f,
+            width * 0.45f, -height * 0.05f,
+        });
+
+        baseShape.set(new float[] {
+            -width * 0.5f, -height * 0.05f,
+            width * 0.5f, -height * 0.05f,
+            width * 0.5f, -height * 0.95f,
+            -width * 0.5f, -height * 0.95f
+        });
+
+        final FixtureDef topFixtureDef = new FixtureDef();
+        final FixtureDef baseFixtureDef = new FixtureDef();
+
+        topFixtureDef.shape = topShape;
+        topFixtureDef.filter.categoryBits = group();
+        topFixtureDef.filter.maskBits = collidesWith();
+
+        baseFixtureDef.shape = baseShape;
+        baseFixtureDef.filter.categoryBits = group();
+        baseFixtureDef.filter.maskBits = collidesWith();
+
+        _body = world.createBody(bodyDef);
+
+        final Fixture topFixture = _body.createFixture(topFixtureDef);
+        final Fixture baseFixture = _body.createFixture(baseFixtureDef);
+
+        topFixture.setUserData(new ContactData(this));
     }
 
     @Override
     public void updateBody(World world, float deltaTime) {
+        if (_sleigh != null) {
+            _deltaTimeSinceContactBegin += deltaTime;
 
+            if (_deltaTimeSinceContactBegin > 0.05f) {
+                final float amplitude = _force;
+                final Vector2 direction = new Vector2(
+                    (float) Math.cos((90.f + getRotation()) * MathUtils.degreesToRadians),
+                    (float) Math.sin((90.f + getRotation()) * MathUtils.degreesToRadians)
+                ).nor();
+
+                _sleigh.body().applyLinearImpulse(
+                    direction.cpy().scl(amplitude),
+                    _sleigh.body().getWorldCenter(),
+                    true
+                );
+
+                _sleigh = null;
+            }
+        }
     }
 
     @Override
     public void destroyBody(World world) {
 
+    }
+
+    @Override
+    public short group() {
+        return CollisionGroup.TRACK.value();
+    }
+
+    @Override
+    public short collidesWith() {
+        return CollisionGroup.SLEIGH.value();
+    }
+
+    private void updateBodyTransform() {
+        if (_body == null)
+            return;
+
+        _body.setTransform(getX(), getY(), getRotation() * MathUtils.degreesToRadians);
     }
 }

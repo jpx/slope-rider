@@ -139,7 +139,8 @@ public class Level extends Component {
                 _end = addComponent(componentFactory.initializeComponent(end));
                 component = _end;
             } else if (type.equals("Bumper")) {
-                final Bumper bumper = new Bumper();
+                final Bumper bumper = new Bumper()
+                    .force(componentNode.getFloat("force"));
                 bumper.setPosition(position.x, position.y);
                 bumper.setSize(scale.x, scale.y);
 
