@@ -3,6 +3,7 @@ package com.sloperider.component;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
@@ -145,6 +146,15 @@ public class Level extends Component {
                 bumper.setSize(scale.x, scale.y);
 
                 component = addComponent(componentFactory.initializeComponent(bumper));
+            } else if (type.equals("CollectibleItem")) {
+                final CollectibleItem collectibleItem = new CollectibleItem()
+                    .diffuseColor(Color.PURPLE)
+                    .textureFilename("texture/wheel_icon.png");
+
+                collectibleItem.setPosition(position.x, position.y);
+                collectibleItem.setSize(scale.x, scale.y);
+
+                component = addComponent(componentFactory.initializeComponent(Layer.FRONT0, collectibleItem));
             } else if (type.equals("FallingSign")) {
                 component = addComponent(componentFactory.createComponent(Layer.BACKGROUND2, position, FallingSign.class));
             } else if (type.equals("ObjectSpawner")) {
@@ -390,6 +400,9 @@ public class Level extends Component {
         final Vector2 position = new Vector2(_begin.getX(), _begin.getY()).add(0.f, 1.f);
 
         _sleigh = _componentFactory.createComponent(position, Sleigh.class);
+
+        final SleighWheel wheel = new SleighWheel(_sleigh);
+        _sleigh.addComponent(_componentFactory.initializeComponent(wheel));
 
         playingBegin(_sleigh);
 

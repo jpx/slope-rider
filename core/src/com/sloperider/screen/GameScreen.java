@@ -337,7 +337,8 @@ public class GameScreen extends Screen {
         _levelStage.draw();
         _uiStage.draw();
 
-//        _physicsWorld.render(_levelStage.getCamera());
+        if (_masterScreen.configuration().debug())
+            _physicsWorld.render(_levelStage.getCamera());
     }
 
     @Override

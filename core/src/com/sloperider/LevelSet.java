@@ -88,7 +88,7 @@ public class LevelSet {
         }
     }
 
-    public final boolean loadFromFile(final String filename) {
+    public final boolean loadFromFile(final String filename, boolean unlockAll) {
         _levels.clear();
 
         final JsonReader reader = new JsonReader();
@@ -104,7 +104,7 @@ public class LevelSet {
             levelInfo.name = levelNode.getString("name");
             levelInfo.filename = levelNode.getString("filename");
             levelInfo.bestScore = _io.readInt(String.format("%s;score", levelInfo.name), 0);
-            levelInfo.unlocked = _io.readBoolean(String.format("%s;unlocked", levelInfo.name), false);
+            levelInfo.unlocked = unlockAll ? true : _io.readBoolean(String.format("%s;unlocked", levelInfo.name), false);
 
             _levels.add(levelInfo);
         }

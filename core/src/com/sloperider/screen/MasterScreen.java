@@ -1,5 +1,7 @@
 package com.sloperider.screen;
 
+import com.sloperider.Configuration;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,8 +10,17 @@ import java.util.List;
  * Created by jpx on 03/12/15.
  */
 public class MasterScreen extends Screen {
+    private Configuration _configuration;
     private final List<Screen> _screens = new ArrayList<Screen>();
     private Screen _activeScreen;
+
+    public final void configuration(final Configuration configuration) {
+        _configuration = configuration;
+    }
+
+    protected final Configuration configuration() {
+        return _configuration;
+    }
 
     public final void push(final Screen screen) {
         if (_activeScreen != null) {

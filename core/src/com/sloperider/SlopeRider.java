@@ -19,6 +19,27 @@ public class SlopeRider extends ApplicationAdapter {
     private AssetManager _assetManager;
     private boolean _assetsLoaded;
 
+    private Configuration _configuration;
+
+    public SlopeRider() {
+        _configuration = new Configuration() {
+            @Override
+            public boolean debug() {
+                return true;
+            }
+        };
+    }
+
+    public final SlopeRider configuration(final Configuration configuration) {
+        _configuration = configuration;
+
+        return this;
+    }
+
+    public final Configuration configuration() {
+        return _configuration;
+    }
+
     public final SlopeRider io(final PersistentIO io) {
         LevelSet.instance().io(io);
 
@@ -36,11 +57,15 @@ public class SlopeRider extends ApplicationAdapter {
         _assetManager = new AssetManager();
 
         _masterScreen = new MasterScreen();
+        _masterScreen.configuration(_configuration);
         _masterScreen.assetManager(_assetManager);
         _masterScreen.start();
         _masterScreen.push(new LoadingScreen());
 
-        LevelSet.instance().loadFromFile("level/main.lvl");
+        if (!configuration().debug())
+            LevelSet.instance().loadFromFile("level/main.lvl", false);
+        else
+            LevelSet.instance().loadFromFile("level/debug.lvl", true);
 
         _assetManager.load("ui/uiskin.json", Skin.class);
 	}

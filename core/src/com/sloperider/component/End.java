@@ -160,6 +160,10 @@ public class End extends Component {
             _bodyNeedsUpdate = true;
         }
 
+        updateRenderablePosition();
+    }
+
+    private void updateRenderablePosition() {
         if (_renderable != null) {
             _renderable.worldTransform
                 .idt()
@@ -187,6 +191,8 @@ public class End extends Component {
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
+        _time = 0.f;
+
         _bodyNeedsUpdate = false;
         _animationActive = false;
 
@@ -294,6 +300,8 @@ public class End extends Component {
         };
 
         _shader.init();
+
+        updateRenderablePosition();
     }
 
     @Override
