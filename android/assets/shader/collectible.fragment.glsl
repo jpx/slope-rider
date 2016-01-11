@@ -7,6 +7,10 @@ uniform vec4 u_diffuseColor;
 uniform sampler2D u_diffuseMap;
 uniform sampler2D u_maskMap;
 
+uniform float u_cooldownAnimationMask;
+uniform float u_cooldownAnimationDuration;
+uniform float u_cooldownAnimationStartTime;
+
 varying vec2 v_uv;
 
 #define PI_2 1.570796
@@ -38,6 +42,20 @@ void main()
 //            vec3(0.5, 0.5, 0.5),
 //            distance(v_uv.y, abs(sin(1.0 / 2.0 + u_time * PI_2 * 4.0))) * 1.0
 //        );
+
+        if (u_cooldownAnimationMask > 0.0)
+        {
+            vec2 v0 = vec2(0.0, 1.0);
+            vec2 v1 = vec2(0.5) - v_uv;
+
+            float angle = acos(dot(v0, v1));
+            float rate = clamp((u_time - u_cooldownAnimationStartTime) / u_cooldownAnimationDuration, 0.0, 1.0);
+
+            float currentAngle = 4.0 * PI_2 * rate;
+
+            if (angle < currentAngle)
+                diffuse = vec4(diffuse.rgb * 0.5, 0.6);
+        }
     }
     else if (mask.g > 0.1)
     {

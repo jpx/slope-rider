@@ -17,8 +17,8 @@
     },
     {
       "type" : "CollectibleItem",
-      "position" : [ 10.0, 30.0 ],
-      "scale" : [ 8.0, 8.0 ]
+      "position" : [ 10.0, 26.0 ],
+      "scale" : [ 1.0, 1.0 ]
     },
     {
       "type" : "DraggableNetwork",

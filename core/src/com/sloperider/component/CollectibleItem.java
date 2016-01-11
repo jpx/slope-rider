@@ -6,6 +6,7 @@ import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -21,6 +22,7 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -66,6 +68,9 @@ public class CollectibleItem extends Component {
     private Vector2 _animationTargetPosition;
     private Vector2 _animationStartScale;
     private Vector2 _animationTargetScale;
+    private float _animationStartZoom;
+    private float _animationTargetZoom;
+    private float _animationCurrentZoom;
     private float _animationStartTime;
     private float _animationDuration;
 
@@ -277,9 +282,22 @@ public class CollectibleItem extends Component {
                 final Vector2 scale = _animationStartScale.cpy()
                     .lerp(_animationTargetScale, elapsedTime / _animationDuration);
 
+                _animationCurrentZoom = MathUtils.lerp(
+                    _animationStartZoom,
+                    _animationTargetZoom,
+                    elapsedTime / _animationDuration
+                );
+
                 setPosition(position.x, position.y);
                 setScale(scale.x, scale.y);
             }
+        }
+
+        if (_cooldownAnimationActive) {
+            final float elapsedTIme = _time - _cooldownAnimationStartTime;
+
+            if (elapsedTIme > _cooldownAnimationDuration)
+                cooldownAnimationComplete();
         }
     }
 
@@ -294,7 +312,7 @@ public class CollectibleItem extends Component {
         final float baseZoom = getCamera().zoom;
 
         if (_animationActive) {
-            getCamera().zoom = 1.f;
+            getCamera().zoom = _animationCurrentZoom;
             getCamera().update();
         }
 
@@ -354,9 +372,11 @@ public class CollectibleItem extends Component {
                     startAnimation(
                         new Vector2(getCamera().viewportWidth * 0.5f / SlopeRider.PIXEL_PER_UNIT, getCamera().viewportHeight * 0.5f / SlopeRider.PIXEL_PER_UNIT).add(padding),
                         targetSize,
-                        20.f,
+                        0.6f,
                         _time
                     );
+
+                    startCooldownAnimation(5.f, _time);
 
                     return true;
                 }
@@ -439,10 +459,13 @@ public class CollectibleItem extends Component {
         _baseScale = new Vector2(getScaleX(), getScaleY());
 
         _animationActive = true;
-        _animationStartPosition = new Vector2(getX(), getY()).sub(new Vector2(getCamera().position.x, getCamera().position.y).scl(1.f / SlopeRider.PIXEL_PER_UNIT)).add(getWidth() * 0.5f / getCamera().zoom, -getHeight() * 0.5f / getCamera().zoom);
+        _animationStartPosition = new Vector2(getX(), getY())
+            .sub(new Vector2(getCamera().position.x, getCamera().position.y).scl(1.f / SlopeRider.PIXEL_PER_UNIT));
         _animationTargetPosition = targetPosition;
-        _animationStartScale = _baseScale.cpy().scl(1.f / getCamera().zoom);
+        _animationStartScale = _baseScale;
         _animationTargetScale = new Vector2(targetSize / getWidth(), targetSize / getHeight());
+        _animationStartZoom = getCamera().zoom;
+        _animationTargetZoom = 1.f;
         _animationDuration = duration;
         _animationStartTime = time;
 
@@ -455,15 +478,40 @@ public class CollectibleItem extends Component {
         if (!_animationActive)
             return;
 
+        _animationCurrentZoom = _animationTargetZoom;
         setPosition(_animationTargetPosition.x, _animationTargetPosition.y);
         setScale(_animationTargetScale.x, _animationTargetScale.y);
 
-//        _animationActive = false;
-//        _shaderProgram.begin();
-//        _shaderProgram.setUniformf("u_animationMask", 0.f);
-//        _shaderProgram.end();
+    }
 
-//        setPosition(_basePosition.x, _basePosition.y);
-//        setScale(_baseScale.x, _baseScale.y);
+    private void startCooldownAnimation(final float duration, final float time) {
+        if (_cooldownAnimationActive)
+            return;
+
+        _cooldownAnimationActive = true;
+        _cooldownAnimationDuration = duration;
+        _cooldownAnimationStartTime = time;
+
+        _shaderProgram.begin();
+        _shaderProgram.setUniformf("u_cooldownAnimationMask", 1.f);
+        _shaderProgram.setUniformf("u_cooldownAnimationDuration", _cooldownAnimationDuration);
+        _shaderProgram.setUniformf("u_cooldownAnimationStartTime", _cooldownAnimationStartTime);
+        _shaderProgram.end();
+    }
+
+    private void cooldownAnimationComplete() {
+        if (!_cooldownAnimationActive)
+            return;
+
+        _animationActive = false;
+        _cooldownAnimationActive = false;
+
+        _shaderProgram.begin();
+        _shaderProgram.setUniformf("u_animationMask", 0.f);
+        _shaderProgram.setUniformf("u_cooldownAnimationMask", 0.f);
+        _shaderProgram.end();
+
+        setPosition(_basePosition.x, _basePosition.y);
+        setScale(_baseScale.x, _baseScale.y);
     }
 }
