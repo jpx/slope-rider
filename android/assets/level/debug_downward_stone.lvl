@@ -31,6 +31,18 @@
       "force" : 8.0
     },
     {
+      "type" : "CollectibleItem",
+      "position" : [ 0.0, 100.0 ],
+      "scale" : [ 17.5, 17.5 ],
+      "action" : {
+        "type" : "equip",
+        "component" : {
+          "type" : "SleighWheel"
+        },
+        "duration" : 4.0
+      }
+    },
+    {
       "type" : "DraggableNetwork",
       "position" : [ 0.0, 0.0 ],
       "quota" : 25.0
@@ -46,7 +58,7 @@
           "x" : 0.0,
           "y" : 2.0,
           "editable" : false,
-          "material" : "STONE",
+          "material" : "SNOW",
           "minBound" : 0.0,
           "maxBound" : 0.0
         },
@@ -54,7 +66,7 @@
           "x" : 0.2,
           "y" : 1.8,
           "editable" : true,
-          "material" : "STONE",
+          "material" : "SNOW",
           "minBound" : -5.0,
           "maxBound" : 2.0
         },

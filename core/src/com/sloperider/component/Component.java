@@ -45,6 +45,10 @@ public abstract class Component extends Group implements PhysicsActor {
         return component;
     }
 
+    protected final boolean hasComponent(final Component component) {
+        return _components.contains(component);
+    }
+
     public final Component setLayer(final Layer layer) {
         _layer = layer;
 

@@ -43,6 +43,16 @@ import com.sloperider.physics.PhysicsActor;
  * Created by jpx on 09/01/16.
  */
 public class CollectibleItem extends Component {
+    interface Listener {
+        void collected(final CollectibleItem self);
+        void complete(final CollectibleItem self);
+    }
+
+    private Listener _listener;
+    private float _duration;
+
+    private boolean _collected;
+
     private String _textureFilename;
     private Texture _texture;
     private Texture _maskTexture;
@@ -77,6 +87,18 @@ public class CollectibleItem extends Component {
     private boolean _cooldownAnimationActive;
     private float _cooldownAnimationStartTime;
     private float _cooldownAnimationDuration;
+
+    public final CollectibleItem listener(final Listener listener) {
+        _listener = listener;
+
+        return this;
+    }
+
+    public final CollectibleItem duration(final float value) {
+        _duration = value;
+
+        return this;
+    }
 
     public final CollectibleItem diffuseColor(final Color value) {
         _diffuseColor = value;
@@ -147,6 +169,7 @@ public class CollectibleItem extends Component {
     @Override
     protected void doReady(ComponentFactory componentFactory) {
         _time = 0.f;
+        _collected = false;
 
         _bodyNeedsUpdate = false;
         _bodyNeedsDestruction = false;
@@ -270,6 +293,26 @@ public class CollectibleItem extends Component {
     protected void doAct(float delta) {
         _time += delta;
 
+        if (_collected) {
+            _collected = false;
+
+
+            final float targetSize = 1.f;
+            final Vector2 padding = new Vector2(-0.5f, -0.5f).sub(targetSize * 0.5f, targetSize * 0.5f);
+
+            startAnimation(
+                new Vector2(getCamera().viewportWidth * 0.5f / SlopeRider.PIXEL_PER_UNIT, getCamera().viewportHeight * 0.5f / SlopeRider.PIXEL_PER_UNIT).add(padding),
+                targetSize,
+                0.5f,
+                _time
+            );
+
+            startCooldownAnimation(_duration, _time);
+
+            if (_listener != null)
+                _listener.collected(CollectibleItem.this);
+        }
+
         if (_animationActive) {
             final float elapsedTime = _time - _animationStartTime;
 
@@ -366,17 +409,7 @@ public class CollectibleItem extends Component {
 
                     _bodyNeedsDestruction = true;
 
-                    final float targetSize = 1.f;
-                    final Vector2 padding = new Vector2(-0.5f, -0.5f).sub(targetSize * 0.5f, targetSize * 0.5f);
-
-                    startAnimation(
-                        new Vector2(getCamera().viewportWidth * 0.5f / SlopeRider.PIXEL_PER_UNIT, getCamera().viewportHeight * 0.5f / SlopeRider.PIXEL_PER_UNIT).add(padding),
-                        targetSize,
-                        0.6f,
-                        _time
-                    );
-
-                    startCooldownAnimation(5.f, _time);
+                    _collected = true;
 
                     return true;
                 }
@@ -437,6 +470,8 @@ public class CollectibleItem extends Component {
     protected void doLevelStopped(Level level) {
         super.doLevelStopped(level);
 
+        stopAnimation();
+
         setVisible(false);
 
         _bodyNeedsDestruction = true;
@@ -445,6 +480,8 @@ public class CollectibleItem extends Component {
     @Override
     protected void doLevelComplete(Level level) {
         super.doLevelComplete(level);
+
+        stopAnimation();
 
         setVisible(false);
 
@@ -513,5 +550,16 @@ public class CollectibleItem extends Component {
 
         setPosition(_basePosition.x, _basePosition.y);
         setScale(_baseScale.x, _baseScale.y);
+
+        if (_listener != null)
+            _listener.complete(this);
+    }
+
+    private void stopAnimation() {
+        if (_animationActive)
+            animationComplete();
+
+        if (_cooldownAnimationActive)
+            cooldownAnimationComplete();
     }
 }

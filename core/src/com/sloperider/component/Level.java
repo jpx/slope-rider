@@ -18,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.Timer;
 import com.sloperider.ComponentFactory;
 import com.sloperider.Layer;
 import com.sloperider.LevelSet;
@@ -153,6 +154,36 @@ public class Level extends Component {
 
                 collectibleItem.setPosition(position.x, position.y);
                 collectibleItem.setSize(scale.x, scale.y);
+
+                final JsonValue actionNode = componentNode.get("action");
+                final String actionType = actionNode.getString("type");
+
+                if (actionType.equals("equip")) {
+                    final JsonValue equipedComponentNode = actionNode.get("component");
+                    final String equipedComponentType = equipedComponentNode.getString("type");
+                    final float duration = actionNode.getFloat("duration");
+
+                    collectibleItem.duration(duration);
+
+                    if (equipedComponentType.equals("SleighWheel")) {
+                        collectibleItem.listener(new CollectibleItem.Listener() {
+                            SleighWheel sleighWheel;
+
+                            @Override
+                            public void collected(CollectibleItem self) {
+                                sleighWheel = new SleighWheel(_sleigh);
+                                _sleigh.addComponent(componentFactory.initializeComponent(sleighWheel));
+                            }
+
+                            @Override
+                            public void complete(CollectibleItem self) {
+                                if (_sleigh.hasComponent(sleighWheel))
+                                    componentFactory.destroyComponent(_sleigh.removeComponent(sleighWheel));
+                            }
+                        });
+                    }
+
+                }
 
                 component = addComponent(componentFactory.initializeComponent(Layer.FRONT0, collectibleItem));
             } else if (type.equals("FallingSign")) {
@@ -400,9 +431,6 @@ public class Level extends Component {
         final Vector2 position = new Vector2(_begin.getX(), _begin.getY()).add(0.f, 1.f);
 
         _sleigh = _componentFactory.createComponent(position, Sleigh.class);
-
-        final SleighWheel wheel = new SleighWheel(_sleigh);
-        _sleigh.addComponent(_componentFactory.initializeComponent(wheel));
 
         playingBegin(_sleigh);
 

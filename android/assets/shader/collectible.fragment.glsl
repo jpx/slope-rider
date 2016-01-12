@@ -37,18 +37,15 @@ void main()
 
         diffuse *= mask.r;
 
-//        diffuse.rgb += mix(
-//            vec3(0.0),
-//            vec3(0.5, 0.5, 0.5),
-//            distance(v_uv.y, abs(sin(1.0 / 2.0 + u_time * PI_2 * 4.0))) * 1.0
-//        );
-
         if (u_cooldownAnimationMask > 0.0)
         {
-            vec2 v0 = vec2(0.0, 1.0);
-            vec2 v1 = vec2(0.5) - v_uv;
+            vec2 v0 = normalize(vec2(0.0, -0.5));
+            vec2 v1 = normalize(vec2(0.5, 0.5) - v_uv);
 
-            float angle = acos(dot(v0, v1));
+            float angle = atan(v0.y, v0.x) - atan(v1.y, v1.x);
+            if (angle < 0.0)
+                angle += 4.0 * PI_2;
+
             float rate = clamp((u_time - u_cooldownAnimationStartTime) / u_cooldownAnimationDuration, 0.0, 1.0);
 
             float currentAngle = 4.0 * PI_2 * rate;
