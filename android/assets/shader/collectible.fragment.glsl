@@ -48,9 +48,9 @@ void main()
 
             float rate = clamp((u_time - u_cooldownAnimationStartTime) / u_cooldownAnimationDuration, 0.0, 1.0);
 
-            float currentAngle = 4.0 * PI_2 * rate;
+            float currentAngle = 4.0 * PI_2 * (1.0 - rate);
 
-            if (angle < currentAngle)
+            if (angle > currentAngle)
                 diffuse = vec4(diffuse.rgb * 0.5, 0.6);
         }
     }

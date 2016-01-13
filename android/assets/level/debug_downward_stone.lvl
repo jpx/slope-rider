@@ -25,34 +25,34 @@
         "track" : "track0",
         "location" : 0.2,
         "offset" : 0.02,
-        "rotate" : false
+        "rotate" : true
       },
-      "scale" : [ 4.0, 4.0 ],
+      "scale" : [ 8.0, 8.0 ],
       "force" : 8.0
     },
     {
       "type" : "CollectibleItem",
-      "position" : [ 0.0, 100.0 ],
-      "scale" : [ 17.5, 17.5 ],
+      "position" : [ 30.0, 80.0 ],
+      "scale" : [ 1.0, 1.0 ],
       "action" : {
         "type" : "equip",
         "component" : {
           "type" : "SleighWheel"
         },
-        "duration" : 4.0
+        "duration" : 8.0
       }
     },
     {
       "type" : "DraggableNetwork",
       "position" : [ 0.0, 0.0 ],
-      "quota" : 25.0
+      "quota" : 35.0
     },
     {
       "type" : "Track",
       "name" : "track0",
       "position" : [ 0.0, 0.0 ],
-      "width" : 180.0,
-      "height" : 60.0,
+      "width" : 120.0,
+      "height" : 20.0,
       "points" : [
         {
           "x" : 0.0,
@@ -75,8 +75,8 @@
           "y" : 1.4,
           "editable" : true,
           "material" : "STONE",
-          "minBound" : -5.0,
-          "maxBound" : 2.0
+          "minBound" : -12.0,
+          "maxBound" : 15.0
         },
         {
           "x" : 0.6,

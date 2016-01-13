@@ -1,8 +1,14 @@
 package com.sloperider.component;
 
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix3;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
@@ -14,7 +20,9 @@ import com.badlogic.gdx.physics.box2d.JointDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
 import com.badlogic.gdx.physics.box2d.joints.WheelJointDef;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.sloperider.ComponentFactory;
+import com.sloperider.SlopeRider;
 import com.sloperider.physics.PhysicsActor;
 
 /**
@@ -49,28 +57,35 @@ public class SleighWheel extends Component {
     private Body _leftWheelBody;
     private Body _rightWheelBody;
 
+    private Texture _texture;
+    private TextureRegion _textureRegion;
+
     SleighWheel(final Sleigh sleigh) {
         _sleigh = sleigh;
     }
 
     @Override
     public void requireAssets(AssetManager assetManager) {
-
+        assetManager.load("texture/wheel_diffuse_map.png", Texture.class);
     }
 
     @Override
     public void manageAssets(AssetManager assetManager) {
-
+        _texture = assetManager.get("texture/wheel_diffuse_map.png", Texture.class);
     }
 
     @Override
     public void doReleaseAssets(AssetManager assetManager) {
-
+        if (assetManager.isLoaded("texture/wheel_diffuse_map.png"))
+            assetManager.unload("texture/wheel_diffuse_map.png");
     }
 
     @Override
     protected void doReady(ComponentFactory componentFactory) {
+        setTouchable(Touchable.disabled);
+        setOrigin(getWidth() / 2.f, getHeight() / 2.f);
 
+        _textureRegion = new TextureRegion(_texture);
     }
 
     @Override
@@ -80,7 +95,31 @@ public class SleighWheel extends Component {
 
     @Override
     protected void doDraw(Batch batch) {
+        batch.draw(
+            _textureRegion,
+            _leftWheelBody.getPosition().x * SlopeRider.PIXEL_PER_UNIT,
+            _leftWheelBody.getPosition().y * SlopeRider.PIXEL_PER_UNIT,
+            wheelSize().x / 2.f,
+            wheelSize().y / 2.f,
+            wheelSize().x,
+            wheelSize().y,
+            getScaleX() * SlopeRider.PIXEL_PER_UNIT,
+            getScaleY() * SlopeRider.PIXEL_PER_UNIT,
+            _leftWheelBody.getAngle() * MathUtils.degreesToRadians
+        );
 
+        batch.draw(
+            _textureRegion,
+            _rightWheelBody.getPosition().x * SlopeRider.PIXEL_PER_UNIT,
+            _rightWheelBody.getPosition().y * SlopeRider.PIXEL_PER_UNIT,
+            wheelSize().x / 2.f,
+            wheelSize().y / 2.f,
+            wheelSize().x,
+            wheelSize().y,
+            getScaleX() * SlopeRider.PIXEL_PER_UNIT,
+            getScaleY() * SlopeRider.PIXEL_PER_UNIT,
+            _rightWheelBody.getAngle() * MathUtils.degreesToRadians
+        );
     }
 
     @Override
@@ -94,16 +133,16 @@ public class SleighWheel extends Component {
 
         final BodyDef leftWheelBodyDef = new BodyDef();
         leftWheelBodyDef.type = BodyDef.BodyType.DynamicBody;
-        leftWheelBodyDef.position.set(_sleigh.getX() - 0.35f, _sleigh.getY() - 0.35f);
+        leftWheelBodyDef.position.set(leftWheelPosition().x, leftWheelPosition().y);
         final BodyDef rightWheelBodyDef = new BodyDef();
         rightWheelBodyDef.type = BodyDef.BodyType.DynamicBody;
-        rightWheelBodyDef.position.set(_sleigh.getX() + 0.35f, _sleigh.getY() - 0.35f);
+        rightWheelBodyDef.position.set(rightWheelPosition().x, rightWheelPosition().y);
 
         final CircleShape leftWheelShape = new CircleShape();
-        leftWheelShape.setRadius(0.2f);
+        leftWheelShape.setRadius(wheelSize().x / 2.f);
 
         final CircleShape rightWheelShape = new CircleShape();
-        rightWheelShape.setRadius(0.2f);
+        rightWheelShape.setRadius(wheelSize().x / 2.f);
 
         final FixtureDef leftWheel = new FixtureDef();
         final FixtureDef rightWheel = new FixtureDef();
@@ -159,5 +198,26 @@ public class SleighWheel extends Component {
             world.destroyBody(_rightWheelBody);
             _rightWheelBody = null;
         }
+    }
+
+    private Vector2 wheelSize() {
+        return new Vector2(0.6f, 0.6f);
+    }
+
+    private Matrix4 sleighModelToWorldMatrix() {
+        return new Matrix4()
+            .translate(_sleigh.getX(), _sleigh.getY(), 0.f)
+            .rotate(Vector3.Z, _sleigh.getRotation())
+            .scale(_sleigh.getScaleX(), _sleigh.getScaleY(), 1.f);
+    }
+
+    private Vector2 leftWheelPosition() {
+        final Vector3 worldPosition = new Vector3(-0.4f, -0.4f, 0.f).mul(sleighModelToWorldMatrix());
+        return new Vector2(worldPosition.x, worldPosition.y);
+    }
+
+    private Vector2 rightWheelPosition() {
+        final Vector3 worldPosition = new Vector3(0.4f, -0.4f, 0.f).mul(sleighModelToWorldMatrix());
+        return new Vector2(worldPosition.x, worldPosition.y);
     }
 }
