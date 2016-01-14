@@ -23,6 +23,7 @@ public class PhysicsWorld {
     private static final int MAX_STEP_COUNT = 5;
 
     private float _fixedTimestepAccumulator;
+    private float _fixedTimestepAccumulatorRate;
 
     private World _world;
     private List<PhysicsActor> _actors;
@@ -31,6 +32,7 @@ public class PhysicsWorld {
 
     public PhysicsWorld() {
         _fixedTimestepAccumulator = 0.f;
+        _fixedTimestepAccumulatorRate = 0.f;
 
         _renderer = new Box2DDebugRenderer();
 
@@ -100,15 +102,21 @@ public class PhysicsWorld {
             _fixedTimestepAccumulator -= stepCount * FIXED_TIMESTEP;
         }
 
+        _fixedTimestepAccumulatorRate = _fixedTimestepAccumulator / FIXED_TIMESTEP;
+
         final int boundStepCount = Math.min(stepCount, MAX_STEP_COUNT);
 
         for (int i = 0; i < boundStepCount; ++i) {
             for (PhysicsActor actor : _actors) {
+                actor.resetSmoothingState(_world, FIXED_TIMESTEP);
                 actor.updateBody(_world, FIXED_TIMESTEP);
             }
 
             _world.step(FIXED_TIMESTEP, 6, 2);
         }
+
+        for (final PhysicsActor actor : _actors)
+            actor.applySmoothingState(_world, deltaTime, _fixedTimestepAccumulatorRate);
     }
 
     public final void render(Camera camera) {

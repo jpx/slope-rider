@@ -17,5 +17,7 @@ public interface PhysicsActor {
 
     void initializeBody(World world);
     void updateBody(World world, float deltaTime);
+    void resetSmoothingState(World world, float deltaTime);
+    void applySmoothingState(World world, float deltaTime, final float alpha);
     void destroyBody(World world);
 }

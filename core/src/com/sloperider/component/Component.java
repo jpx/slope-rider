@@ -6,6 +6,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -16,6 +17,7 @@ import com.sloperider.Layer;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.CollisionGroup;
 import com.sloperider.physics.PhysicsActor;
+import com.sloperider.physics.SmoothingState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -185,6 +187,14 @@ public abstract class Component extends Group implements PhysicsActor {
     @Override
     public short collidesWith() {
         return CollisionGroup.NOTHING.value();
+    }
+
+    @Override
+    public void resetSmoothingState(World world, float deltaTime) {
+    }
+
+    @Override
+    public void applySmoothingState(World world, float deltaTime, float alpha) {
     }
 
     protected final OrthographicCamera getCamera() {

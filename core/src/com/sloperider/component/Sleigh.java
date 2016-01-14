@@ -23,6 +23,7 @@ import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.CollisionGroup;
 import com.sloperider.physics.PhysicsActor;
+import com.sloperider.physics.SmoothingState;
 
 /**
  * Created by jpx on 08/11/15.
@@ -37,6 +38,8 @@ public class Sleigh extends Component {
     private boolean _physicsEnabled;
 
     private Vector2 _persistentForceVector;
+
+    private final SmoothingState _smoothingState = new SmoothingState();
 
     public Sleigh() {
     }
@@ -120,7 +123,6 @@ public class Sleigh extends Component {
 
     @Override
     protected void doAct(float delta) {
-
     }
 
     @Override
@@ -199,12 +201,29 @@ public class Sleigh extends Component {
         if (_persistentForceVector != null) {
             _body.applyForceToCenter(_persistentForceVector.cpy().scl(30.f), true);
         }
+    }
 
-        final Vector2 position = _body.getPosition().cpy();
-        final float rotation = MathUtils.radiansToDegrees * _body.getAngle();
+    @Override
+    public void resetSmoothingState(World world, float deltaTime) {
+        super.resetSmoothingState(world, deltaTime);
 
-        setPosition(position.x, position.y);
-        setRotation(rotation);
+        _smoothingState.smoothedPosition = _smoothingState.previousPosition = _body.getPosition();
+        _smoothingState.smoothedRotation = _smoothingState.previousRotation = _body.getAngle() * MathUtils.radiansToDegrees;
+    }
+
+    @Override
+    public void applySmoothingState(World world, float deltaTime, float alpha) {
+        super.applySmoothingState(world, deltaTime, alpha);
+
+        _smoothingState.smoothedPosition = _body.getPosition().cpy()
+            .scl(alpha)
+            .add(_smoothingState.previousPosition.cpy().scl(1.f - alpha));
+
+        _smoothingState.smoothedRotation = _body.getAngle() * MathUtils.radiansToDegrees *
+            alpha + _smoothingState.previousRotation * (1.f - alpha);
+
+        setPosition(_smoothingState.smoothedPosition.x, _smoothingState.smoothedPosition.y);
+        setRotation(_smoothingState.smoothedRotation);
     }
 
     @Override
