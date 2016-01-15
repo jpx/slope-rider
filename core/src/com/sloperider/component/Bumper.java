@@ -18,6 +18,8 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix3;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -97,6 +99,11 @@ public class Bumper  extends Component {
     public void setPosition(float x, float y) {
         super.setPosition(x, y);
 
+        updateRenderableTransform();
+        updateBodyTransform();
+    }
+
+    private void updateRenderableTransform() {
         if (_renderable != null) {
             _renderable.worldTransform
                 .idt()
@@ -105,8 +112,6 @@ public class Bumper  extends Component {
                 .rotate(Vector3.Z, getRotation())
                 .translate(-getOriginX(), -getOriginY(), 0.f);
         }
-
-        updateBodyTransform();
     }
 
     @Override
@@ -244,6 +249,8 @@ public class Bumper  extends Component {
         };
 
         _shader.init();
+
+        updateRenderableTransform();
     }
 
     @Override
@@ -279,6 +286,7 @@ public class Bumper  extends Component {
         final BodyDef bodyDef = new BodyDef();
 
         bodyDef.type = BodyDef.BodyType.KinematicBody;
+        bodyDef.position.set(getX(), getY());
 
         final PolygonShape topShape = new PolygonShape();
         final PolygonShape baseShape = new PolygonShape();
@@ -286,13 +294,13 @@ public class Bumper  extends Component {
         final float width = getWidth();
         final float height = getHeight();
 
-        topShape.set(new float[] {
+        topShape.set(new float[]{
             -width * 0.45f, -height * 0.05f,
             0.f, height * 0.05f,
             width * 0.45f, -height * 0.05f,
         });
 
-        baseShape.set(new float[] {
+        baseShape.set(new float[]{
             -width * 0.5f, -height * 0.05f,
             width * 0.5f, -height * 0.05f,
             width * 0.5f, -height * 0.95f,
@@ -303,6 +311,7 @@ public class Bumper  extends Component {
         final FixtureDef baseFixtureDef = new FixtureDef();
 
         topFixtureDef.shape = topShape;
+        topFixtureDef.isSensor = true;
         topFixtureDef.filter.categoryBits = group();
         topFixtureDef.filter.maskBits = collidesWith();
 
@@ -316,6 +325,8 @@ public class Bumper  extends Component {
         final Fixture baseFixture = _body.createFixture(baseFixtureDef);
 
         topFixture.setUserData(new ContactData(this));
+
+        updateBodyTransform();
     }
 
     @Override

@@ -195,8 +195,13 @@ public class Sleigh extends Component {
 
     @Override
     public void updateBody(World world, float deltaTime) {
-        if (!_physicsEnabled)
+        if (!_physicsEnabled) {
+            if (_body != null) {
+                destroyBody(world);
+            }
+
             return;
+        }
 
         if (_persistentForceVector != null) {
             _body.applyForceToCenter(_persistentForceVector.cpy().scl(30.f), true);
@@ -207,6 +212,9 @@ public class Sleigh extends Component {
     public void resetSmoothingState(World world, float deltaTime) {
         super.resetSmoothingState(world, deltaTime);
 
+        if (!_physicsEnabled)
+            return;
+
         _smoothingState.smoothedPosition = _smoothingState.previousPosition = _body.getPosition();
         _smoothingState.smoothedRotation = _smoothingState.previousRotation = _body.getAngle() * MathUtils.radiansToDegrees;
     }
@@ -214,6 +222,9 @@ public class Sleigh extends Component {
     @Override
     public void applySmoothingState(World world, float deltaTime, float alpha) {
         super.applySmoothingState(world, deltaTime, alpha);
+
+        if (!_physicsEnabled)
+            return;
 
         _smoothingState.smoothedPosition = _body.getPosition().cpy()
             .scl(alpha)
@@ -228,11 +239,15 @@ public class Sleigh extends Component {
 
     @Override
     public void destroyBody(World world) {
+        if (_body == null)
+            return;
+
         world.destroyBody(_body);
+        _body = null;
     }
 
     public final boolean isMoving() {
-        return _body.getLinearVelocity().len() > 1e-2f;
+        return _body == null ? true : _body.getLinearVelocity().len() > 1e-2f;
     }
 
     public final Sleigh disablePhysics() {

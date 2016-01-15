@@ -94,6 +94,7 @@ public class Level extends Component {
             Vector2 position = null;
 
             final Vector2 scale = new Vector2(1.f, 1.f);
+            float rotation = 0.f;
 
             if (componentNode.has("scale")) {
                 final JsonValue scaleNode = componentNode.get("scale");
@@ -103,6 +104,9 @@ public class Level extends Component {
                     scaleNode.get(1).asFloat()
                 );
             }
+
+            if (componentNode.has("rotation"))
+                rotation = componentNode.getFloat("rotation");
 
             final String type = componentNode.getString("type");
 
@@ -145,6 +149,7 @@ public class Level extends Component {
                     .force(componentNode.getFloat("force"));
                 bumper.setPosition(position.x, position.y);
                 bumper.setSize(scale.x, scale.y);
+                bumper.setRotation(rotation);
 
                 component = addComponent(componentFactory.initializeComponent(bumper));
             } else if (type.equals("CollectibleItem")) {

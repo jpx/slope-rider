@@ -7,6 +7,18 @@
     {
       "name" : "Debug downward stone",
       "filename" : "level/debug_downward_stone.lvl"
+    },
+    {
+      "name" : "Tutorial",
+      "filename" : "level/tutorial.lvl"
+    },
+    {
+      "name" : "Level 0",
+      "filename" : "level/level0.lvl"
+    },
+    {
+      "name" : "Level 1",
+      "filename" : "level/level1.lvl"
     }
   ]
 }

@@ -86,7 +86,9 @@ public class SleighCameraController extends Component {
     }
 
     private void updateTargetPosition() {
-        final Vector2 velocity = _target.body().getLinearVelocity();
+        final Vector2 velocity = _target.body() == null
+            ? Vector2.Zero
+            : _target.body().getLinearVelocity();
 
         final Vector3 offset = new Vector3(velocity.x, velocity.y, 0.f)
             .scl(0.2f)
@@ -110,7 +112,9 @@ public class SleighCameraController extends Component {
     private void updateTargetZoom() {
         final float minVelocity = 0.f;
         final float maxVelocity = 50.f;
-        final float velocity = _target.body().getLinearVelocity().len();
+        final float velocity = _target.body() == null
+            ? 0.f
+            : _target.body().getLinearVelocity().len();
 
         final float zoom = MathUtils.lerp(
             minZoom(),
