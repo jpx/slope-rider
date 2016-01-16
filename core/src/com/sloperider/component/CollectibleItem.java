@@ -291,57 +291,7 @@ public class CollectibleItem extends Component {
 
     @Override
     protected void doAct(float delta) {
-        _time += delta;
 
-        if (_collected) {
-            _collected = false;
-
-
-            final float targetSize = 1.f;
-            final Vector2 padding = new Vector2(-0.5f, -0.5f).sub(targetSize * 0.5f, targetSize * 0.5f);
-
-            startAnimation(
-                new Vector2(getCamera().viewportWidth * 0.5f / SlopeRider.PIXEL_PER_UNIT, getCamera().viewportHeight * 0.5f / SlopeRider.PIXEL_PER_UNIT).add(padding),
-                targetSize,
-                0.5f,
-                _time
-            );
-
-            startCooldownAnimation(_duration, _time);
-
-            if (_listener != null)
-                _listener.collected(CollectibleItem.this);
-        }
-
-        if (_animationActive) {
-            final float elapsedTime = _time - _animationStartTime;
-
-            if (elapsedTime > _animationDuration)
-                animationComplete();
-            else {
-                final Vector2 position = _animationStartPosition.cpy()
-                    .lerp(_animationTargetPosition, elapsedTime / _animationDuration);
-
-                final Vector2 scale = _animationStartScale.cpy()
-                    .lerp(_animationTargetScale, elapsedTime / _animationDuration);
-
-                _animationCurrentZoom = MathUtils.lerp(
-                    _animationStartZoom,
-                    _animationTargetZoom,
-                    elapsedTime / _animationDuration
-                );
-
-                setPosition(position.x, position.y);
-                setScale(scale.x, scale.y);
-            }
-        }
-
-        if (_cooldownAnimationActive) {
-            final float elapsedTIme = _time - _cooldownAnimationStartTime;
-
-            if (elapsedTIme > _cooldownAnimationDuration)
-                cooldownAnimationComplete();
-        }
     }
 
     @Override
@@ -436,6 +386,58 @@ public class CollectibleItem extends Component {
             _bodyNeedsUpdate = false;
 
             resetBody(world);
+        }
+
+        _time += deltaTime;
+
+        if (_collected) {
+            _collected = false;
+
+            final float targetSize = 1.f;
+            final Vector2 padding = new Vector2(-0.5f, -0.5f).sub(targetSize * 0.5f, targetSize * 0.5f);
+
+            startAnimation(
+                new Vector2(getCamera().viewportWidth * 0.5f / SlopeRider.PIXEL_PER_UNIT, getCamera().viewportHeight * 0.5f / SlopeRider.PIXEL_PER_UNIT).add(padding),
+                targetSize,
+                0.5f,
+                _time
+            );
+
+            startCooldownAnimation(_duration, _time);
+
+            if (_listener != null)
+                _listener.collected(CollectibleItem.this);
+        }
+
+        if (_animationActive) {
+            final float elapsedTime = _time - _animationStartTime;
+
+            if (elapsedTime > _animationDuration - 1e-2f)
+                animationComplete();
+            else {
+                final Vector2 position = _animationStartPosition.cpy()
+                    .lerp(_animationTargetPosition, elapsedTime / _animationDuration);
+
+                final Vector2 scale = _animationStartScale.cpy()
+                    .lerp(_animationTargetScale, elapsedTime / _animationDuration);
+
+                _animationCurrentZoom = MathUtils.lerp(
+                    _animationStartZoom,
+                    _animationTargetZoom,
+                    elapsedTime / _animationDuration
+                );
+
+                setPosition(position.x, position.y);
+                setScale(scale.x, scale.y);
+            }
+        }
+
+        if (_cooldownAnimationActive) {
+            final float elapsedTime = _time - _cooldownAnimationStartTime;
+
+
+            if (elapsedTime > _cooldownAnimationDuration - 1e-2f)
+                cooldownAnimationComplete();
         }
     }
 

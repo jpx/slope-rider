@@ -12,6 +12,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.sloperider.SlopeRider;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -27,6 +28,8 @@ public class PhysicsWorld {
 
     private World _world;
     private List<PhysicsActor> _actors;
+    private final List<PhysicsActor> _actorsToRemove = new LinkedList<PhysicsActor>();
+    private final List<PhysicsActor> _actorsToAdd = new LinkedList<PhysicsActor>();
 
     private Box2DDebugRenderer _renderer;
 
@@ -82,18 +85,49 @@ public class PhysicsWorld {
     }
 
     public final void addActor(PhysicsActor actor) {
+        if (_actorsToRemove.contains(actor))
+            _actorsToRemove.remove(actor);
+
+        _actorsToAdd.add(actor);
+    }
+
+    public final void removeActor(PhysicsActor actor) {
+        if (_actorsToAdd.contains(actor))
+            _actorsToAdd.remove(actor);
+
+        _actorsToRemove.add(actor);
+    }
+
+    private void doAddActor(final PhysicsActor actor) {
         actor.initializeBody(_world);
+        actor.resetSmoothingState(_world, 0.f);
 
         _actors.add(actor);
     }
 
-    public final void removeActor(PhysicsActor actor) {
+    private void doRemoveActor(final PhysicsActor actor) {
         actor.destroyBody(_world);
 
         _actors.remove(actor);
     }
 
+    private void flushPendingActors() {
+        while (!_actorsToRemove.isEmpty()) {
+            final PhysicsActor actor = _actorsToRemove.remove(0);
+
+            doRemoveActor(actor);
+        }
+
+        while (!_actorsToAdd.isEmpty()) {
+            final PhysicsActor actor = _actorsToAdd.remove(0);
+
+            doAddActor(actor);
+        }
+    }
+
     public final void update(float deltaTime) {
+        flushPendingActors();
+
         _fixedTimestepAccumulator += deltaTime;
 
         final int stepCount = (int) Math.floor((double) (_fixedTimestepAccumulator / FIXED_TIMESTEP));
@@ -112,11 +146,15 @@ public class PhysicsWorld {
                 actor.updateBody(_world, FIXED_TIMESTEP);
             }
 
+            flushPendingActors();
+
             _world.step(FIXED_TIMESTEP, 6, 2);
         }
 
         for (final PhysicsActor actor : _actors)
             actor.applySmoothingState(_world, deltaTime, _fixedTimestepAccumulatorRate);
+
+        flushPendingActors();
     }
 
     public final void render(Camera camera) {

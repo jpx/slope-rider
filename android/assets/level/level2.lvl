@@ -1,0 +1,224 @@
+{
+  "name" : "Level 1",
+  "description" : "You haven't seen anything yet !",
+  "components" : [
+    {
+      "type" : "Begin",
+      "position" : {
+        "track" : "track0",
+        "location" : 0.01,
+        "offset" : -0.1
+      }
+    },
+    {
+      "type" : "End",
+      "position" : {
+        "track" : "track0",
+        "location" : 0.95,
+        "offset" : 20.0
+      },
+      "scale" : [ 4.0, 4.0 ]
+    },
+    {
+      "type" : "ObjectSpawner",
+      "position" : {
+        "track" : "track0",
+        "location" : 0.3,
+        "offset" : 8.0
+      },
+      "cardinality" : 1.0,
+      "delay" : 2.0,
+      "spawnedObjectType" : "RollingObject"
+    },
+    {
+      "type" : "FallingSign",
+      "position" : {
+        "track" : "track0",
+        "location" : 0.3,
+        "offset" : -0.2
+      }
+    },
+    {
+      "type" : "DraggableNetwork",
+      "position" : [ 0.0, 0.0 ],
+      "quota" : 30.0
+    },
+    {
+      "type" : "Track",
+      "name" : "track0",
+      "position" : [ 0.0, 0.0 ],
+      "width" : 250.0,
+      "height" : 80.0,
+      "points" : [
+        {
+          "x" : 0.0,
+          "y" : 0.0,
+          "editable" : false,
+          "material" : "SNOW",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 0.05,
+          "y" : -0.2,
+          "editable" : false,
+          "material" : "SNOW",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 0.1,
+          "y" : -0.4,
+          "editable" : false,
+          "material" : "BOOSTER",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 0.15,
+          "y" : -0.5,
+          "editable" : false,
+          "material" : "BOOSTER",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 0.2,
+          "y" : -0.4,
+          "editable" : false,
+          "material" : "SNOW",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 0.25,
+          "y" : -0.3,
+          "editable" : true,
+          "material" : "SNOW",
+          "minBound" : -5.0,
+          "maxBound" : 6.0
+        },
+        {
+          "x" : 0.3,
+          "y" : -0.2,
+          "editable" : false,
+          "material" : "SNOW",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 0.35,
+          "y" : -0.2,
+          "editable" : true,
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
+        },
+        {
+          "x" : 0.4,
+          "y" : -0.2,
+          "editable" : false,
+          "material" : "SNOW",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 0.45,
+          "y" : 0.15,
+          "editable" : true,
+          "material" : "STONE",
+          "minBound" : -5.0,
+          "maxBound" : 2.0
+        },
+        {
+          "x" : 0.5,
+          "y" : 0.45,
+          "editable" : true,
+          "material" : "STONE",
+          "minBound" : -25.0,
+          "maxBound" : 2.0
+        },
+        {
+          "x" : 0.55,
+          "y" : 0.0,
+          "editable" : false,
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
+        },
+        {
+          "x" : 0.6,
+          "y" : -0.1,
+          "editable" : true,
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
+        },
+        {
+          "x" : 0.65,
+          "y" : -0.2,
+          "editable" : true,
+          "material" : "BOOSTER",
+          "minBound" : -5.0,
+          "maxBound" : 5.0
+        },
+        {
+          "x" : 0.7,
+          "y" : -0.25,
+          "editable" : true,
+          "material" : "BOOSTER",
+          "minBound" : -5.0,
+          "maxBound" : 5.0
+        },
+        {
+          "x" : 0.75,
+          "y" : -0.3,
+          "editable" : true,
+          "material" : "SNOW",
+          "minBound" : -10.0,
+          "maxBound" : 10.0
+        },
+        {
+          "x" : 0.8,
+          "y" : -0.2,
+          "editable" : true,
+          "material" : "SNOW",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
+        },
+        {
+          "x" : 0.85,
+          "y" : -0.4,
+          "editable" : false,
+          "material" : "STONE",
+          "minBound" : -2.0,
+          "maxBound" : 5.0
+        },
+        {
+          "x" : 0.9,
+          "y" : -0.5,
+          "editable" : false,
+          "material" : "BOOSTER",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 0.95,
+          "y" : -0.5,
+          "editable" : false,
+          "material" : "BOOSTER",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        },
+        {
+          "x" : 1.0,
+          "y" : -0.3,
+          "editable" : false,
+          "material" : "BOOSTER",
+          "minBound" : 0.0,
+          "maxBound" : 0.0
+        }
+      ]
+    }
+  ]
+}

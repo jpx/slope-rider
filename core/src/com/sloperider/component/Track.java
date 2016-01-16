@@ -870,7 +870,11 @@ public class Track extends Component {
 
     @Override
     public void destroyBody(World world) {
+        if (_body == null)
+            return;
+
         world.destroyBody(_body);
+        _body = null;
     }
 
     @Override

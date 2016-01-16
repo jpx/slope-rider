@@ -19,6 +19,10 @@
     {
       "name" : "Level 1",
       "filename" : "level/level1.lvl"
+    },
+    {
+      "name" : "Level 2",
+      "filename" : "level/level2.lvl"
     }
   ]
 }

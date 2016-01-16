@@ -334,7 +334,7 @@ public class Bumper  extends Component {
         if (_sleigh != null) {
             _deltaTimeSinceContactBegin += deltaTime;
 
-            if (_deltaTimeSinceContactBegin > 0.02f) {
+//            if (_deltaTimeSinceContactBegin > 0.02f) {
                 final float amplitude = _force;
                 final Vector2 direction = new Vector2(
                     (float) Math.cos((90.f + getRotation()) * MathUtils.degreesToRadians),
@@ -348,7 +348,7 @@ public class Bumper  extends Component {
                 );
 
                 _sleigh = null;
-            }
+//            }
         }
     }
 

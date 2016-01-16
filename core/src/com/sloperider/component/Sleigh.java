@@ -215,7 +215,8 @@ public class Sleigh extends Component {
         if (!_physicsEnabled)
             return;
 
-        _smoothingState.smoothedPosition = _smoothingState.previousPosition = _body.getPosition();
+        _smoothingState.smoothedPosition.set(_body.getPosition());
+        _smoothingState.previousPosition.set(_body.getPosition());
         _smoothingState.smoothedRotation = _smoothingState.previousRotation = _body.getAngle() * MathUtils.radiansToDegrees;
     }
 
@@ -226,9 +227,9 @@ public class Sleigh extends Component {
         if (!_physicsEnabled)
             return;
 
-        _smoothingState.smoothedPosition = _body.getPosition().cpy()
+        _smoothingState.smoothedPosition.set(_body.getPosition().cpy()
             .scl(alpha)
-            .add(_smoothingState.previousPosition.cpy().scl(1.f - alpha));
+            .add(_smoothingState.previousPosition.cpy().scl(1.f - alpha)));
 
         _smoothingState.smoothedRotation = _body.getAngle() * MathUtils.radiansToDegrees *
             alpha + _smoothingState.previousRotation * (1.f - alpha);
