@@ -1,5 +1,6 @@
 package com.sloperider.component;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -198,6 +199,11 @@ public class SleighWheel extends Component {
             world.destroyBody(_rightWheelBody);
             _rightWheelBody = null;
         }
+    }
+
+    @Override
+    protected void doLevelPhysicsUpdate(World world, float deltaTime, int stepId, int frameId) {
+        super.doLevelPhysicsUpdate(world, deltaTime, stepId, frameId);
     }
 
     private Vector2 wheelSize() {

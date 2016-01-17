@@ -50,6 +50,9 @@ public class Level extends Component {
 
     private boolean _startedAsViewOnly = false;
 
+    private int _stepId;
+    private int _frameId;
+
     private ComponentFactory _componentFactory;
     private String _name;
     private String _description;
@@ -351,6 +354,8 @@ public class Level extends Component {
 
     @Override
     protected void doAct(float delta) {
+        ++_frameId;
+
         if (_sleigh != null) {
             final boolean sleighIsMoving = _sleigh.isMoving();
 
@@ -407,6 +412,8 @@ public class Level extends Component {
 
     @Override
     public void updateBody(World world, float deltaTime) {
+        levelPhysicsUpdate(world, deltaTime, _stepId, _frameId);
+        ++_stepId;
     }
 
     @Override
@@ -435,7 +442,7 @@ public class Level extends Component {
 
         final Vector2 position = new Vector2(_begin.getX(), _begin.getY()).add(0.f, 1.f);
 
-        _sleigh = _componentFactory.createComponent(position, Sleigh.class);
+        _sleigh = addComponent(_componentFactory.createComponent(position, Sleigh.class));
 
         playingBegin(_sleigh);
 
@@ -463,7 +470,7 @@ public class Level extends Component {
 
         if (_end != null)
             _end.sleighDestroyed(_sleigh);
-        _componentFactory.destroyComponent(_sleigh);
+        removeComponent(_componentFactory.destroyComponent(_sleigh));
         _sleigh = null;
 
         return this;
@@ -497,12 +504,13 @@ public class Level extends Component {
         if (_startedAsViewOnly)
             return;
 
+        _stepId = 0;
+        _frameId = 0;
+
         if (_listener != null)
             _listener.stateChanged("playing");
 
-        for (final Component component : _components) {
-            component.levelPlayed(this);
-        }
+        levelPlayed(this);
 
         _playingCameraController = addComponent(_componentFactory.createComponent(Vector2.Zero, SleighCameraController.class))
             .target(sleigh);
@@ -513,9 +521,7 @@ public class Level extends Component {
         if (_startedAsViewOnly)
             return;
 
-        for (final Component component : _components) {
-            component.levelStopped(this);
-        }
+        levelStopped(this);
 
         if (_playingCameraController != null) {
             removeComponent(_componentFactory.destroyComponent(_playingCameraController));

@@ -108,9 +108,18 @@ public abstract class Component extends Group implements PhysicsActor {
         doLevelComplete(level);
     }
 
+    protected final void levelPhysicsUpdate(final World world, final float deltaTime, final int stepId, final int frameId) {
+        for (final Component component : _components) {
+            component.levelPhysicsUpdate(world, deltaTime, stepId, frameId);
+        }
+
+        doLevelPhysicsUpdate(world, deltaTime, stepId, frameId);
+    }
+
     protected void doLevelPlayed(final Level level) { }
     protected void doLevelStopped(final Level level) { }
     protected void doLevelComplete(final Level level) { }
+    protected void doLevelPhysicsUpdate(final World world, final float deltaTime, final int stepId, final int frameId) { }
 
     public final void ready(ComponentFactory componentFactory) {
         if (_ready)

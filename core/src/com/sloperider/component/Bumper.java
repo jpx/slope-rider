@@ -124,7 +124,7 @@ public class Bumper  extends Component {
     @Override
     public void requireAssets(AssetManager assetManager) {
         assetManager.load("texture/bumper.png", Texture.class);
-        assetManager.load("texture/bumper_base.png", Texture.class);
+        assetManager.load("texture/bumper_symbol.png", Texture.class);
 
         _vertexShaderSource = Gdx.files.internal("shader/bumper.vertex.glsl").readString();
         _fragmentShaderSource = Gdx.files.internal("shader/bumper.fragment.glsl").readString();
@@ -133,15 +133,15 @@ public class Bumper  extends Component {
     @Override
     public void manageAssets(AssetManager assetManager) {
         _diffuseMask = assetManager.get("texture/bumper.png", Texture.class);
-        _baseDiffuseMask = assetManager.get("texture/bumper_base.png", Texture.class);
+        _baseDiffuseMask = assetManager.get("texture/bumper_symbol.png", Texture.class);
     }
 
     @Override
     public void doReleaseAssets(AssetManager assetManager) {
         if (assetManager.isLoaded("texture/bumpber.png", Texture.class))
             assetManager.unload("texture/bumper.png");
-        if (assetManager.isLoaded("texture/bumpber_base.png", Texture.class))
-            assetManager.unload("texture/bumper_base.png");
+        if (assetManager.isLoaded("texture/bumper_symbol.png", Texture.class))
+            assetManager.unload("texture/bumper_symbol.png");
     }
 
     @Override
@@ -295,14 +295,14 @@ public class Bumper  extends Component {
         final float height = getHeight();
 
         topShape.set(new float[]{
-            -width * 0.45f, -height * 0.05f,
+            -width * 0.48f, 0.f,
             0.f, height * 0.05f,
-            width * 0.45f, -height * 0.05f,
+            width * 0.48f, 0.f,
         });
 
         baseShape.set(new float[]{
-            -width * 0.5f, -height * 0.05f,
-            width * 0.5f, -height * 0.05f,
+            -width * 0.5f, 0.f,
+            width * 0.5f, 0.f,
             width * 0.5f, -height * 0.95f,
             -width * 0.5f, -height * 0.95f
         });
