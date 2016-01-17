@@ -10,4 +10,5 @@ public class LevelInfo {
     public String filename;
     public float bestScore;
     public boolean unlocked;
+    public boolean secret;
 }

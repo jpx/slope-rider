@@ -63,7 +63,7 @@ void main()
             diffuse = vec3(1.0);
         }
 
-        diffuseMask.a *= 0.6;
+        diffuseMask.a *= 0.8;
     }
 
     gl_FragColor = vec4(diffuse, diffuseMask.a);

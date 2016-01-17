@@ -3,6 +3,7 @@ package com.sloperider.component;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -98,6 +99,9 @@ public class End extends Component {
     private String _fragmentShaderSource;
     private float _time;
 
+    private final Color _color0 = new Color(0.1f, 0.2f, 0.9f, 1.f);
+    private final Color _color1 = new Color(0.6f, 0.3f, 0.1f, 1.f);
+
     private boolean _animationActive;
     private float _animationStartTime;
     private final float _animationDuration = 1.0f;
@@ -111,6 +115,18 @@ public class End extends Component {
     private final List<Sleigh> _sleightsToAdd = new ArrayList<Sleigh>();
     private final List<Sleigh> _sleightsToRemove = new ArrayList<Sleigh>();
     private final List<SleighEntry> _activeSleighs = new ArrayList<SleighEntry>();
+
+    public End color0(final Color value) {
+        _color0.set(value);
+
+        return this;
+    }
+
+    public End color1(final Color value) {
+        _color1.set(value);
+
+        return this;
+    }
 
     public final void sleighDestroyed(final Sleigh sleigh) {
         removeSleigh(sleigh);
@@ -284,6 +300,9 @@ public class End extends Component {
 
                 if (program.hasUniform("u_time"))
                     program.setUniformf("u_time", _time);
+
+                program.setUniformf("u_diffuseColor0", _color0);
+                program.setUniformf("u_diffuseColor1", _color1);
 
                 renderable.meshPart.render(program);
             }

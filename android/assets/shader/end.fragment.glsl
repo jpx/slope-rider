@@ -4,6 +4,9 @@ precision mediump float;
 
 uniform float u_time;
 
+uniform vec4 u_diffuseColor0;
+uniform vec4 u_diffuseColor1;
+
 uniform float u_animationMask;
 uniform float u_animationStartTime;
 uniform float u_animationDuration;
@@ -80,13 +83,13 @@ void main()
     float mid = 0.5 + snoise(vec2(0.0, v_uv.y + u_time / 2.0)) / 2.0;
 
     diffuse.rgb += mix(
-        vec3(0.1, 0.2, 0.9),
+        u_diffuseColor0.rgb,
         vec3(0.0, 0.0, 0.0),
         (v_uv.x - mid) * 10.0
     );
 
     diffuse.rgb += mix(
-        vec3(0.6, 0.3, 0.1),
+        u_diffuseColor1.rgb,
         vec3(0.0, 0.0, 0.0),
         (mid - v_uv.x) * 10.0
     );

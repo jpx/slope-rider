@@ -145,6 +145,28 @@ public class Level extends Component {
                 end.setPosition(position.x, position.y);
                 end.setSize(scale.x, scale.y);
 
+                if (componentNode.has("color0")) {
+                    final JsonValue color0Node = componentNode.get("color0");
+
+                    end.color0(new Color(
+                        color0Node.getFloat(0),
+                        color0Node.getFloat(1),
+                        color0Node.getFloat(2),
+                        color0Node.getFloat(3)
+                    ));
+                }
+
+                if (componentNode.has("color1")) {
+                    final JsonValue color1Node = componentNode.get("color1");
+
+                    end.color1(new Color(
+                        color1Node.getFloat(0),
+                        color1Node.getFloat(1),
+                        color1Node.getFloat(2),
+                        color1Node.getFloat(3)
+                    ));
+                }
+
                 _end = addComponent(componentFactory.initializeComponent(end));
                 component = _end;
             } else if (type.equals("Bumper")) {

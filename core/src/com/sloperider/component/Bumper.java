@@ -295,14 +295,16 @@ public class Bumper  extends Component {
         final float height = getHeight();
 
         topShape.set(new float[]{
+            -width * 0.48f, -height * 0.05f,
             -width * 0.48f, 0.f,
-            0.f, height * 0.05f,
+            0.f, height * 0.08f,
             width * 0.48f, 0.f,
+            width * 0.48f, -height * 0.05f
         });
 
         baseShape.set(new float[]{
-            -width * 0.5f, 0.f,
-            width * 0.5f, 0.f,
+            -width * 0.5f, -height * 0.05f,
+            width * 0.5f, -height * 0.05f,
             width * 0.5f, -height * 0.95f,
             -width * 0.5f, -height * 0.95f
         });

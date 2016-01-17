@@ -25,6 +25,7 @@ import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.PhysicsActor;
+import com.sloperider.physics.SmoothingState;
 
 /**
  * Created by jpx on 03/01/16.
@@ -57,6 +58,8 @@ public class SleighWheel extends Component {
 
     private Body _leftWheelBody;
     private Body _rightWheelBody;
+    private final SmoothingState _leftWheelSmoothingState = new SmoothingState();
+    private final SmoothingState _rightWheelSmoothingState = new SmoothingState();
 
     private Texture _texture;
     private TextureRegion _textureRegion;
@@ -98,28 +101,28 @@ public class SleighWheel extends Component {
     protected void doDraw(Batch batch) {
         batch.draw(
             _textureRegion,
-            _leftWheelBody.getPosition().x * SlopeRider.PIXEL_PER_UNIT,
-            _leftWheelBody.getPosition().y * SlopeRider.PIXEL_PER_UNIT,
+            _leftWheelSmoothingState.smoothedPosition.x * SlopeRider.PIXEL_PER_UNIT,
+            _leftWheelSmoothingState.smoothedPosition.y * SlopeRider.PIXEL_PER_UNIT,
             wheelSize().x / 2.f,
             wheelSize().y / 2.f,
             wheelSize().x,
             wheelSize().y,
             getScaleX() * SlopeRider.PIXEL_PER_UNIT,
             getScaleY() * SlopeRider.PIXEL_PER_UNIT,
-            _leftWheelBody.getAngle() * MathUtils.degreesToRadians
+            _leftWheelSmoothingState.smoothedRotation * MathUtils.degreesToRadians
         );
 
         batch.draw(
             _textureRegion,
-            _rightWheelBody.getPosition().x * SlopeRider.PIXEL_PER_UNIT,
-            _rightWheelBody.getPosition().y * SlopeRider.PIXEL_PER_UNIT,
+            _rightWheelSmoothingState.smoothedPosition.x * SlopeRider.PIXEL_PER_UNIT,
+            _rightWheelSmoothingState.smoothedPosition.y * SlopeRider.PIXEL_PER_UNIT,
             wheelSize().x / 2.f,
             wheelSize().y / 2.f,
             wheelSize().x,
             wheelSize().y,
             getScaleX() * SlopeRider.PIXEL_PER_UNIT,
             getScaleY() * SlopeRider.PIXEL_PER_UNIT,
-            _rightWheelBody.getAngle() * MathUtils.degreesToRadians
+            _rightWheelSmoothingState.smoothedRotation * MathUtils.degreesToRadians
         );
     }
 
@@ -188,6 +191,39 @@ public class SleighWheel extends Component {
 
     }
 
+
+    @Override
+    public void resetSmoothingState(World world, float deltaTime) {
+        super.resetSmoothingState(world, deltaTime);
+
+        _leftWheelSmoothingState.smoothedPosition.set(_leftWheelBody.getPosition());
+        _leftWheelSmoothingState.previousPosition.set(_leftWheelBody.getPosition());
+        _leftWheelSmoothingState.smoothedRotation = _leftWheelSmoothingState.previousRotation = _leftWheelBody.getAngle() * MathUtils.radiansToDegrees;
+
+        _rightWheelSmoothingState.smoothedPosition.set(_rightWheelBody.getPosition());
+        _rightWheelSmoothingState.previousPosition.set(_rightWheelBody.getPosition());
+        _rightWheelSmoothingState.smoothedRotation = _rightWheelSmoothingState.previousRotation = _rightWheelBody.getAngle() * MathUtils.radiansToDegrees;
+    }
+
+    @Override
+    public void applySmoothingState(World world, float deltaTime, float alpha) {
+        super.applySmoothingState(world, deltaTime, alpha);
+
+        _leftWheelSmoothingState.smoothedPosition.set(_leftWheelBody.getPosition().cpy()
+            .scl(alpha)
+            .add(_leftWheelSmoothingState.previousPosition.cpy().scl(1.f - alpha)));
+
+        _leftWheelSmoothingState.smoothedRotation = _leftWheelBody.getAngle() * MathUtils.radiansToDegrees *
+            alpha + _leftWheelSmoothingState.previousRotation * (1.f - alpha);
+
+        _rightWheelSmoothingState.smoothedPosition.set(_rightWheelBody.getPosition().cpy()
+                .scl(alpha)
+                .add(_rightWheelSmoothingState.previousPosition.cpy().scl(1.f - alpha)));
+
+        _rightWheelSmoothingState.smoothedRotation = _rightWheelBody.getAngle() * MathUtils.radiansToDegrees *
+                alpha + _rightWheelSmoothingState.previousRotation * (1.f - alpha);
+    }
+
     @Override
     public void destroyBody(World world) {
         if (_leftWheelBody != null) {
@@ -207,7 +243,7 @@ public class SleighWheel extends Component {
     }
 
     private Vector2 wheelSize() {
-        return new Vector2(0.6f, 0.6f);
+        return new Vector2(0.5f, 0.5f);
     }
 
     private Matrix4 sleighModelToWorldMatrix() {
@@ -218,12 +254,12 @@ public class SleighWheel extends Component {
     }
 
     private Vector2 leftWheelPosition() {
-        final Vector3 worldPosition = new Vector3(-0.4f, -0.4f, 0.f).mul(sleighModelToWorldMatrix());
+        final Vector3 worldPosition = new Vector3(-0.38f, -0.3f, 0.f).mul(sleighModelToWorldMatrix());
         return new Vector2(worldPosition.x, worldPosition.y);
     }
 
     private Vector2 rightWheelPosition() {
-        final Vector3 worldPosition = new Vector3(0.4f, -0.4f, 0.f).mul(sleighModelToWorldMatrix());
+        final Vector3 worldPosition = new Vector3(0.38f, -0.3f, 0.f).mul(sleighModelToWorldMatrix());
         return new Vector2(worldPosition.x, worldPosition.y);
     }
 }

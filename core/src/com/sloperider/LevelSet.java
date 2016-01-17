@@ -105,6 +105,7 @@ public class LevelSet {
             levelInfo.filename = levelNode.getString("filename");
             levelInfo.bestScore = _io.readInt(String.format("%s;score", levelInfo.name), 0);
             levelInfo.unlocked = unlockAll ? true : _io.readBoolean(String.format("%s;unlocked", levelInfo.name), false);
+            levelInfo.secret = levelNode.getBoolean("secret", false);
 
             _levels.add(levelInfo);
         }

@@ -39,6 +39,7 @@ import java.util.ArrayList;
  */
 public class LevelsMenuScreen extends Screen {
     private Stage _uiStage;
+    private UI _ui;
 
     private class UI {
         private Skin _skin;
@@ -54,9 +55,6 @@ public class LevelsMenuScreen extends Screen {
         Label bestScoreValueLabel;
 
         void currentIndexChanged(final int index) {
-            if (_levelIndex == index)
-                return;
-
             _levelIndex = index;
 
             setBackgroundLevel(index);
@@ -91,7 +89,8 @@ public class LevelsMenuScreen extends Screen {
             final Array items = new Array();
 
             for (final LevelInfo level : LevelSet.instance().levels()) {
-                items.add(level.name);
+                if (!level.secret || level.unlocked)
+                    items.add(level.name);
             }
             _menu.setItems(items);
 
@@ -162,7 +161,7 @@ public class LevelsMenuScreen extends Screen {
         _levelIndex = -1;
         _uiStage = new Stage();
 
-        final UI ui = new UI(_uiStage, masterScreen);
+        _ui = new UI(_uiStage, masterScreen);
 
         _levelStage = new Stage();
         _physicsWorld = new PhysicsWorld();
@@ -170,14 +169,14 @@ public class LevelsMenuScreen extends Screen {
         _componentFactory = new ComponentFactory(_levelStage, masterScreen._assetManager, _physicsWorld);
         _componentFactory.ready();
 
-        ui.currentIndexChanged(0);
+        _ui.currentIndexChanged(0);
     }
 
     @Override
     public void start() {
         Gdx.input.setInputProcessor(new InputMultiplexer(_uiStage, _levelStage));
 
-        setBackgroundLevel(0);
+        _ui.currentIndexChanged(_levelIndex);
 
         _spawnSleighTimer = new Timer();
         _spawnSleighTimer.scheduleTask(new Timer.Task() {
