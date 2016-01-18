@@ -269,8 +269,8 @@ public class Level extends Component {
                         pointNode.getFloat("y"),
                         pointNode.getBoolean("editable"),
                         Track.GroundMaterialType.valueOf(pointNode.getString("material")),
-                        pointNode.getFloat("minBound"),
-                        pointNode.getFloat("maxBound")
+                        pointNode.getFloat("minBound", 0.f),
+                        pointNode.getFloat("maxBound", 0.f)
                     );
 
                     points.add(point);

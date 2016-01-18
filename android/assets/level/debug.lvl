@@ -1,6 +1,10 @@
 {
   "levels" : [
     {
+      "name" : "Level 3",
+      "filename" : "level/level3.lvl"
+    },
+    {
       "name" : "Debug simple",
       "filename" : "level/debug_simple.lvl"
     },

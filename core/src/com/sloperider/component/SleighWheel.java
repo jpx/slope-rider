@@ -152,13 +152,15 @@ public class SleighWheel extends Component {
         final FixtureDef rightWheel = new FixtureDef();
 
         leftWheel.shape = leftWheelShape;
-        leftWheel.density = 0.2f;
+        leftWheel.density = 0.01f;
         leftWheel.friction = 0.5f;
+        leftWheel.restitution = 0.f;
         leftWheel.filter.categoryBits = _sleigh.group();
         leftWheel.filter.maskBits = _sleigh.collidesWith();
         rightWheel.shape = rightWheelShape;
-        rightWheel.density = 0.2f;
+        rightWheel.density = 0.01f;
         rightWheel.friction = 0.5f;
+        rightWheel.restitution = 0.f;
         rightWheel.filter.categoryBits = _sleigh.group();
         rightWheel.filter.maskBits = _sleigh.collidesWith();
 
@@ -174,15 +176,15 @@ public class SleighWheel extends Component {
         final WheelJointDef leftWheelJoint = new WheelJointDef();
         leftWheelJoint.initialize(body, _leftWheelBody, _leftWheelBody.getPosition(), new Vector2(0.f, 1.f));
         leftWheelJoint.enableMotor = false;
-        leftWheelJoint.frequencyHz = 20.f;
-        leftWheelJoint.dampingRatio = 20.f;
+        leftWheelJoint.frequencyHz = 30.f;
+        leftWheelJoint.dampingRatio = 5.f;
         world.createJoint(leftWheelJoint);
 
         final WheelJointDef rightWheelJoint = new WheelJointDef();
         rightWheelJoint.initialize(body, _rightWheelBody, _rightWheelBody.getPosition(), new Vector2(0.f, 1.f));
         rightWheelJoint.enableMotor = false;
-        rightWheelJoint.frequencyHz = 20.f;
-        rightWheelJoint.dampingRatio = 20.f;
+        rightWheelJoint.frequencyHz = 30.f;
+        rightWheelJoint.dampingRatio = 5.f;
         world.createJoint(rightWheelJoint);
     }
 
@@ -243,7 +245,7 @@ public class SleighWheel extends Component {
     }
 
     private Vector2 wheelSize() {
-        return new Vector2(0.5f, 0.5f);
+        return new Vector2(0.55f, 0.55f);
     }
 
     private Matrix4 sleighModelToWorldMatrix() {
@@ -254,12 +256,12 @@ public class SleighWheel extends Component {
     }
 
     private Vector2 leftWheelPosition() {
-        final Vector3 worldPosition = new Vector3(-0.38f, -0.3f, 0.f).mul(sleighModelToWorldMatrix());
+        final Vector3 worldPosition = new Vector3(-0.4f, -0.34f, 0.f).mul(sleighModelToWorldMatrix());
         return new Vector2(worldPosition.x, worldPosition.y);
     }
 
     private Vector2 rightWheelPosition() {
-        final Vector3 worldPosition = new Vector3(0.38f, -0.3f, 0.f).mul(sleighModelToWorldMatrix());
+        final Vector3 worldPosition = new Vector3(0.4f, -0.34f, 0.f).mul(sleighModelToWorldMatrix());
         return new Vector2(worldPosition.x, worldPosition.y);
     }
 }
