@@ -12,6 +12,7 @@ import com.sloperider.component.Component;
 import com.sloperider.component.Level;
 import com.sloperider.physics.PhysicsWorld;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,8 +37,8 @@ public class ComponentFactory {
     private AssetManager _assetManager;
     private PhysicsWorld _physicsWorld;
 
-    private Map<Component, Layer> _components;
-    private Map<Component, Layer> _componentsToAdd;
+    private List<Map.Entry<Component, Layer>> _components;
+    private List<Map.Entry<Component, Layer>> _componentsToAdd;
 
     private final Map<Layer, Group> _roots = new HashMap<Layer, Group>();
 
@@ -51,8 +52,8 @@ public class ComponentFactory {
         _assetManager = assetManager;
         _physicsWorld = physicsWorld;
 
-        _components = new HashMap<Component, Layer>();
-        _componentsToAdd = new HashMap<Component, Layer>();
+        _components = new ArrayList();
+        _componentsToAdd = new ArrayList();
 
         for (final Layer layer : Layer.values()){
             final Group root = new Group();
@@ -74,7 +75,7 @@ public class ComponentFactory {
     }
 
     public final void requireAssets() {
-        for (final Map.Entry<Component, Layer> component : _components.entrySet()) {
+        for (final Map.Entry<Component, Layer> component : _components) {
             component.getKey().requireAssets(_assetManager);
         }
     }
@@ -86,22 +87,22 @@ public class ComponentFactory {
         _ready = true;
         _runningPostPhase = true;
 
-        for (final Map.Entry<Component, Layer> component : _components.entrySet()) {
+        for (final Map.Entry<Component, Layer> component : _components) {
             component.getKey().manageAssets(_assetManager);
         }
 
-        for (final Map.Entry<Component, Layer> component : _components.entrySet()) {
+        for (final Map.Entry<Component, Layer> component : _components) {
             component.getKey().ready(this);
         }
 
-        for (final Map.Entry<Component, Layer> component : _components.entrySet()) {
+        for (final Map.Entry<Component, Layer> component : _components) {
             _physicsWorld.addActor(component.getKey());
         }
 
         _runningPostPhase = false;
 
-        for (final Map.Entry<Component, Layer> component : _componentsToAdd.entrySet()) {
-            _components.put(component.getKey(), component.getValue());
+        for (final Map.Entry<Component, Layer> component : _componentsToAdd) {
+            _components.add(component);
         }
 
         _componentsToAdd.clear();
@@ -152,9 +153,9 @@ public class ComponentFactory {
         component.setLayer(layer);
 
         if (!_runningPostPhase)
-            _components.put(component, layer);
+            _components.add(new AbstractMap.SimpleEntry(component, layer));
         else
-            _componentsToAdd.put(component, layer);
+            _componentsToAdd.add(new AbstractMap.SimpleEntry(component, layer));
 
         _roots.get(layer).addActor(component);
 
@@ -176,7 +177,9 @@ public class ComponentFactory {
     }
 
     public final <T extends Component> T destroyComponent(final T component) {
-        final Layer layer = _components.remove(component);
+        final Map.Entry<Component, Layer> entry = _components.stream().filter(c -> c.getKey() == component).findFirst().orElse(null);
+        final Layer layer = entry.getValue();
+        _components.remove(entry);
 
         for (final Listener listener : _listeners)
             listener.componentDestroyed(component);
