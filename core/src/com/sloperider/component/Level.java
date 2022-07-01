@@ -201,18 +201,15 @@ public class Level extends Component {
 
                             @Override
                             public void collected(CollectibleItem self) {
-                                sleighWheel = new SleighWheel(_sleigh);
-                                _sleigh.addComponent(componentFactory.initializeComponent(sleighWheel));
+                                _sleigh.getComponent(SleighWheel.class).setVisible(true);
                             }
 
                             @Override
                             public void complete(CollectibleItem self) {
-                                if (_sleigh.hasComponent(sleighWheel))
-                                    componentFactory.destroyComponent(_sleigh.removeComponent(sleighWheel));
+                                _sleigh.getComponent(SleighWheel.class).setVisible(false);
                             }
                         });
                     }
-
                 }
 
                 component = addComponent(componentFactory.initializeComponent(Layer.FRONT0, collectibleItem));
@@ -465,6 +462,12 @@ public class Level extends Component {
         final Vector2 position = new Vector2(_begin.getX(), _begin.getY()).add(0.f, 1.f);
 
         _sleigh = addComponent(_componentFactory.createComponent(position, Sleigh.class));
+
+        _sleigh.addComponent(_componentFactory.initializeComponent(
+            new SleighWheel(_sleigh))
+        );
+
+        _sleigh.getComponent(SleighWheel.class).setVisible(false);
 
         playingBegin(_sleigh);
 

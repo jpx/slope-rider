@@ -51,6 +51,10 @@ public abstract class Component extends Group implements PhysicsActor {
         return _components.contains(component);
     }
 
+    public final <T extends  Component> T getComponent(java.lang.Class<T> klass) {
+        return (T) _components.stream().filter(c -> klass.isInstance(c)).findFirst().orElse(null);
+    }
+
     public final Component setLayer(final Layer layer) {
         _layer = layer;
 

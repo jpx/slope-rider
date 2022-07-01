@@ -64,6 +64,8 @@ public class SleighWheel extends Component {
     private Texture _texture;
     private TextureRegion _textureRegion;
 
+    private boolean _visible;
+
     SleighWheel(final Sleigh sleigh) {
         _sleigh = sleigh;
     }
@@ -186,6 +188,26 @@ public class SleighWheel extends Component {
         rightWheelJoint.frequencyHz = 30.f;
         rightWheelJoint.dampingRatio = 5.f;
         world.createJoint(rightWheelJoint);
+
+        if (!_visible) {
+            _leftWheelBody.setActive(false);
+            _rightWheelBody.setActive(false);
+        }
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+
+        _visible = visible;
+
+        if (_leftWheelBody != null) {
+            _leftWheelBody.setActive(visible);
+        }
+
+        if (_rightWheelBody != null) {
+            _rightWheelBody.setActive(visible);
+        }
     }
 
     @Override
