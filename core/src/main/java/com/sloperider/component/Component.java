@@ -22,8 +22,6 @@ import com.sloperider.physics.SmoothingState;
 import java.util.ArrayList;
 import java.util.List;
 
-import sun.rmi.runtime.Log;
-
 /**
  * Created by jpx on 11/11/15.
  */

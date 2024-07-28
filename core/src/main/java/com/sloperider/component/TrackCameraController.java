@@ -209,6 +209,11 @@ public class TrackCameraController
     }
 
     @Override
+    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         return false;
     }
@@ -219,7 +224,7 @@ public class TrackCameraController
     }
 
     @Override
-    public boolean scrolled(int amount) {
+    public boolean scrolled(float amountX, float amountY) {
         return false;
     }
 
@@ -297,6 +302,11 @@ public class TrackCameraController
     @Override
     public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
         return false;
+    }
+
+    @Override
+    public void pinchStop() {
+
     }
 
     private Vector3 checkPosition(final Vector3 position) {

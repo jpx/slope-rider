@@ -329,7 +329,7 @@ public class Track extends Component {
         _renderable.meshPart.set(model.meshParts.first());
         _renderable.material = model.materials.first();
 
-        _context = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
+        _context = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
 
         _shader = new Shader() {
             ShaderProgram program;

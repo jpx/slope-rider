@@ -64,7 +64,7 @@ public class Background extends Component {
         _environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         _environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
-        _context = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
+        _context = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.LRU, 1));
 
         final ModelBuilder builder = new ModelBuilder();
 
