@@ -225,7 +225,22 @@ public class TrackCameraController
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
-        return false;
+        final float delta = amountY * 25.0f;
+
+        final float minZoom = 1.5f;
+        final float maxZoom = maxZoom();
+        final float zoomSpeed = 0.005f;
+
+        OrthographicCamera camera = getCamera();
+
+        final float newValue = MathUtils.clamp(camera.zoom + delta * zoomSpeed, minZoom, maxZoom);
+
+        _hasTarget = false;
+        camera.zoom = newValue;
+
+        setCameraPosition(camera.position);
+
+        return true;
     }
 
     @Override
