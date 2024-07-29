@@ -356,7 +356,7 @@ public class Draggable extends Component {
 
     @Override
     public Actor doHit(float x, float y, boolean touchable) {
-        final float additionalHitScale = 1.5f;
+        final float additionalHitScale = getCamera().zoom / 2.f;
 
         final Vector2 minBound = new Vector2(
             -getOriginX() - getWidth() * additionalHitScale / 2.f,
