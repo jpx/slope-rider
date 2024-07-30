@@ -109,7 +109,7 @@ public class SleighWheel extends Component {
             wheelSize().y,
             getScaleX() * SlopeRider.PIXEL_PER_UNIT,
             getScaleY() * SlopeRider.PIXEL_PER_UNIT,
-            _leftWheelSmoothingState.smoothedRotation * MathUtils.degreesToRadians
+            _leftWheelSmoothingState.smoothedRotation
         );
 
         batch.draw(
@@ -122,7 +122,7 @@ public class SleighWheel extends Component {
             wheelSize().y,
             getScaleX() * SlopeRider.PIXEL_PER_UNIT,
             getScaleY() * SlopeRider.PIXEL_PER_UNIT,
-            _rightWheelSmoothingState.smoothedRotation * MathUtils.degreesToRadians
+            _rightWheelSmoothingState.smoothedRotation
         );
     }
 
