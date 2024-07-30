@@ -450,10 +450,10 @@ public class Level extends Component {
     }
 
     private boolean sleighOutOfBounds() {
-        return _sleigh != null && _sleigh.getX() < getX()
-            || _sleigh.getY() < getY()
-            || _sleigh.getRight() > getRight()
-            || _sleigh.getTop() > getTop();
+        return _sleigh != null && _sleigh.getRight() < getX()
+            || _sleigh.getTop() < getY()
+            || _sleigh.getX() > getRight()
+            || _sleigh.getY() > getTop();
     }
 
     public final Level spawnSleigh() {
