@@ -5,9 +5,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.sloperider.screen.GameScreen;
 import com.sloperider.screen.LoadingScreen;
-import com.sloperider.screen.MainMenuScreen;
 import com.sloperider.screen.MasterScreen;
+
+import java.util.List;
+import java.util.OptionalInt;
 
 public class SlopeRider extends ApplicationAdapter {
 
@@ -26,6 +29,11 @@ public class SlopeRider extends ApplicationAdapter {
             @Override
             public boolean debug() {
                 return true;
+            }
+
+            @Override
+            public String startingLevel() {
+                return null;
             }
         };
     }
@@ -56,16 +64,46 @@ public class SlopeRider extends ApplicationAdapter {
         _assetsLoaded = false;
         _assetManager = new AssetManager();
 
-        _masterScreen = new MasterScreen();
-        _masterScreen.configuration(_configuration);
-        _masterScreen.assetManager(_assetManager);
-        _masterScreen.start();
-        _masterScreen.push(new LoadingScreen());
-
         if (!configuration().debug())
             LevelSet.instance().loadFromFile("level/main.lvl", false);
         else
             LevelSet.instance().loadFromFile("level/debug.lvl", true);
+
+        _masterScreen = new MasterScreen();
+        _masterScreen.configuration(configuration());
+        _masterScreen.assetManager(_assetManager);
+        _masterScreen.start();
+
+        final LoadingScreen loadingScreen = new LoadingScreen();
+
+        if (configuration().startingLevel() != null) {
+            OptionalInt startingLevel = OptionalInt.empty();
+            List<LevelInfo> levels = LevelSet.instance().levels();
+            for (int i = 0; i < levels.size(); ++i) {
+                if (levels.get(i).name.equals(configuration().startingLevel())) {
+                    startingLevel = OptionalInt.of(i);
+                }
+            }
+
+            if (startingLevel.isPresent()) {
+                OptionalInt finalStartingLevel = startingLevel;
+                loadingScreen
+                    .redirect(new LoadingScreen.Redirect() {
+                        @Override
+                        public int limit() {
+                            return 1;
+                        }
+
+                        @Override
+                        public void call() {
+                            _masterScreen.push(new GameScreen(_masterScreen)
+                                .startingLevel(finalStartingLevel.getAsInt()));
+                        }
+                    });
+            }
+        }
+
+        _masterScreen.push(loadingScreen);
 
         _assetManager.load("ui/uiskin.json", Skin.class);
 	}

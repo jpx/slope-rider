@@ -5,4 +5,6 @@ package com.sloperider;
  */
 public interface Configuration {
     boolean debug();
+
+    String startingLevel();
 }

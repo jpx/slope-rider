@@ -5,16 +5,35 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
+import java.util.function.Function;
+
 /**
  * Created by jpx on 08/12/15.
  */
 public class LoadingScreen extends Screen {
+    public interface Redirect {
+        int limit();
+        void call();
+    }
+
     private final SpriteBatch batch = new SpriteBatch();
     private final TextureRegion sprite = new TextureRegion(new Texture("texture/loading_screen.png"));
 
+    private boolean _ready = false;
+    private Redirect _redirect = null;
+    private int _redirectCallCount = 0;
+
+    public final LoadingScreen redirect(Redirect redirect) {
+        _redirect = redirect;
+
+        return this;
+    }
+
     @Override
     public void start() {
-
+        if (_ready) {
+            redirect();
+        }
     }
 
     @Override
@@ -42,6 +61,19 @@ public class LoadingScreen extends Screen {
     public void ready() {
         super.ready();
 
-        _masterScreen.push(new MainMenuScreen(_masterScreen));
+        _ready = true;
+
+        redirect();
+    }
+
+    private void redirect() {
+        if (_redirect == null || _redirectCallCount >= _redirect.limit()) {
+            _masterScreen.push(new MainMenuScreen(_masterScreen));
+            return;
+        }
+
+        ++_redirectCallCount;
+
+        _redirect.call();
     }
 }

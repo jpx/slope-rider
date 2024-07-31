@@ -22,6 +22,11 @@ public class AndroidLauncher extends AndroidApplication {
                 public boolean debug() {
                     return (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
                 }
+
+                @Override
+                public String startingLevel() {
+                    return debug() ? "Debug simple" : null;
+                }
             })
             .io(new PersistentIO() {
                 SharedPreferences sharedPreferences;
