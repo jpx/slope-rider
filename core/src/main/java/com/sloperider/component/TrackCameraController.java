@@ -78,7 +78,7 @@ public class TrackCameraController
         _targetPosition.set(targetPosition);
         _targetZoom = targetZoom;
 
-        getCamera().zoom = _targetZoom;
+        setCameraZoom(_targetZoom);
         setCameraPosition(new Vector3(_targetPosition.x, _targetPosition.y, 0.f));
 
         _hasTarget = true;
@@ -158,7 +158,7 @@ public class TrackCameraController
                 final float zoom = MathUtils.lerp(_moveStartZoom, _targetZoom, rate);
 
                 setCameraPosition(new Vector3(position.x, position.y, camera.position.z));
-                camera.zoom = zoom;
+                setCameraZoom(zoom);
             }
         }
     }
@@ -236,8 +236,8 @@ public class TrackCameraController
         final float newValue = MathUtils.clamp(camera.zoom + delta * zoomSpeed, minZoom, maxZoom);
 
         _hasTarget = false;
-        camera.zoom = newValue;
 
+        setCameraZoom(newValue);
         setCameraPosition(camera.position);
 
         return true;
@@ -304,8 +304,8 @@ public class TrackCameraController
             final float newValue = MathUtils.clamp(camera.zoom + delta * zoomSpeed, minZoom, maxZoom);
 
             _hasTarget = false;
-            camera.zoom = newValue;
 
+            setCameraZoom(newValue);
             setCameraPosition(camera.position);
 
             _lastZoomDistance = distance;
@@ -340,10 +340,20 @@ public class TrackCameraController
         );
     }
 
+    private float checkZoom(final float zoom) {
+        return Math.min(zoom, maxZoom());
+    }
+
     private void setCameraPosition(final Vector3 position) {
         final OrthographicCamera camera = getCamera();
 
         camera.position.set(checkPosition(position));
+    }
+
+    private void setCameraZoom(final float zoom) {
+        final OrthographicCamera camera = getCamera();
+
+        camera.zoom = checkZoom(zoom);
     }
 
     private float maxZoom() {
