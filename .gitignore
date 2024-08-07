@@ -153,6 +153,7 @@ Thumbs.db
 *.*#
 *#*#
 /assets/assets.txt
+*.log
 
 ## Special cases:
 

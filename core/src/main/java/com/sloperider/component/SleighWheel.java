@@ -194,7 +194,7 @@ public class SleighWheel extends Component {
 
     @Override
     public void updateBody(World world, float deltaTime) {
-
+        EventLogger.instance().log("sleigh_wheel.position=" + _leftWheelBody.getPosition());
     }
 
 
@@ -254,8 +254,8 @@ public class SleighWheel extends Component {
 
     private Matrix4 sleighModelToWorldMatrix() {
         return new Matrix4()
-            .translate(_sleigh.getX(), _sleigh.getY(), 0.f)
-            .rotate(Vector3.Z, _sleigh.getRotation())
+            .translate(_sleigh.getBodyX(), _sleigh.getBodyY(), 0.f)
+            .rotate(Vector3.Z, _sleigh.getBodyAngle())
             .scale(_sleigh.getScaleX(), _sleigh.getScaleY(), 1.f);
     }
 

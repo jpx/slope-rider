@@ -241,6 +241,18 @@ public class Sleigh extends Component {
         setRotation(_smoothingState.smoothedRotation);
     }
 
+    public final float getBodyX() {
+        return _body.getPosition().x;
+    }
+
+    public final float getBodyY() {
+        return _body.getPosition().y;
+    }
+
+    public final float getBodyAngle() {
+        return _body.getAngle();
+    }
+
     @Override
     public void destroyBody(World world) {
         if (_body == null)
