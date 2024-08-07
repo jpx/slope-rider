@@ -14,8 +14,9 @@ public class LevelSet {
     private static LevelSet _instance;
 
     public static LevelSet instance() {
-        if (_instance == null)
+        if (_instance == null) {
             _instance = new LevelSet();
+        }
 
         return _instance;
     }

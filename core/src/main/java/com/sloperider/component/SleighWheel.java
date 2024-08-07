@@ -23,6 +23,7 @@ import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
 import com.badlogic.gdx.physics.box2d.joints.WheelJointDef;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.sloperider.ComponentFactory;
+import com.sloperider.EventLogger;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.PhysicsActor;
 import com.sloperider.physics.SmoothingState;
@@ -133,6 +134,7 @@ public class SleighWheel extends Component {
 
     @Override
     public void initializeBody(World world) {
+        EventLogger.instance().log("sleigh_wheel.initialize_body");
         final Body body = _sleigh.body();
 
         final BodyDef leftWheelBodyDef = new BodyDef();
@@ -186,6 +188,8 @@ public class SleighWheel extends Component {
         rightWheelJoint.frequencyHz = 30.f;
         rightWheelJoint.dampingRatio = 5.f;
         world.createJoint(rightWheelJoint);
+
+        EventLogger.instance().log("sleigh_wheel.on_equipped");
     }
 
     @Override

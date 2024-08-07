@@ -20,6 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.sloperider.ComponentFactory;
+import com.sloperider.EventLogger;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.CollisionGroup;
 import com.sloperider.physics.PhysicsActor;
@@ -206,6 +207,8 @@ public class Sleigh extends Component {
         if (_persistentForceVector != null) {
             _body.applyForceToCenter(_persistentForceVector.cpy().scl(30.f), true);
         }
+
+        EventLogger.instance().log("sleight.position", _body.getPosition().toString());
     }
 
     @Override

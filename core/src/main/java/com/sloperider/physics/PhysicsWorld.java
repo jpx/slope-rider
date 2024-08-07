@@ -9,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
+import com.sloperider.EventLogger;
 import com.sloperider.SlopeRider;
 
 import java.util.ArrayList;
@@ -131,6 +132,7 @@ public class PhysicsWorld {
         _fixedTimestepAccumulator += deltaTime;
 
         final int stepCount = (int) Math.floor((double) (_fixedTimestepAccumulator / FIXED_TIMESTEP));
+        EventLogger.instance().setEnv("physics_steps", String.valueOf(stepCount));
 
         if (stepCount > 0) {
             _fixedTimestepAccumulator -= stepCount * FIXED_TIMESTEP;

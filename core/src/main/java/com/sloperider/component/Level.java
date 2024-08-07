@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -20,6 +21,7 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.Timer;
 import com.sloperider.ComponentFactory;
+import com.sloperider.EventLogger;
 import com.sloperider.Layer;
 import com.sloperider.LevelSet;
 import com.sloperider.SlopeRider;
@@ -50,8 +52,10 @@ public class Level extends Component {
 
     private boolean _startedAsViewOnly = false;
 
-    private int _stepId;
-    private int _frameId;
+    private float _sessionTime = 0.0f;
+    private int _sessionId = 0;
+    private int _stepId = 0;
+    private int _frameId = 0;
 
     private ComponentFactory _componentFactory;
     private String _name;
@@ -377,6 +381,7 @@ public class Level extends Component {
     @Override
     protected void doAct(float delta) {
         ++_frameId;
+        EventLogger.instance().setEnv("frame_id", String.valueOf(_frameId));
 
         if (_sleigh != null) {
             final boolean sleighIsMoving = _sleigh.isMoving();
@@ -434,6 +439,13 @@ public class Level extends Component {
 
     @Override
     public void updateBody(World world, float deltaTime) {
+        _sessionTime += deltaTime;
+
+        EventLogger.instance()
+            .setEnv("session_time", String.valueOf(_sessionTime))
+            .setEnv("step_id", String.valueOf(_stepId))
+            .setEnv("delta_time", String.valueOf(deltaTime));
+
         levelPhysicsUpdate(world, deltaTime, _stepId, _frameId);
         ++_stepId;
     }
@@ -526,8 +538,12 @@ public class Level extends Component {
         if (_startedAsViewOnly)
             return;
 
+        _sessionTime = 0.0f;
         _stepId = 0;
         _frameId = 0;
+
+        ++_sessionId;
+        EventLogger.instance().setEnv("session_id", String.valueOf(_sessionId));
 
         if (_listener != null)
             _listener.stateChanged("playing");
