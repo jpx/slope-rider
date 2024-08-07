@@ -1,5 +1,8 @@
 package com.sloperider;
 
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -24,11 +27,13 @@ public final class EventLogger {
     public final EventLogger setEnv(final String key, final String value) {
         _env.put(key, value);
 
-        if (key.equals("session_id")) {
-            try {
-                _writer = new PrintWriter("events_" + value + ".log");
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
+        if (Gdx.app.getType() != Application.ApplicationType.Android) {
+            if (key.equals("session_id")) {
+                try {
+                    _writer = new PrintWriter("events_" + value + ".log");
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
 
@@ -36,15 +41,17 @@ public final class EventLogger {
     }
 
     public final EventLogger log(final String... params) {
+        if (_writer == null) {
+            return this;
+        }
+
          List<String> envVars = _env
             .entrySet()
             .stream()
             .map(e -> e.getKey() + "=" + e.getValue())
             .collect(Collectors.toList());
 
-         if (_writer != null) {
-             _writer.println(String.join(", ", envVars) + ", " + String.join(",", params));
-         }
+         _writer.println(String.join(", ", envVars) + ", " + String.join(",", params));
 
          return this;
     }
