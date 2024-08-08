@@ -61,7 +61,7 @@ public abstract class MainCharacter extends Component {
 
     @Override
     public short collidesWith() {
-        return (short) (CollisionGroup.TRACK.value() | CollisionGroup.END.value());
+        return (short) (CollisionGroup.MAIN_CHARACTER.value() | CollisionGroup.TRACK.value() | CollisionGroup.END.value());
     }
 
     @Override

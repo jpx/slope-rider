@@ -884,7 +884,7 @@ public class Track extends Component {
 
     @Override
     public short collidesWith() {
-        return CollisionGroup.ANYTHING.value();
+        return CollisionGroup.EVERYTHING.value();
     }
 
     public final float heightAtX(float x) {

@@ -227,7 +227,7 @@ public class TrackCameraController
     public boolean scrolled(float amountX, float amountY) {
         final float delta = amountY * 25.0f;
 
-        final float minZoom = 1.5f;
+        final float minZoom = 0.5f;
         final float maxZoom = maxZoom();
         final float zoomSpeed = 0.005f;
 
@@ -295,7 +295,7 @@ public class TrackCameraController
         } else {
             final float delta = _lastZoomDistance - distance;
 
-            final float minZoom = 1.5f;
+            final float minZoom = 0.5f;
             final float maxZoom = maxZoom();
             final float zoomSpeed = 0.005f;
 

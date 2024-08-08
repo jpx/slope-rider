@@ -145,7 +145,7 @@ public class MainCharacterCameraController extends Component {
     }
 
     private float minZoom() {
-        return 2.f;
+        return 0.5f;
     }
 
     private float maxZoom() {

@@ -353,7 +353,7 @@ public class Level extends Component {
         mainTrackChanged(_mainTrack);
 
         _targetEditingCameraPosition.set(_begin.getX() * SlopeRider.PIXEL_PER_UNIT, _begin.getY() * SlopeRider.PIXEL_PER_UNIT);
-        _targetEditingCameraZoom = 3.f;
+        _targetEditingCameraZoom = 1.f;
 
         editingBegin();
     }

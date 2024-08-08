@@ -188,7 +188,7 @@ public abstract class Component extends Group implements PhysicsActor {
 
     @Override
     public short group() {
-        return CollisionGroup.ANYTHING.value();
+        return CollisionGroup.EVERYTHING.value();
     }
 
     @Override
