@@ -1,6 +1,5 @@
 package com.sloperider.component;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -14,14 +13,14 @@ import com.sloperider.SlopeRider;
 /**
  * Created by jpx on 26/12/15.
  */
-public class SleighCameraController extends Component {
+public class MainCharacterCameraController extends Component {
     private final Vector3 _targetPosition = new Vector3();
     private float _targetZoom;
 
-    private Sleigh _target;
+    private MainCharacter _target;
 
-    public SleighCameraController target(final Sleigh sleigh) {
-        _target = sleigh;
+    public MainCharacterCameraController target(final MainCharacter mainCharacter) {
+        _target = mainCharacter;
 
         updateTargetPosition();
 

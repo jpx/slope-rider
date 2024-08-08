@@ -6,7 +6,6 @@ import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -16,8 +15,6 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
@@ -29,7 +26,6 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -37,7 +33,6 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
 import com.sloperider.physics.CollisionGroup;
-import com.sloperider.physics.PhysicsActor;
 
 /**
  * Created by jpx on 09/01/16.
@@ -355,7 +350,7 @@ public class CollectibleItem extends Component {
         _body.createFixture(fixture).setUserData(new ContactData() {
             @Override
             public boolean contactBegin(ContactData data, Contact contact) {
-                if (data instanceof Sleigh.ContactData) {
+                if (data instanceof MainCharacter.ContactData) {
 
                     _bodyNeedsDestruction = true;
 
@@ -451,7 +446,7 @@ public class CollectibleItem extends Component {
 
     @Override
     public short collidesWith() {
-        return CollisionGroup.SLEIGH.value();
+        return CollisionGroup.MAIN_CHARACTER.value();
     }
 
     @Override

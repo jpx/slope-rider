@@ -1,25 +1,15 @@
 package com.sloperider.component;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Event;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.badlogic.gdx.utils.Timer;
 import com.sloperider.ComponentFactory;
 import com.sloperider.EventLogger;
 import com.sloperider.Layer;
@@ -68,14 +58,14 @@ public class Level extends Component {
     private final Map<Track, List<TrackBoundComponent>> _trackBoundComponents = new HashMap<Track, List<TrackBoundComponent>>();
 
     private TrackCameraController _editingCameraController;
-    private SleighCameraController _playingCameraController;
+    private MainCharacterCameraController _playingCameraController;
     private final Vector2 _targetEditingCameraPosition = new Vector2();
     private float _targetEditingCameraZoom;
 
-    private Sleigh _sleigh;
-    private boolean _sleighIsMoving = false;
+    private MainCharacter _mainCharacter;
+    private boolean _mainCharacterIsMoving = false;
 
-    private float _elapsedTimeSinceSleighMoveStoped;
+    private float _elapsedTimeSinceMainCharacterMoveStoped;
 
     private boolean _over;
 
@@ -199,20 +189,20 @@ public class Level extends Component {
 
                     collectibleItem.duration(duration);
 
-                    if (equipedComponentType.equals("SleighWheel")) {
+                    if (equipedComponentType.equals("Wheels")) {
                         collectibleItem.listener(new CollectibleItem.Listener() {
-                            SleighWheel sleighWheel;
+                            Wheels wheels;
 
                             @Override
                             public void collected(CollectibleItem self) {
-                                sleighWheel = new SleighWheel(_sleigh);
-                                _sleigh.addComponent(componentFactory.initializeComponent(sleighWheel));
+                                wheels = new Wheels(_mainCharacter);
+                                _mainCharacter.addComponent(componentFactory.initializeComponent(wheels));
                             }
 
                             @Override
                             public void complete(CollectibleItem self) {
-                                if (_sleigh.hasComponent(sleighWheel))
-                                    componentFactory.destroyComponent(_sleigh.removeComponent(sleighWheel));
+                                if (_mainCharacter.hasComponent(wheels))
+                                    componentFactory.destroyComponent(_mainCharacter.removeComponent(wheels));
                             }
                         });
                     }
@@ -383,29 +373,29 @@ public class Level extends Component {
         ++_frameId;
         EventLogger.instance().setEnv("frame_id", String.valueOf(_frameId));
 
-        if (_sleigh != null) {
-            final boolean sleighIsMoving = _sleigh.isMoving();
+        if (_mainCharacter != null) {
+            final boolean mainCharacterIsMoving = _mainCharacter.isMoving();
 
-            if (_sleighIsMoving != sleighIsMoving) {
-                _sleighIsMoving = sleighIsMoving;
+            if (_mainCharacterIsMoving != mainCharacterIsMoving) {
+                _mainCharacterIsMoving = mainCharacterIsMoving;
 
-                if (!sleighIsMoving) {
-                    _elapsedTimeSinceSleighMoveStoped = 0.f;
+                if (!mainCharacterIsMoving) {
+                    _elapsedTimeSinceMainCharacterMoveStoped = 0.f;
                 }
             }
 
             boolean won = false;
             boolean lost = false;
 
-            if (_end != null && _end.hasSleigh(_sleigh)) {
+            if (_end != null && _end.hasMainCharacter(_mainCharacter)) {
                 won = true;
             } else {
-                if (sleighOutOfBounds()) {
+                if (mainCharacterOutOfBounds()) {
                     lost = true;
-                } else if (!sleighIsMoving) {
-                    _elapsedTimeSinceSleighMoveStoped += delta;
+                } else if (!mainCharacterIsMoving) {
+                    _elapsedTimeSinceMainCharacterMoveStoped += delta;
 
-                    if (_elapsedTimeSinceSleighMoveStoped > 1.f) {
+                    if (_elapsedTimeSinceMainCharacterMoveStoped > 1.f) {
                         lost = true;
                     }
                 }
@@ -414,13 +404,13 @@ public class Level extends Component {
             if (won) {
                 _over = true;
 
-                destroySleigh(true);
+                destroyMainCharacter(true);
 
                 if (_listener != null)
                     _listener.stateChanged("won");
 
             } else if (lost) {
-                destroySleigh();
+                destroyMainCharacter();
 
                 if (_listener != null)
                     _listener.stateChanged("lost");
@@ -461,33 +451,33 @@ public class Level extends Component {
         return this;
     }
 
-    private boolean sleighOutOfBounds() {
-        return _sleigh != null && _sleigh.getRight() < getX()
-            || _sleigh.getTop() < getY()
-            || _sleigh.getX() > getRight()
-            || _sleigh.getY() > getTop();
+    private boolean mainCharacterOutOfBounds() {
+        return _mainCharacter != null && _mainCharacter.getRight() < getX()
+            || _mainCharacter.getTop() < getY()
+            || _mainCharacter.getX() > getRight()
+            || _mainCharacter.getY() > getTop();
     }
 
-    public final Level spawnSleigh() {
-        if (_sleigh != null)
-            destroySleigh();
+    public final Level spawnMainCharacter() {
+        if (_mainCharacter != null)
+            destroyMainCharacter();
 
         editingEnd();
 
         final Vector2 position = new Vector2(_begin.getX(), _begin.getY()).add(0.f, 1.f);
 
-        _sleigh = addComponent(_componentFactory.createComponent(position, Sleigh.class));
+        _mainCharacter = addComponent(_componentFactory.createComponent(position, Sleigh.class));
 
-        playingBegin(_sleigh);
+        playingBegin(_mainCharacter);
 
         return this;
     }
 
-    public final Level destroySleigh() {
-        return destroySleigh(false);
+    public final Level destroyMainCharacter() {
+        return destroyMainCharacter(false);
     }
 
-    public final Level destroySleigh(final boolean end) {
+    public final Level destroyMainCharacter(final boolean end) {
         playingEnd();
 
         if (!end)
@@ -499,13 +489,13 @@ public class Level extends Component {
             }
         }
 
-        if (_sleigh == null)
+        if (_mainCharacter == null)
             return this;
 
         if (_end != null)
-            _end.sleighDestroyed(_sleigh);
-        removeComponent(_componentFactory.destroyComponent(_sleigh));
-        _sleigh = null;
+            _end.mainCharacterDestroyed(_mainCharacter);
+        removeComponent(_componentFactory.destroyComponent(_mainCharacter));
+        _mainCharacter = null;
 
         return this;
     }
@@ -534,7 +524,7 @@ public class Level extends Component {
         return this;
     }
 
-    private void playingBegin(final Sleigh sleigh) {
+    private void playingBegin(final MainCharacter mainCharacter) {
         if (_startedAsViewOnly)
             return;
 
@@ -550,8 +540,8 @@ public class Level extends Component {
 
         levelPlayed(this);
 
-        _playingCameraController = addComponent(_componentFactory.createComponent(Vector2.Zero, SleighCameraController.class))
-            .target(sleigh);
+        _playingCameraController = addComponent(_componentFactory.createComponent(Vector2.Zero, MainCharacterCameraController.class))
+            .target(mainCharacter);
         _playingCameraController.setBounds(getX(), getY(), getWidth(), getHeight());
     }
 

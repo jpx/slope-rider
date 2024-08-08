@@ -5,8 +5,6 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -18,7 +16,6 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleSorter;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
@@ -30,11 +27,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.Joint;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.physics.box2d.joints.DistanceJointDef;
-import com.badlogic.gdx.physics.box2d.joints.RopeJointDef;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.sloperider.ComponentFactory;
 import com.sloperider.SlopeRider;
@@ -43,7 +36,6 @@ import com.sloperider.physics.PhysicsActor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * Created by jpx on 29/11/15.
@@ -59,11 +51,11 @@ public class End extends Component {
 
         @Override
         public boolean contactBegin(PhysicsActor.ContactData data, Contact contact) {
-            if (data instanceof Sleigh.ContactData) {
-                Sleigh.ContactData sleighContactData = (Sleigh.ContactData) data;
-                Sleigh sleigh = sleighContactData.sleigh;
+            if (data instanceof MainCharacter.ContactData) {
+                MainCharacter.ContactData mainCharacterContactData = (MainCharacter.ContactData) data;
+                MainCharacter mainCharacter = mainCharacterContactData.mainCharacter;
 
-                end._sleightsToAdd.add(sleigh);
+                end._mainCharactertsToAdd.add(mainCharacter);
 
                 return true;
             }
@@ -73,11 +65,11 @@ public class End extends Component {
 
         @Override
         public boolean contactEnd(PhysicsActor.ContactData data, Contact contact) {
-//            if (data instanceof Sleigh.ContactData) {
-//                Sleigh.ContactData sleighContactData = (Sleigh.ContactData) data;
-//                Sleigh sleigh = sleighContactData.sleigh;
+//            if (data instanceof MainCharacter.ContactData) {
+//                MainCharacter.ContactData mainCharacterContactData = (MainCharacter.ContactData) data;
+//                MainCharacter mainCharacter = mainCharacterContactData.mainCharacter;
 //
-//                end._sleightsToRemove.add(sleigh);
+//                end._mainCharactertsToRemove.add(mainCharacter);
 //
 //                return true;
 //            }
@@ -86,8 +78,8 @@ public class End extends Component {
         }
     }
 
-    static class SleighEntry {
-        Sleigh sleigh;
+    static class MainCharacterEntry {
+        MainCharacter mainCharacter;
     }
 
     private RenderContext _context;
@@ -112,9 +104,9 @@ public class End extends Component {
     private Fixture _fixture;
     private boolean _bodyNeedsUpdate;
 
-    private final List<Sleigh> _sleightsToAdd = new ArrayList<Sleigh>();
-    private final List<Sleigh> _sleightsToRemove = new ArrayList<Sleigh>();
-    private final List<SleighEntry> _activeSleighs = new ArrayList<SleighEntry>();
+    private final List<MainCharacter> _mainCharactertsToAdd = new ArrayList<MainCharacter>();
+    private final List<MainCharacter> _mainCharactertsToRemove = new ArrayList<MainCharacter>();
+    private final List<MainCharacterEntry> _activeMainCharacters = new ArrayList<MainCharacterEntry>();
 
     public End color0(final Color value) {
         _color0.set(value);
@@ -128,38 +120,38 @@ public class End extends Component {
         return this;
     }
 
-    public final void sleighDestroyed(final Sleigh sleigh) {
-        removeSleigh(sleigh);
+    public final void mainCharacterDestroyed(final MainCharacter mainCharacter) {
+        removeMainCharacter(mainCharacter);
     }
 
-    private void addSleigh(Sleigh sleigh) {
-        SleighEntry sleighEntry = null;
+    private void addMainCharacter(MainCharacter mainCharacter) {
+        MainCharacterEntry mainCharacterEntry = null;
 
-        for (SleighEntry activeSleighEntry : _activeSleighs) {
-            if (activeSleighEntry.sleigh == sleigh) {
-                sleighEntry = activeSleighEntry;
+        for (MainCharacterEntry activeMainCharacterEntry : _activeMainCharacters) {
+            if (activeMainCharacterEntry.mainCharacter == mainCharacter) {
+                mainCharacterEntry = activeMainCharacterEntry;
 
                 break;
             }
         }
 
-        if (sleighEntry == null) {
-            sleighEntry = new SleighEntry();
-            sleighEntry.sleigh = sleigh;
+        if (mainCharacterEntry == null) {
+            mainCharacterEntry = new MainCharacterEntry();
+            mainCharacterEntry.mainCharacter = mainCharacter;
 
-            _activeSleighs.add(sleighEntry);
+            _activeMainCharacters.add(mainCharacterEntry);
         }
 
         startAnimation(_time);
-        sleigh.disablePhysics();
+        mainCharacter.disablePhysics();
     }
 
-    private void removeSleigh(final Sleigh sleigh) {
-        for (int i = 0; i < _activeSleighs.size(); ++i) {
-            final SleighEntry sleighEntry = _activeSleighs.get(i);
+    private void removeMainCharacter(final MainCharacter mainCharacter) {
+        for (int i = 0; i < _activeMainCharacters.size(); ++i) {
+            final MainCharacterEntry mainCharacterEntry = _activeMainCharacters.get(i);
 
-            if (sleighEntry.sleigh == sleigh) {
-                _activeSleighs.remove(i);
+            if (mainCharacterEntry.mainCharacter == mainCharacter) {
+                _activeMainCharacters.remove(i);
 
                 return;
             }
@@ -325,8 +317,8 @@ public class End extends Component {
 
     @Override
     protected void doDestroy(ComponentFactory componentFactory) {
-        while (!_activeSleighs.isEmpty()) {
-            removeSleigh(_activeSleighs.get(0).sleigh);
+        while (!_activeMainCharacters.isEmpty()) {
+            removeMainCharacter(_activeMainCharacters.get(0).mainCharacter);
         }
     }
 
@@ -335,19 +327,19 @@ public class End extends Component {
         _time += delta;
 
         if (_animationActive) {
-            for (final SleighEntry sleighEntry : _activeSleighs) {
-                final Sleigh sleigh = sleighEntry.sleigh;
+            for (final MainCharacterEntry mainCharacterEntry : _activeMainCharacters) {
+                final MainCharacter mainCharacter = mainCharacterEntry.mainCharacter;
 
                 final Vector2 targetPosition = new Vector2(getX(), getY());
-                final Vector2 position = new Vector2(sleigh.getX(), sleigh.getY());
+                final Vector2 position = new Vector2(mainCharacter.getX(), mainCharacter.getY());
 
                 final Vector2 offset = targetPosition.cpy()
                     .sub(position)
                     .scl(3.f * delta);
 
-                sleigh.moveBy(offset.x, offset.y);
-                sleigh.rotateBy(360.f * delta);
-                sleigh.scaleBy(-0.8f * delta);
+                mainCharacter.moveBy(offset.x, offset.y);
+                mainCharacter.rotateBy(360.f * delta);
+                mainCharacter.scaleBy(-0.8f * delta);
             }
 
             if (_time - _animationStartTime >= _animationDuration) {
@@ -382,12 +374,12 @@ public class End extends Component {
 
     private void resetBody(World world) {
         if (_body != null) {
-            for (final SleighEntry sleighEntry : _activeSleighs) {
-                _sleightsToRemove.add(sleighEntry.sleigh);
+            for (final MainCharacterEntry mainCharacterEntry : _activeMainCharacters) {
+                _mainCharactertsToRemove.add(mainCharacterEntry.mainCharacter);
             }
 
-            while (!_sleightsToRemove.isEmpty()) {
-                removeSleigh(_sleightsToRemove.remove(0));
+            while (!_mainCharactertsToRemove.isEmpty()) {
+                removeMainCharacter(_mainCharactertsToRemove.remove(0));
             }
 
             _body.destroyFixture(_fixture);
@@ -425,14 +417,14 @@ public class End extends Component {
             resetBody(world);
         }
 
-        while (!_sleightsToRemove.isEmpty()) {
-            final Sleigh sleigh = _sleightsToRemove.remove(0);
-            removeSleigh(sleigh);
+        while (!_mainCharactertsToRemove.isEmpty()) {
+            final MainCharacter mainCharacter = _mainCharactertsToRemove.remove(0);
+            removeMainCharacter(mainCharacter);
         }
 
-        while (!_sleightsToAdd.isEmpty()) {
-            final Sleigh sleigh = _sleightsToAdd.remove(0);
-            addSleigh(sleigh);
+        while (!_mainCharactertsToAdd.isEmpty()) {
+            final MainCharacter mainCharacter = _mainCharactertsToAdd.remove(0);
+            addMainCharacter(mainCharacter);
         }
     }
 
@@ -452,15 +444,15 @@ public class End extends Component {
 
     @Override
     public short collidesWith() {
-        return CollisionGroup.SLEIGH.value();
+        return CollisionGroup.MAIN_CHARACTER.value();
     }
 
-    public final boolean hasSleigh(final Sleigh sleigh) {
+    public final boolean hasMainCharacter(final MainCharacter mainCharacter) {
         if (_animationActive)
             return false;
 
-        for (final SleighEntry entry : _activeSleighs) {
-            if (entry.sleigh == sleigh) {
+        for (final MainCharacterEntry entry : _activeMainCharacters) {
+            if (entry.mainCharacter == mainCharacter) {
                 return true;
             }
         }

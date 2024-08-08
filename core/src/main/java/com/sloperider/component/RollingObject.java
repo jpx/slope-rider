@@ -167,6 +167,6 @@ public class RollingObject extends Component {
 
     @Override
     public short collidesWith() {
-        return (short) (CollisionGroup.TRACK.value() | CollisionGroup.SLEIGH.value());
+        return (short) (CollisionGroup.TRACK.value() | CollisionGroup.MAIN_CHARACTER.value());
     }
 }

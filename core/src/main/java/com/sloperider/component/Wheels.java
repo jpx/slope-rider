@@ -1,12 +1,10 @@
 package com.sloperider.component;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -16,10 +14,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.Joint;
-import com.badlogic.gdx.physics.box2d.JointDef;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
 import com.badlogic.gdx.physics.box2d.joints.WheelJointDef;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.sloperider.ComponentFactory;
@@ -31,7 +26,7 @@ import com.sloperider.physics.SmoothingState;
 /**
  * Created by jpx on 03/01/16.
  */
-public class SleighWheel extends Component {
+public class Wheels extends Component {
     static class ContactData implements PhysicsActor.ContactData {
         @Override
         public boolean contactBegin(PhysicsActor.ContactData data, Contact contact) {
@@ -55,7 +50,7 @@ public class SleighWheel extends Component {
             return false;
         }
     }
-    private final Sleigh _sleigh;
+    private final MainCharacter _mainCharacter;
 
     private Body _leftWheelBody;
     private Body _rightWheelBody;
@@ -65,8 +60,8 @@ public class SleighWheel extends Component {
     private Texture _texture;
     private TextureRegion _textureRegion;
 
-    SleighWheel(final Sleigh sleigh) {
-        _sleigh = sleigh;
+    Wheels(final MainCharacter mainCharacter) {
+        _mainCharacter = mainCharacter;
     }
 
     @Override
@@ -134,8 +129,8 @@ public class SleighWheel extends Component {
 
     @Override
     public void initializeBody(World world) {
-        EventLogger.instance().log("sleigh_wheel.initialize_body");
-        final Body body = _sleigh.body();
+        EventLogger.instance().log("mainCharacter_wheel.initialize_body");
+        final Body body = _mainCharacter.body();
 
         final BodyDef leftWheelBodyDef = new BodyDef();
         leftWheelBodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -157,14 +152,14 @@ public class SleighWheel extends Component {
         leftWheel.density = 0.01f;
         leftWheel.friction = 0.5f;
         leftWheel.restitution = 0.f;
-        leftWheel.filter.categoryBits = _sleigh.group();
-        leftWheel.filter.maskBits = _sleigh.collidesWith();
+        leftWheel.filter.categoryBits = _mainCharacter.group();
+        leftWheel.filter.maskBits = _mainCharacter.collidesWith();
         rightWheel.shape = rightWheelShape;
         rightWheel.density = 0.01f;
         rightWheel.friction = 0.5f;
         rightWheel.restitution = 0.f;
-        rightWheel.filter.categoryBits = _sleigh.group();
-        rightWheel.filter.maskBits = _sleigh.collidesWith();
+        rightWheel.filter.categoryBits = _mainCharacter.group();
+        rightWheel.filter.maskBits = _mainCharacter.collidesWith();
 
         _leftWheelBody = world.createBody(leftWheelBodyDef);
         _rightWheelBody = world.createBody(rightWheelBodyDef);
@@ -189,12 +184,12 @@ public class SleighWheel extends Component {
         rightWheelJoint.dampingRatio = 5.f;
         world.createJoint(rightWheelJoint);
 
-        EventLogger.instance().log("sleigh_wheel.on_equipped");
+        EventLogger.instance().log("mainCharacter_wheel.on_equipped");
     }
 
     @Override
     public void updateBody(World world, float deltaTime) {
-        EventLogger.instance().log("sleigh_wheel.position=" + _leftWheelBody.getPosition());
+        EventLogger.instance().log("mainCharacter_wheel.position=" + _leftWheelBody.getPosition());
     }
 
 
@@ -252,20 +247,20 @@ public class SleighWheel extends Component {
         return new Vector2(0.55f, 0.55f);
     }
 
-    private Matrix4 sleighModelToWorldMatrix() {
+    private Matrix4 mainCharacterModelToWorldMatrix() {
         return new Matrix4()
-            .translate(_sleigh.getBodyX(), _sleigh.getBodyY(), 0.f)
-            .rotate(Vector3.Z, _sleigh.getBodyAngle())
-            .scale(_sleigh.getScaleX(), _sleigh.getScaleY(), 1.f);
+            .translate(_mainCharacter.getBodyX(), _mainCharacter.getBodyY(), 0.f)
+            .rotate(Vector3.Z, _mainCharacter.getBodyAngle())
+            .scale(_mainCharacter.getScaleX(), _mainCharacter.getScaleY(), 1.f);
     }
 
     private Vector2 leftWheelPosition() {
-        final Vector3 worldPosition = new Vector3(-0.4f, -0.34f, 0.f).mul(sleighModelToWorldMatrix());
+        final Vector3 worldPosition = new Vector3(-0.4f, -0.34f, 0.f).mul(mainCharacterModelToWorldMatrix());
         return new Vector2(worldPosition.x, worldPosition.y);
     }
 
     private Vector2 rightWheelPosition() {
-        final Vector3 worldPosition = new Vector3(0.4f, -0.34f, 0.f).mul(sleighModelToWorldMatrix());
+        final Vector3 worldPosition = new Vector3(0.4f, -0.34f, 0.f).mul(mainCharacterModelToWorldMatrix());
         return new Vector2(worldPosition.x, worldPosition.y);
     }
 }

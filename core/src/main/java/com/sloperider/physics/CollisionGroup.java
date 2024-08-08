@@ -5,10 +5,10 @@ package com.sloperider.physics;
  */
 public enum CollisionGroup {
     NOTHING (0),
-    SLEIGH (1 << 0),
+    MAIN_CHARACTER(1 << 0),
     TRACK (1 << 1),
     END (1 << 2),
-    ANYTHING (SLEIGH.value | TRACK.value | END.value);
+    ANYTHING (MAIN_CHARACTER.value | TRACK.value | END.value);
 
     private int value;
 

@@ -37,7 +37,7 @@
       "action" : {
         "type" : "equip",
         "component" : {
-          "type" : "SleighWheel"
+          "type" : "Wheels"
         },
         "duration" : 8.0
       }

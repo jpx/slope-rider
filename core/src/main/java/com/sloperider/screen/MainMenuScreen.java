@@ -80,7 +80,7 @@ public class MainMenuScreen extends Screen {
     private ComponentFactory _componentFactory;
     private Level _backgroundLevel;
 
-    private Timer _spawnSleighTimer;
+    private Timer _spawnMainCharacterTimer;
 
     private int _currentLevelIndex;
 
@@ -113,21 +113,21 @@ public class MainMenuScreen extends Screen {
         _backgroundLevel = _componentFactory.createLevel("level/title_level.lvl")
             .startAsViewOnly();
 
-        _spawnSleighTimer = new Timer();
-        _spawnSleighTimer.scheduleTask(new Timer.Task() {
+        _spawnMainCharacterTimer = new Timer();
+        _spawnMainCharacterTimer.scheduleTask(new Timer.Task() {
             @Override
             public void run() {
-                _backgroundLevel.spawnSleigh();
+                _backgroundLevel.spawnMainCharacter();
             }
         }, 2.f, 12.f);
-        _spawnSleighTimer.start();
+        _spawnMainCharacterTimer.start();
     }
 
     @Override
     public void stop() {
-        _spawnSleighTimer.stop();
-        _spawnSleighTimer = null;
-        _backgroundLevel.destroySleigh();
+        _spawnMainCharacterTimer.stop();
+        _spawnMainCharacterTimer = null;
+        _backgroundLevel.destroyMainCharacter();
         _componentFactory.destroyComponent(_backgroundLevel);
     }
 

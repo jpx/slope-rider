@@ -264,7 +264,7 @@ public class GameScreen extends Screen {
 
     private void stopButtonClicked(final UI ui, final Button button) {
         ui.setEditingMode();
-        _activeLevel.destroySleigh();
+        _activeLevel.destroyMainCharacter();
     }
 
     private void levelEndBackButtonClicked(final UI ui, final Button button) {
@@ -357,7 +357,7 @@ public class GameScreen extends Screen {
 
     private final void play() {
         _ui.setPlayingMode();
-        _activeLevel.spawnSleigh();
+        _activeLevel.spawnMainCharacter();
     }
 
     private void changeLevel(final LevelInfo levelInfo) {

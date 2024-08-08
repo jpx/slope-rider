@@ -18,8 +18,6 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix3;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -54,7 +52,7 @@ public class Bumper  extends Component {
     private float _force;
 
     private float _deltaTimeSinceContactBegin;
-    private Sleigh _sleigh;
+    private MainCharacter _mainCharacter;
 
     private Body _body;
 
@@ -67,11 +65,11 @@ public class Bumper  extends Component {
 
         @Override
         public boolean contactBegin(PhysicsActor.ContactData data, Contact contact) {
-            if (data instanceof Sleigh.ContactData) {
-                final Sleigh.ContactData sleighContactData = (Sleigh.ContactData) data;
+            if (data instanceof MainCharacter.ContactData) {
+                final MainCharacter.ContactData mainCharacterContactData = (MainCharacter.ContactData) data;
 
                 bumper._deltaTimeSinceContactBegin = 0.f;
-                bumper._sleigh = sleighContactData.sleigh;
+                bumper._mainCharacter = mainCharacterContactData.mainCharacter;
 
                 return true;
             }
@@ -81,8 +79,8 @@ public class Bumper  extends Component {
 
         @Override
         public boolean contactEnd(PhysicsActor.ContactData data, Contact contact) {
-            if (data instanceof Sleigh.ContactData) {
-                bumper._sleigh = null;
+            if (data instanceof MainCharacter.ContactData) {
+                bumper._mainCharacter = null;
             }
 
             return false;
@@ -333,7 +331,7 @@ public class Bumper  extends Component {
 
     @Override
     public void updateBody(World world, float deltaTime) {
-        if (_sleigh != null) {
+        if (_mainCharacter != null) {
             _deltaTimeSinceContactBegin += deltaTime;
 
 //            if (_deltaTimeSinceContactBegin > 0.02f) {
@@ -343,13 +341,13 @@ public class Bumper  extends Component {
                     (float) Math.sin((90.f + getRotation()) * MathUtils.degreesToRadians)
                 ).nor();
 
-                _sleigh.body().applyLinearImpulse(
+                _mainCharacter.body().applyLinearImpulse(
                     direction.cpy().scl(amplitude),
-                    _sleigh.body().getWorldCenter(),
+                    _mainCharacter.body().getWorldCenter(),
                     true
                 );
 
-                _sleigh = null;
+                _mainCharacter = null;
 //            }
         }
     }
@@ -366,7 +364,7 @@ public class Bumper  extends Component {
 
     @Override
     public short collidesWith() {
-        return CollisionGroup.SLEIGH.value();
+        return CollisionGroup.MAIN_CHARACTER.value();
     }
 
     private void updateBodyTransform() {
