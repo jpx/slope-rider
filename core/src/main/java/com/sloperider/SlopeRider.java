@@ -97,7 +97,8 @@ public class SlopeRider extends ApplicationAdapter {
                         @Override
                         public void call() {
                             _masterScreen.push(new GameScreen(_masterScreen)
-                                .startingLevel(finalStartingLevel.getAsInt()));
+                                .startingLevel(finalStartingLevel.getAsInt())
+                                .autoPlay(true));
                         }
                     });
             }

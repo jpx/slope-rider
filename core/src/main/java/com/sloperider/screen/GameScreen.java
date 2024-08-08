@@ -259,8 +259,7 @@ public class GameScreen extends Screen {
     }
 
     private void playButtonClicked(final UI ui, final Button button) {
-        ui.setPlayingMode();
-        _activeLevel.spawnSleigh();
+        play();
     }
 
     private void stopButtonClicked(final UI ui, final Button button) {
@@ -288,6 +287,7 @@ public class GameScreen extends Screen {
     private Level _activeLevel;
 
     private int _startingLevel;
+    private boolean _autoPlay = false;
 
     private int _attemptCount;
 
@@ -311,11 +311,21 @@ public class GameScreen extends Screen {
         return this;
     }
 
+    public final GameScreen autoPlay(final boolean value) {
+        _autoPlay = value;
+
+        return this;
+    }
+
     @Override
     public void start() {
         Gdx.input.setInputProcessor(new InputMultiplexer(_uiStage, _levelStage));
 
         changeLevel(LevelSet.instance().levels().get(_startingLevel));
+
+        if (_autoPlay) {
+            play();
+        }
     }
 
     @Override
@@ -343,6 +353,11 @@ public class GameScreen extends Screen {
 
     @Override
     public void dispose() {
+    }
+
+    private final void play() {
+        _ui.setPlayingMode();
+        _activeLevel.spawnSleigh();
     }
 
     private void changeLevel(final LevelInfo levelInfo) {
