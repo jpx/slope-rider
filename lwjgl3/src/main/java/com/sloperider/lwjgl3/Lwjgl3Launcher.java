@@ -16,17 +16,19 @@ public class Lwjgl3Launcher {
     private static Lwjgl3Application createApplication(String[] args) {
         final String startingLevel = args.length > 0 ? args[0] : null;
 
-        return new Lwjgl3Application(new SlopeRider().configuration(new Configuration() {
-            @Override
-            public boolean debug() {
-                return true;
-            }
-
-            @Override
-            public String startingLevel() {
-                return startingLevel;
-            }
-        }), getDefaultConfiguration());
+        return new Lwjgl3Application(new Box2DExample());
+//
+//        return new Lwjgl3Application(new SlopeRider().configuration(new Configuration() {
+//            @Override
+//            public boolean debug() {
+//                return true;
+//            }
+//
+//            @Override
+//            public String startingLevel() {
+//                return startingLevel;
+//            }
+//        }), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
