@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.JsonValue;
+import com.sloperider.Box2DCharacter;
 import com.sloperider.ComponentFactory;
 import com.sloperider.EventLogger;
 import com.sloperider.Layer;
@@ -353,7 +354,7 @@ public class Level extends Component {
         mainTrackChanged(_mainTrack);
 
         _targetEditingCameraPosition.set(_begin.getX() * SlopeRider.PIXEL_PER_UNIT, _begin.getY() * SlopeRider.PIXEL_PER_UNIT);
-        _targetEditingCameraZoom = 1.f;
+        _targetEditingCameraZoom = 3.f;
 
         editingBegin();
     }
@@ -396,7 +397,7 @@ public class Level extends Component {
                     _elapsedTimeSinceMainCharacterMoveStoped += delta;
 
                     if (_elapsedTimeSinceMainCharacterMoveStoped > 1.f) {
-                        lost = true;
+//                        lost = true;
                     }
                 }
             }
@@ -466,7 +467,7 @@ public class Level extends Component {
 
         final Vector2 position = new Vector2(_begin.getX(), _begin.getY()).add(0.f, 1.f);
 
-        _mainCharacter = addComponent(_componentFactory.createComponent(position, Sleigh.class));
+        _mainCharacter = addComponent(_componentFactory.createComponent(position, Box2DCharacter.class));
 
         playingBegin(_mainCharacter);
 
