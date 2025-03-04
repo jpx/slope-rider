@@ -91,58 +91,88 @@ public class Box2DExample extends ApplicationAdapter {
 	Vector2 vector = new Vector2();
 
 	public void create () {
-		batch = new SpriteBatch();
-		renderer = new ShapeRenderer();
-		skeletonRenderer = new SkeletonRenderer();
-		skeletonRenderer.setPremultipliedAlpha(true);
+        batch = new SpriteBatch();
+        renderer = new ShapeRenderer();
+        skeletonRenderer = new SkeletonRenderer();
+        skeletonRenderer.setPremultipliedAlpha(true);
 
-		atlas = new TextureAtlas(Gdx.files.internal("spineboy/spineboy-pma.atlas"));
+        atlas = new TextureAtlas(Gdx.files.internal("spineboy/spineboy-pma.atlas"));
 
-		// This loader creates Box2dAttachments instead of RegionAttachments for an easy way to keep track of the Box2D body for
-		// each attachment.
-		AtlasAttachmentLoader atlasLoader = new AtlasAttachmentLoader(atlas) {
-			public RegionAttachment newRegionAttachment (Skin skin, String name, String path, @Null Sequence sequence) {
-				Box2dAttachment attachment = new Box2dAttachment(name);
-				AtlasRegion region = atlas.findRegion(attachment.getName());
-				if (region == null) throw new RuntimeException("Region not found in atlas: " + attachment);
-				attachment.setRegion(region);
-				return attachment;
-			}
-		};
-		SkeletonJson json = new SkeletonJson(atlasLoader);
-		json.setScale(0.6f * 0.05f);
-		SkeletonData skeletonData = json.readSkeletonData(Gdx.files.internal("spineboy/spineboy-ess.json"));
-		animation = skeletonData.findAnimation("walk");
+        // This loader creates Box2dAttachments instead of RegionAttachments for an easy way to keep track of the Box2D body for
+        // each attachment.
+        AtlasAttachmentLoader atlasLoader = new AtlasAttachmentLoader(atlas) {
+            public RegionAttachment newRegionAttachment(Skin skin, String name, String path, @Null Sequence sequence) {
+                Box2dAttachment attachment = new Box2dAttachment(name);
+                AtlasRegion region = atlas.findRegion(attachment.getName());
+                if (region == null)
+                    throw new RuntimeException("Region not found in atlas: " + attachment);
+                attachment.setRegion(region);
+                return attachment;
+            }
+        };
+        SkeletonJson json = new SkeletonJson(atlasLoader);
+        json.setScale(0.6f * 0.05f);
+        SkeletonData skeletonData = json.readSkeletonData(Gdx.files.internal("spineboy/spineboy-ess.json"));
+        animation = skeletonData.findAnimation("walk");
 
-		skeleton = new Skeleton(skeletonData);
-		skeleton.setX(16);
-		skeleton.setY(1);
-		skeleton.updateWorldTransform(Physics.update);
+        skeleton = new Skeleton(skeletonData);
+        skeleton.setX(0);
+        skeleton.setY(0);
+        skeleton.updateWorldTransform(Physics.update);
 
-		// See Box2DTest in libgdx for more detailed information about Box2D setup.
-		camera = new OrthographicCamera(48, 32);
-		camera.position.set(0, 16, 0);
-		box2dRenderer = new Box2DDebugRenderer();
-		createWorld();
+        // See Box2DTest in libgdx for more detailed information about Box2D setup.
+        camera = new OrthographicCamera(48, 32);
+        camera.position.set(0, 0, 0);
+        box2dRenderer = new Box2DDebugRenderer();
+        createWorld();
 
-		// Create a body for each attachment. Note it is probably better to create just a few bodies rather than one for each
-		// region attachment, but this is just an example.
-		for (Slot slot : skeleton.getSlots()) {
-			if (!(slot.getAttachment() instanceof Box2dAttachment)) continue;
-			Box2dAttachment attachment = (Box2dAttachment)slot.getAttachment();
+        // Create a body for each attachment. Note it is probably better to create just a few bodies rather than one for each
+        // region attachment, but this is just an example.
+        for (Slot slot : skeleton.getSlots()) {
+            // Position each attachment body.
+            if (!(slot.getAttachment() instanceof Box2dAttachment)) continue;
+            Box2dAttachment attachment = (Box2dAttachment) slot.getAttachment();
 
-			PolygonShape boxPoly = new PolygonShape();
-			boxPoly.setAsBox(attachment.getWidth() / 2 * attachment.getScaleX(), attachment.getHeight() / 2 * attachment.getScaleY(),
-				vector.set(attachment.getX(), attachment.getY()), attachment.getRotation() * MathUtils.degRad);
+            PolygonShape boxPoly = new PolygonShape();
+            boxPoly.setAsBox(
+                attachment.getWidth() / 2 * attachment.getScaleX(),
+                attachment.getHeight() / 2 * attachment.getScaleY(),
+                vector.set(attachment.getX(), attachment.getY()),
+                attachment.getRotation() * MathUtils.degRad);
 
-			BodyDef boxBodyDef = new BodyDef();
-			boxBodyDef.type = BodyType.DynamicBody;
-			attachment.body = world.createBody(boxBodyDef);
-			attachment.body.createFixture(boxPoly, 1);
+            BodyDef boxBodyDef = new BodyDef();
+            boxBodyDef.type = BodyType.DynamicBody;
+            attachment.body = world.createBody(boxBodyDef);
+            attachment.body.setTransform(slot.getBone().getWorldX(), slot.getBone().getWorldY(), slot.getBone().getWorldRotationX()
+                * MathUtils.degRad);
+            attachment.body.createFixture(boxPoly, 1);
 
-			boxPoly.dispose();
-		}
-	}
+            boxPoly.dispose();
+        }
+
+        for (Slot slot : skeleton.getSlots()) {
+            if (!(slot.getAttachment() instanceof Box2dAttachment)) continue;
+            Box2dAttachment attachment = (Box2dAttachment) slot.getAttachment();
+            Body body = attachment.body;
+            if (body == null) continue;
+
+            Slot parentSlot = Arrays.stream(skeleton.getSlots().toArray(Slot.class))
+                .filter(s -> slot.getBone().getParent().equals(s.getBone()))
+                .findFirst()
+                .orElse(null);
+
+            if (parentSlot == null) {
+                Gdx.app.log(SlopeRider.TAG, "slot " + slot.getData().getName() + " has no parent!");
+                continue;
+            }
+
+            Body parentBody = ((Box2dAttachment) parentSlot.getAttachment()).body;
+
+            RevoluteJointDef jointDef = new RevoluteJointDef();
+            jointDef.initialize(parentBody, attachment.body, new Vector2(parentSlot.getBone().getWorldX(), parentSlot.getBone().getWorldY()));
+            world.createJoint(jointDef);
+        }
+    }
 
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
@@ -161,10 +191,10 @@ public class Box2DExample extends ApplicationAdapter {
 		batch.setTransformMatrix(camera.view);
 		batch.begin();
 
-		animation.apply(skeleton, time, time, true, events, 1, MixBlend.first, MixDirection.in);
-		skeleton.setX(skeleton.getX() + 8 * delta);
-		skeleton.update(delta);
-		skeleton.updateWorldTransform(Physics.update);
+//		animation.apply(skeleton, time, time, true, events, 1, MixBlend.first, MixDirection.in);
+//		skeleton.setX(skeleton.getX() + 0.1f * delta);
+//		skeleton.update(delta);
+//		skeleton.updateWorldTransform(Physics.update);
 		skeletonRenderer.draw(batch, skeleton);
 
 		batch.end();
@@ -182,7 +212,7 @@ public class Box2DExample extends ApplicationAdapter {
             Body b = attachment.body;
             slot.getBone().setWorldX(b.getPosition().x);
             slot.getBone().setWorldY(b.getPosition().y);
-            slot.getBone().setRotation(b.getAngle());
+            slot.getBone().setRotation(b.getAngle() * MathUtils.degRad);
 		}
 
 		box2dRenderer.render(world, camera.combined);
@@ -233,7 +263,7 @@ public class Box2DExample extends ApplicationAdapter {
 			boxBodyDef.position.x = -24 + (float)(Math.random() * 48);
 			boxBodyDef.position.y = 10 + (float)(Math.random() * 100);
 			Body boxBody = world.createBody(boxBodyDef);
-
+//
 			boxBody.createFixture(boxPoly, 1);
 		}
 
