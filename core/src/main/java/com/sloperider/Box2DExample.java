@@ -117,7 +117,7 @@ public class Box2DExample extends ApplicationAdapter {
 
         skeleton = new Skeleton(skeletonData);
         skeleton.setX(0);
-        skeleton.setY(0);
+        skeleton.setY(-16);
         skeleton.updateWorldTransform(Physics.update);
 
         // See Box2DTest in libgdx for more detailed information about Box2D setup.
@@ -174,6 +174,8 @@ public class Box2DExample extends ApplicationAdapter {
         }
     }
 
+    float lastX = 0f;
+    float lastY = 0f;
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
 		float remaining = delta;
@@ -191,15 +193,33 @@ public class Box2DExample extends ApplicationAdapter {
 		batch.setTransformMatrix(camera.view);
 		batch.begin();
 
-//		animation.apply(skeleton, time, time, true, events, 1, MixBlend.first, MixDirection.in);
-//		skeleton.setX(skeleton.getX() + 0.1f * delta);
-//		skeleton.update(delta);
-//		skeleton.updateWorldTransform(Physics.update);
+        if (lastX == 0f) {
+            lastX = skeleton.getX();
+        }
+        if (lastY == 0f) {
+            lastY = skeleton.getY();
+        }
+
+//        skeleton.setX(Gdx.input.getX() / 20);
+//        skeleton.setY(-Gdx.input.getY() / 20);
+
+        float newX = Gdx.input.getX() - lastX;
+        float newY = Gdx.input.getY() - lastY;
+
+        Gdx.app.log( SlopeRider.TAG, "inputX=" + Gdx.input.getX());
+
+		animation.apply(skeleton, time, time, true, events, 1, MixBlend.first, MixDirection.in);
+        skeleton.physicsTranslate(newX - lastX, newY - lastY);
+		skeleton.update(delta);
+		skeleton.updateWorldTransform(Physics.update);
 		skeletonRenderer.draw(batch, skeleton);
 
 		batch.end();
 
-		// Position the physics body for each attachment.
+        lastX = newX;
+        lastY = newY;
+
+        // Position the physics body for each attachment.
 		for (Slot slot : skeleton.getSlots()) {
 			if (!(slot.getAttachment() instanceof Box2dAttachment)) continue;
 			Box2dAttachment attachment = (Box2dAttachment)slot.getAttachment();
@@ -207,12 +227,7 @@ public class Box2DExample extends ApplicationAdapter {
 			float x = slot.getBone().getWorldX();
 			float y = slot.getBone().getWorldY();
 			float rotation = slot.getBone().getWorldRotationX();
-//			attachment.body.setTransform(x, y, rotation * MathUtils.degRad);
-
-            Body b = attachment.body;
-            slot.getBone().setWorldX(b.getPosition().x);
-            slot.getBone().setWorldY(b.getPosition().y);
-            slot.getBone().setRotation(b.getAngle() * MathUtils.degRad);
+			attachment.body.setTransform(x, y, rotation * MathUtils.degRad);
 		}
 
 		box2dRenderer.render(world, camera.combined);
